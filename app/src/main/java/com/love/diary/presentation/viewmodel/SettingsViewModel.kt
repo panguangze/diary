@@ -131,7 +131,9 @@ class SettingsViewModel @Inject constructor(
                     partnerNickname = null,
                     showMoodTip = true,
                     showStreak = true,
-                    showAnniversary = true
+                    showAnniversary = true,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
                 )
             }
             repository.updateAppConfig(updated)
@@ -147,12 +149,14 @@ class SettingsViewModel @Inject constructor(
             } else {
                 AppConfigEntity(
                     id = 1,
-                    startDate = null,
+                    startDate = "", // startDate is non-null, so provide empty string as default
                     coupleName = name,
                     partnerNickname = null,
                     showMoodTip = true,
                     showStreak = true,
-                    showAnniversary = true
+                    showAnniversary = true,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
                 )
             }
             repository.updateAppConfig(updated)
@@ -168,12 +172,14 @@ class SettingsViewModel @Inject constructor(
             } else {
                 AppConfigEntity(
                     id = 1,
-                    startDate = null,
+                    startDate = "", // startDate is non-null, so provide empty string as default
                     coupleName = null,
                     partnerNickname = nickname,
                     showMoodTip = true,
                     showStreak = true,
-                    showAnniversary = true
+                    showAnniversary = true,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
                 )
             }
             repository.updateAppConfig(updated)
