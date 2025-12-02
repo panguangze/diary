@@ -38,8 +38,17 @@ fun MainApp() {
     var selectedTab by remember { mutableIntStateOf(0) }
 
     // 检查是否需要首次运行设置
-    var isFirstRun by remember { mutableStateOf(false) } // 先设为false以便测试
-    var isLoading by remember { mutableStateOf(false) }   // 先设为false以便测试
+    var isFirstRun by remember { mutableStateOf(true) } // 将在LaunchedEffect中更新
+    var isLoading by remember { mutableStateOf(true) }   // 将在LaunchedEffect中更新
+    val homeViewModel = hiltViewModel<com.love.diary.presentation.viewmodel.HomeViewModel>()
+    val repository = homeViewModel.repository // 获取repository实例
+
+    LaunchedEffect(Unit) {
+        // 检查是否是首次运行
+        val firstRun = homeViewModel.isFirstRun()
+        isFirstRun = firstRun
+        isLoading = false
+    }
 
     if (isLoading) {
         // 加载中显示
@@ -51,12 +60,13 @@ fun MainApp() {
         }
     } else if (isFirstRun) {
         // 首次运行显示设置页
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("首次运行设置页面（需要实现 FirstRunScreen）")
-        }
+        com.love.diary.presentation.screens.setup.FirstRunScreen(
+            repository = repository,
+            onSetupComplete = {
+                isFirstRun = false
+            },
+            modifier = Modifier.fillMaxSize()
+        )
     } else {
         // 正常显示应用
         Scaffold(

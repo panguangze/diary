@@ -24,12 +24,14 @@ data class HomeUiState(
     val otherMoodText: String = "",
     val isLoading: Boolean = true,
     val coupleName: String? = null,
-    val startDate: String = ""
+    val startDate: String = "",
+    val currentDateDisplay: String = "",
+    val currentStreak: Int = 0
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: AppRepository
+    val repository: AppRepository  // 改为public，以便在MainActivity中访问
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -63,15 +65,21 @@ class HomeViewModel @Inject constructor(
                 }
             }
             
-            val today = LocalDate.now().toString()
+            val today = LocalDate.now()
+            val todayStr = today.toString()
+            val dayOfWeek = today.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+            
             config?.let {
-                val dayIndex = calculateDayIndex(it.startDate, today)
+                val dayIndex = calculateDayIndex(it.startDate, todayStr)
                 val dayDisplay = repository.getDayDisplay(dayIndex)
+                val currentStreak = calculateCurrentStreak() // 计算连续记录天数
                 
                 _uiState.update { state ->
                     state.copy(
                         dayIndex = dayIndex,
                         dayDisplay = dayDisplay,
+                        currentDateDisplay = "今天：$todayStr（$dayOfWeek）",
+                        currentStreak = currentStreak,
                         isLoading = false
                     )
                 }
@@ -81,6 +89,31 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false) }
             }
         }
+    }
+    
+    private suspend fun calculateCurrentStreak(): Int {
+        // 获取最近的记录，计算连续记录天数
+        val recentMoods = repository.getRecentMoods(30).first() // 获取最近30天的记录
+        if (recentMoods.isEmpty()) return 0
+        
+        var streak = 0
+        val today = LocalDate.now()
+        
+        // 从今天开始向前检查连续的记录天数
+        for (i in 0 until 30) {
+            val checkDate = today.minusDays(i.toLong())
+            val checkDateStr = checkDate.toString()
+            
+            val hasRecord = recentMoods.any { it.date == checkDateStr }
+            if (hasRecord) {
+                streak++
+            } else {
+                // 如果某一天没有记录，连续记录中断
+                break
+            }
+        }
+        
+        return streak
     }
 
     fun selectMood(moodType: MoodType) {
@@ -153,6 +186,10 @@ class HomeViewModel @Inject constructor(
                 )
             }
         }
+    }
+    
+    suspend fun isFirstRun(): Boolean {
+        return repository.isFirstRun()
     }
     
     private fun calculateDayIndex(startDate: String, targetDate: String): Int {
