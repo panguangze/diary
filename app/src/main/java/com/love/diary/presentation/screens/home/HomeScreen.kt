@@ -68,7 +68,8 @@ fun HomeScreen(
                             fontSize = 40.sp,
                             fontWeight = FontWeight.Bold
                         ),
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))

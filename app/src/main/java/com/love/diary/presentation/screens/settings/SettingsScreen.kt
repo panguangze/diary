@@ -14,6 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.AlertDialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.presentation.viewmodel.SettingsViewModel
 import java.time.LocalDate
@@ -25,6 +30,13 @@ fun SettingsScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    // 添加状态来控制弹窗
+    var showDatePickerDialog by remember { mutableStateOf(false) }
+    var showNameEditDialog by remember { mutableStateOf(false) }
+    var showNicknameEditDialog by remember { mutableStateOf(false) }
+    var tempInput by remember { mutableStateOf("") }
+    var currentEditType by remember { mutableStateOf("") } // "start_date", "couple_name", "partner_nickname"
 
     LazyColumn(
         modifier = modifier
@@ -49,7 +61,11 @@ fun SettingsScreen(
                     icon = Icons.Default.Favorite,
                     title = "我们的开始",
                     subtitle = uiState.startDate ?: "未设置",
-                    onClick = { /* 打开日期选择器 */ }
+                    onClick = { 
+                        currentEditType = "start_date"
+                        tempInput = uiState.startDate ?: ""
+                        showDatePickerDialog = true
+                    }
                 )
 
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -58,7 +74,11 @@ fun SettingsScreen(
                     icon = Icons.Default.Person,
                     title = "我们的名字",
                     subtitle = uiState.coupleName ?: "未设置",
-                    onClick = { /* 打开名称编辑 */ }
+                    onClick = { 
+                        currentEditType = "couple_name"
+                        tempInput = uiState.coupleName ?: ""
+                        showNameEditDialog = true
+                    }
                 )
 
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))
@@ -67,7 +87,11 @@ fun SettingsScreen(
                     icon = Icons.Default.Face,
                     title = "她的昵称",
                     subtitle = uiState.partnerNickname ?: "未设置",
-                    onClick = { /* 打开昵称编辑 */ }
+                    onClick = { 
+                        currentEditType = "partner_nickname"
+                        tempInput = uiState.partnerNickname ?: ""
+                        showNicknameEditDialog = true
+                    }
                 )
             }
         }
@@ -165,6 +189,101 @@ fun SettingsScreen(
         }
     }
 }
+    // 添加日期选择对话框
+    if (showDatePickerDialog) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePickerDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.updateStartDate(tempInput)
+                    showDatePickerDialog = false
+                }) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePickerDialog = false }) {
+                    Text("取消")
+                }
+            }
+        ) {
+            DatePicker(
+                selectedDate = LocalDate.parse(tempInput).toEpochDay(),
+                onSelectionChanged = { epochDay ->
+                    val selectedDate = LocalDate.ofEpochDay(epochDay)
+                    tempInput = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                }
+            )
+        }
+    }
+
+    // 添加名字编辑对话框
+    if (showNameEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showNameEditDialog = false },
+            title = { Text("编辑我们的名字") },
+            text = {
+                OutlinedTextField(
+                    value = tempInput,
+                    onValueChange = { tempInput = it },
+                    label = { Text("名字") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (tempInput.isNotBlank()) {
+                            viewModel.updateCoupleName(tempInput)
+                            showNameEditDialog = false
+                        }
+                    },
+                    enabled = tempInput.isNotBlank()
+                ) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNameEditDialog = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
+    // 添加昵称编辑对话框
+    if (showNicknameEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showNicknameEditDialog = false },
+            title = { Text("编辑她的昵称") },
+            text = {
+                OutlinedTextField(
+                    value = tempInput,
+                    onValueChange = { tempInput = it },
+                    label = { Text("昵称") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (tempInput.isNotBlank()) {
+                            viewModel.updatePartnerNickname(tempInput)
+                            showNicknameEditDialog = false
+                        }
+                    },
+                    enabled = tempInput.isNotBlank()
+                ) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNicknameEditDialog = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
 
 @Composable
 fun SettingsCard(
