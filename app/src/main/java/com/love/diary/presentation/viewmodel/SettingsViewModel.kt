@@ -137,7 +137,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val config = repository.getAppConfig()
             val updated = if (config != null) {
-                config.copy(startDate = date)
+                config.copy(
+                    startDate = date,
+                    updatedAt = System.currentTimeMillis()
+                )
             } else {
                 AppConfigEntity(
                     id = 1,
@@ -160,7 +163,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val config = repository.getAppConfig()
             val updated = if (config != null) {
-                config.copy(coupleName = name)
+                config.copy(
+                    coupleName = name,
+                    updatedAt = System.currentTimeMillis()
+                )
             } else {
                 AppConfigEntity(
                     id = 1,
@@ -183,7 +189,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val config = repository.getAppConfig()
             val updated = if (config != null) {
-                config.copy(partnerNickname = nickname)
+                config.copy(
+                    partnerNickname = nickname,
+                    updatedAt = System.currentTimeMillis()
+                )
             } else {
                 AppConfigEntity(
                     id = 1,
