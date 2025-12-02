@@ -158,7 +158,7 @@ fun SettingsScreen(
                     icon = Icons.Default.Upload,
                     title = "导入记录",
                     subtitle = "从备份文件恢复",
-                    onClick = { importLauncher.launch(\"*/*\") }
+                    onClick = { importLauncher.launch("*/*") }
                 )
 
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))
