@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.presentation.viewmodel.HistoryViewModel
@@ -25,7 +25,7 @@ import java.util.*
 
 @Composable
 fun HistoryScreen(
-    viewModel: HistoryViewModel = viewModel(),
+    viewModel: HistoryViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val moodRecords by viewModel.moodRecords.collectAsState()

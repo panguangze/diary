@@ -3,49 +3,51 @@
 *.class
 *.o
 *.obj
+*.exe
+*.dll
 *.so
 *.a
-*.dll
-*.exe
 *.out
 
 # Dependencies
-build/
-target/
-.gradle/
-.mypy_cache/
-.pytest_cache/
-__pycache__/
 node_modules/
 venv/
 .venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+target/
+.gradle/
 
-# Logs and temp files
-*.log
-*.tmp
-*.swp
+# Build directories (common in Android/Java projects)
+build/
+dist/
 
-# Environment
-.env
-.env.local
-*.env.*
-
-# Editors
+# Editor/IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
+*.tmp
 
 # System files
 .DS_Store
 Thumbs.db
 
-# Coverage
+# Environment files
+.env
+.env.local
+*.env.*
+
+# Logs
+*.log
+
+# Coverage reports
 coverage/
 htmlcov/
 .coverage
 
-# Common compressed files
+# Compressed files
 *.zip
 *.gz
 *.tar

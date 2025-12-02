@@ -17,7 +17,9 @@ import com.love.diary.presentation.screens.history.HistoryScreen
 import com.love.diary.presentation.screens.statistics.StatisticsScreen
 import com.love.diary.presentation.screens.settings.SettingsScreen
 import com.love.diary.ui.theme.LoveDiaryTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
