@@ -16,14 +16,14 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.model.MoodType
 import com.love.diary.presentation.viewmodel.StatisticsViewModel
 import kotlin.math.roundToInt
 
 @Composable
 fun StatisticsScreen(
-    viewModel: StatisticsViewModel = viewModel(),
+    viewModel: StatisticsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
