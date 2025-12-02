@@ -26,6 +26,9 @@ import java.time.format.DateTimeFormatter
 import androidx.compose.material3.rememberDatePickerState
 import java.time.Instant
 import java.time.ZoneId
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.net.Uri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +44,15 @@ fun SettingsScreen(
     var showNicknameEditDialog by remember { mutableStateOf(false) }
     var tempInput by remember { mutableStateOf("") }
     var currentEditType by remember { mutableStateOf("") } // "start_date", "couple_name", "partner_nickname"
+    
+    // 添加文件选择器
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.importDataFromUri(it)
+        }
+    }
 
     LazyColumn(
         modifier = modifier
@@ -146,7 +158,7 @@ fun SettingsScreen(
                     icon = Icons.Default.Upload,
                     title = "导入记录",
                     subtitle = "从备份文件恢复",
-                    onClick = viewModel::importData
+                    onClick = { importLauncher.launch(\"*/*\") }
                 )
 
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))

@@ -110,6 +110,21 @@ class SettingsViewModel @Inject constructor(
         // 实际的导入会在Activity中处理
     }
 
+    fun importDataFromUri(uri: android.net.Uri) {
+        viewModelScope.launch {
+            try {
+                val result = backupManager.importData(uri)
+                if (result.isSuccess) {
+                    // 导入成功，刷新UI状态
+                    loadSettings()
+                    // 通知其他组件配置已更改
+                }
+            } catch (e: Exception) {
+                // 处理错误
+            }
+        }
+    }
+
     fun resetData() {
         viewModelScope.launch {
             // 清空所有数据

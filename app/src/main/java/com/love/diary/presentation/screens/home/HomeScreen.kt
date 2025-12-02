@@ -57,7 +57,8 @@ fun HomeScreen(
                     Text(
                         text = "「${uiState.coupleName ?: "我们"}」已经在一起",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -77,7 +78,8 @@ fun HomeScreen(
                     Text(
                         text = "= ${uiState.dayDisplay}",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
