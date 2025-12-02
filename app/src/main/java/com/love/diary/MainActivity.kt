@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -16,6 +17,8 @@ import com.love.diary.presentation.screens.home.HomeScreen
 import com.love.diary.presentation.screens.history.HistoryScreen
 import com.love.diary.presentation.screens.statistics.StatisticsScreen
 import com.love.diary.presentation.screens.settings.SettingsScreen
+import com.love.diary.presentation.screens.setup.FirstRunScreen
+import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -40,7 +43,7 @@ fun MainApp() {
     // 检查是否需要首次运行设置
     var isFirstRun by remember { mutableStateOf(true) } // 将在LaunchedEffect中更新
     var isLoading by remember { mutableStateOf(true) }   // 将在LaunchedEffect中更新
-    val homeViewModel = hiltViewModel<com.love.diary.presentation.viewmodel.HomeViewModel>()
+    val homeViewModel = hiltViewModel<HomeViewModel>()
     val repository = homeViewModel.repository // 获取repository实例
 
     LaunchedEffect(Unit) {
@@ -60,7 +63,7 @@ fun MainApp() {
         }
     } else if (isFirstRun) {
         // 首次运行显示设置页
-        com.love.diary.presentation.screens.setup.FirstRunScreen(
+        FirstRunScreen(
             repository = repository,
             onSetupComplete = {
                 isFirstRun = false

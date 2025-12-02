@@ -2,6 +2,7 @@ package com.love.diary.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.firstOrNull
 import com.love.diary.data.model.MoodType
 import com.love.diary.data.repository.AppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -93,7 +94,7 @@ class HomeViewModel @Inject constructor(
     
     private suspend fun calculateCurrentStreak(): Int {
         // 获取最近的记录，计算连续记录天数
-        val recentMoods = repository.getRecentMoods(30).first() // 获取最近30天的记录
+        val recentMoods = repository.getRecentMoods(30).firstOrNull() ?: emptyList()
         if (recentMoods.isEmpty()) return 0
         
         var streak = 0
@@ -104,7 +105,7 @@ class HomeViewModel @Inject constructor(
             val checkDate = today.minusDays(i.toLong())
             val checkDateStr = checkDate.toString()
             
-            val hasRecord = recentMoods.any { it.date == checkDateStr }
+            val hasRecord = recentMoods.any { mood -> mood.date == checkDateStr }
             if (hasRecord) {
                 streak++
             } else {
