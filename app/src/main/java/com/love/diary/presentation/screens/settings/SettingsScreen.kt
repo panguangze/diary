@@ -53,6 +53,15 @@ fun SettingsScreen(
             viewModel.importDataFromUri(it)
         }
     }
+    
+    // 添加导出文件选择器
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.exportDataToUri(it)
+        }
+    }
 
     LazyColumn(
         modifier = modifier
@@ -148,8 +157,12 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Download,
                     title = "导出记录",
-                    subtitle = "导出所有心情记录",
-                    onClick = viewModel::exportData
+                    subtitle = "导出所有配置和记录",
+                    onClick = { 
+                        val timestamp = System.currentTimeMillis()
+                        val fileName = "love_diary_backup_${timestamp}.json"
+                        exportLauncher.launch(fileName) 
+                    }
                 )
 
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))

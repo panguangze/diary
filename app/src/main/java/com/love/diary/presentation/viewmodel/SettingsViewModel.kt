@@ -62,7 +62,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val config = repository.getAppConfig()
             config?.let {
-                val updated = it.copy(showMoodTip = show)
+                val updated = it.copy(
+                    showMoodTip = show,
+                    startTimeMinutes = it.startTimeMinutes, // 保留现有的startTimeMinutes
+                    updatedAt = System.currentTimeMillis()
+                )
                 repository.updateAppConfig(updated)
                 _uiState.update { state -> state.copy(showMoodTip = show) }
             }
@@ -73,7 +77,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val config = repository.getAppConfig()
             config?.let {
-                val updated = it.copy(showStreak = show)
+                val updated = it.copy(
+                    showStreak = show,
+                    startTimeMinutes = it.startTimeMinutes, // 保留现有的startTimeMinutes
+                    updatedAt = System.currentTimeMillis()
+                )
                 repository.updateAppConfig(updated)
                 _uiState.update { state -> state.copy(showStreak = show) }
             }
@@ -84,7 +92,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             val config = repository.getAppConfig()
             config?.let {
-                val updated = it.copy(showAnniversary = show)
+                val updated = it.copy(
+                    showAnniversary = show,
+                    startTimeMinutes = it.startTimeMinutes, // 保留现有的startTimeMinutes
+                    updatedAt = System.currentTimeMillis()
+                )
                 repository.updateAppConfig(updated)
                 _uiState.update { state -> state.copy(showAnniversary = show) }
             }
@@ -95,6 +107,20 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val result = backupManager.exportData()
+                if (result.isSuccess) {
+                    // 导出成功，可以显示通知或提示
+                    // 这里可以添加成功提示逻辑
+                }
+            } catch (e: Exception) {
+                // 处理错误
+            }
+        }
+    }
+
+    fun exportDataToUri(uri: android.net.Uri) {
+        viewModelScope.launch {
+            try {
+                val result = backupManager.exportDataToUri(uri)
                 if (result.isSuccess) {
                     // 导出成功，可以显示通知或提示
                     // 这里可以添加成功提示逻辑
@@ -139,12 +165,14 @@ class SettingsViewModel @Inject constructor(
             val updated = if (config != null) {
                 config.copy(
                     startDate = date,
+                    startTimeMinutes = config.startTimeMinutes, // 保留现有的startTimeMinutes
                     updatedAt = System.currentTimeMillis()
                 )
             } else {
                 AppConfigEntity(
                     id = 1,
                     startDate = date,
+                    startTimeMinutes = 0, // 默认值
                     coupleName = null,
                     partnerNickname = null,
                     showMoodTip = true,
@@ -165,12 +193,14 @@ class SettingsViewModel @Inject constructor(
             val updated = if (config != null) {
                 config.copy(
                     coupleName = name,
+                    startTimeMinutes = config.startTimeMinutes, // 保留现有的startTimeMinutes
                     updatedAt = System.currentTimeMillis()
                 )
             } else {
                 AppConfigEntity(
                     id = 1,
                     startDate = "", // startDate is non-null, so provide empty string as default
+                    startTimeMinutes = 0, // 默认值
                     coupleName = name,
                     partnerNickname = null,
                     showMoodTip = true,
@@ -191,12 +221,14 @@ class SettingsViewModel @Inject constructor(
             val updated = if (config != null) {
                 config.copy(
                     partnerNickname = nickname,
+                    startTimeMinutes = config.startTimeMinutes, // 保留现有的startTimeMinutes
                     updatedAt = System.currentTimeMillis()
                 )
             } else {
                 AppConfigEntity(
                     id = 1,
                     startDate = "", // startDate is non-null, so provide empty string as default
+                    startTimeMinutes = 0, // 默认值
                     coupleName = null,
                     partnerNickname = nickname,
                     showMoodTip = true,
