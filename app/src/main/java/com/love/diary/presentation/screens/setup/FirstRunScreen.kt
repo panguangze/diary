@@ -7,6 +7,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +20,8 @@ import com.love.diary.data.repository.AppRepository
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalMaterial3Api::class)
 
 @Composable
 fun FirstRunScreen(
@@ -94,11 +98,22 @@ fun FirstRunScreen(
                     
                     // 日期选择器
                     if (showDatePicker) {
+                        val datePickerState = rememberDatePickerState(
+                            initialSelectedDateMillis = LocalDate.parse(startDate).atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        )
+                        
                         DatePickerDialog(
                             onDismissRequest = { showDatePicker = false },
                             confirmButton = {
                                 TextButton(
                                     onClick = {
+                                        val selectedDate = datePickerState.selectedDateMillis
+                                        if (selectedDate != null) {
+                                            val newDate = java.util.Date(selectedDate).toInstant()
+                                                .atZone(java.time.ZoneId.systemDefault())
+                                                .toLocalDate()
+                                            startDate = newDate.format(dateFormatter)
+                                        }
                                         showDatePicker = false
                                     }
                                 ) {
@@ -116,13 +131,7 @@ fun FirstRunScreen(
                             }
                         ) {
                             DatePicker(
-                                selectedDateMillis = LocalDate.parse(startDate).atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
-                                onSelectionChanged = { newDateMillis ->
-                                    val newDate = java.util.Date(newDateMillis).toInstant()
-                                        .atZone(java.time.ZoneId.systemDefault())
-                                        .toLocalDate()
-                                    startDate = newDate.format(dateFormatter)
-                                }
+                                state = datePickerState
                             )
                         }
                     }
