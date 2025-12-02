@@ -40,6 +40,7 @@ class HomeViewModel @Inject constructor(
     
     init {
         loadInitialData()
+        observeConfigChanges()
     }
     
     private fun loadInitialData() {
@@ -88,6 +89,34 @@ class HomeViewModel @Inject constructor(
                 checkAnniversary(dayIndex)
             } ?: run {
                 _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+    
+    private fun observeConfigChanges() {
+        viewModelScope.launch {
+            repository.getAppConfigFlow().collect { config ->
+                config?.let {
+                    val today = LocalDate.now()
+                    val todayStr = today.toString()
+                    val dayOfWeek = today.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+                    
+                    val dayIndex = calculateDayIndex(it.startDate, todayStr)
+                    val dayDisplay = repository.getDayDisplay(dayIndex)
+                    val currentStreak = calculateCurrentStreak()
+                    
+                    _uiState.update { state ->
+                        state.copy(
+                            coupleName = it.coupleName,
+                            startDate = it.startDate,
+                            dayIndex = dayIndex,
+                            dayDisplay = dayDisplay,
+                            currentStreak = currentStreak
+                        )
+                    }
+                    
+                    checkAnniversary(dayIndex)
+                }
             }
         }
     }

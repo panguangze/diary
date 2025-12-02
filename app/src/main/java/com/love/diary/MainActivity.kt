@@ -3,6 +3,8 @@ package com.love.diary
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,11 +23,19 @@ import com.love.diary.presentation.screens.setup.FirstRunScreen
 import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
+import android.net.Uri
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private lateinit var importLauncher: ActivityResultLauncher<String>
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 初始化导入文件选择器
+        importLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            // 这里可以处理导入结果，如果需要的话
+        }
 
         setContent {
             LoveDiaryTheme {

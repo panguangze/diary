@@ -13,6 +13,9 @@ interface AppConfigDao {
     @Query("SELECT * FROM app_config WHERE id = 1")
     suspend fun getConfig(): AppConfigEntity?
     
+    @Query("SELECT * FROM app_config WHERE id = 1")
+    fun getConfigFlow(): kotlinx.coroutines.flow.Flow<AppConfigEntity?>
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertConfig(config: AppConfigEntity)
     

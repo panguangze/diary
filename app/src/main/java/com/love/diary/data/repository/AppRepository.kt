@@ -51,6 +51,10 @@ class AppRepository @Inject constructor(
         return appConfigDao.getConfig()
     }
 
+    fun getAppConfigFlow(): Flow<AppConfigEntity?> {
+        return appConfigDao.getConfigFlow()
+    }
+
     suspend fun saveAppConfig(config: AppConfigEntity) {
         appConfigDao.insertConfig(config)
     }
