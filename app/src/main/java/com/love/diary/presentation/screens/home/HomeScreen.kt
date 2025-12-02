@@ -165,7 +165,7 @@ fun HomeScreen(
                             onClick = {
                                 if (mood == MoodType.OTHER) {
                                     viewModel.updateOtherMoodText("")
-                                    // 这里应该触发显示对话框的逻辑
+                                    viewModel.showOtherMoodDialog() // 显示对话框
                                 } else {
                                     viewModel.selectMood(mood)
                                 }

@@ -66,7 +66,8 @@ class DataBackupManager(
                 }
 
                 // 清空现有记录并导入新记录
-                // TODO: 需要添加清空和批量插入方法到Repository
+                repository.clearAllMoodRecords()
+                repository.batchInsertMoodRecords(backupData.moodRecords)
 
                 Result.success(true)
             } ?: Result.failure(IOException("无法读取文件"))

@@ -163,6 +163,10 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(otherMoodText = text) }
     }
     
+    fun showOtherMoodDialog() {
+        _uiState.update { it.copy(showOtherMoodDialog = true) }
+    }
+    
     fun closeOtherMoodDialog() {
         _uiState.update { it.copy(showOtherMoodDialog = false, otherMoodText = "") }
     }

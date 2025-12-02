@@ -58,6 +58,10 @@ class AppRepository @Inject constructor(
     suspend fun updateAppConfig(config: AppConfigEntity) {
         appConfigDao.updateConfig(config)
     }
+    
+    suspend fun deleteAppConfig() {
+        appConfigDao.deleteConfig()
+    }
 
     // === Daily Mood ===
     suspend fun saveTodayMood(
@@ -117,15 +121,12 @@ class AppRepository @Inject constructor(
 
     // === 新增方法：清除所有心情记录（用于数据恢复） ===
     suspend fun clearAllMoodRecords() {
-        // 这里实现删除所有记录的逻辑
-        // 注意：实际实现需要根据你的 DAO 方法来定
-        // 可能需要添加一个新的 DAO 方法
+        dailyMoodDao.deleteAllMoods()
     }
 
     // === 新增方法：批量插入心情记录（用于数据恢复） ===
     suspend fun batchInsertMoodRecords(records: List<DailyMoodEntity>) {
-        // 这里实现批量插入逻辑
-        // 可能需要循环调用 insertMood 或添加新的 DAO 方法
+        dailyMoodDao.insertMoods(records)
     }
 
     // === Helper Methods ===
