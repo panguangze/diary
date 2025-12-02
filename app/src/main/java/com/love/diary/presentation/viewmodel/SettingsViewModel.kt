@@ -3,6 +3,7 @@ package com.love.diary.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.love.diary.data.backup.DataBackupManager
 import com.love.diary.data.database.entities.AppConfigEntity
 import com.love.diary.data.repository.AppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
