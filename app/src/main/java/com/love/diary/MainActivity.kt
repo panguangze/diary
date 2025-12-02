@@ -1,0 +1,150 @@
+package com.love.diary
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.love.diary.navigation.Screen
+import com.love.diary.presentation.screens.home.HomeScreen
+import com.love.diary.presentation.screens.history.HistoryScreen
+import com.love.diary.presentation.screens.statistics.StatisticsScreen
+import com.love.diary.presentation.screens.settings.SettingsScreen
+import com.love.diary.ui.theme.LoveDiaryTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            LoveDiaryTheme {
+                MainApp()
+            }
+        }
+    }
+}
+
+@Composable
+fun MainApp() {
+    val navController = rememberNavController()
+    var selectedTab by remember { mutableIntStateOf(0) }
+
+    // 检查是否需要首次运行设置
+    var isFirstRun by remember { mutableStateOf(false) } // 先设为false以便测试
+    var isLoading by remember { mutableStateOf(false) }   // 先设为false以便测试
+
+    if (isLoading) {
+        // 加载中显示
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    } else if (isFirstRun) {
+        // 首次运行显示设置页
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("首次运行设置页面（需要实现 FirstRunScreen）")
+        }
+    } else {
+        // 正常显示应用
+        Scaffold(
+            bottomBar = {
+                BottomNavigationBar(
+                    selectedTab = selectedTab,
+                    onTabSelected = { index ->
+                        selectedTab = index
+                        when (index) {
+                            0 -> navController.navigate(Screen.Home.route) {
+                                // 防止重复添加相同的目标
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                            1 -> navController.navigate(Screen.History.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                            2 -> navController.navigate(Screen.Statistics.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                            3 -> navController.navigate(Screen.Settings.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Home.route,
+                modifier = Modifier.padding(paddingValues)
+            ) {
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                composable(Screen.History.route) {
+                    HistoryScreen(
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                composable(Screen.Statistics.route) {
+                    StatisticsScreen(
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                composable(Screen.Settings.route) {
+                    SettingsScreen(
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomNavigationBar(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit
+) {
+    val items = listOf(
+        Screen.Home,
+        Screen.History,
+        Screen.Statistics,
+        Screen.Settings
+    )
+
+    NavigationBar {
+        items.forEachIndexed { index, screen ->
+            NavigationBarItem(
+                selected = selectedTab == index,
+                onClick = { onTabSelected(index) },
+                icon = {
+                    if (selectedTab == index) {
+                        Icon(screen.selectedIcon, contentDescription = screen.title)
+                    } else {
+                        Icon(screen.unselectedIcon, contentDescription = screen.title)
+                    }
+                },
+                label = { Text(screen.title) }
+            )
+        }
+    }
+}

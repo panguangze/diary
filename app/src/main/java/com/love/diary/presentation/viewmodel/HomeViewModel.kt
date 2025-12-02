@@ -1,0 +1,163 @@
+package com.love.diary.presentation.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.love.diary.data.model.MoodType
+import com.love.diary.data.repository.AppRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import javax.inject.Inject
+
+data class HomeUiState(
+    val dayIndex: Int = 0,
+    val dayDisplay: String = "",
+    val todayMood: MoodType? = null,
+    val todayMoodText: String? = null,
+    val showAnniversaryPopup: Boolean = false,
+    val anniversaryMessage: String = "",
+    val showOtherMoodDialog: Boolean = false,
+    val otherMoodText: String = "",
+    val isLoading: Boolean = true,
+    val coupleName: String? = null,
+    val startDate: String = ""
+)
+
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val repository: AppRepository
+) : ViewModel() {
+    
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    
+    init {
+        loadInitialData()
+    }
+    
+    private fun loadInitialData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            
+            val config = repository.getAppConfig()
+            config?.let {
+                _uiState.update { state ->
+                    state.copy(
+                        coupleName = it.coupleName,
+                        startDate = it.startDate
+                    )
+                }
+            }
+            
+            val todayMood = repository.getTodayMood()
+            todayMood?.let {
+                _uiState.update { state ->
+                    state.copy(
+                        todayMood = MoodType.fromCode(it.moodTypeCode),
+                        todayMoodText = it.moodText
+                    )
+                }
+            }
+            
+            val today = LocalDate.now().toString()
+            config?.let {
+                val dayIndex = calculateDayIndex(it.startDate, today)
+                val dayDisplay = repository.getDayDisplay(dayIndex)
+                
+                _uiState.update { state ->
+                    state.copy(
+                        dayIndex = dayIndex,
+                        dayDisplay = dayDisplay,
+                        isLoading = false
+                    )
+                }
+                
+                checkAnniversary(dayIndex)
+            } ?: run {
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    fun selectMood(moodType: MoodType) {
+        viewModelScope.launch {
+            if (moodType == MoodType.OTHER) {
+                _uiState.update { it.copy(showOtherMoodDialog = true) }
+            } else {
+                // 真实保存到数据库
+                repository.saveTodayMood(moodType)
+
+                // 更新UI状态
+                _uiState.update {
+                    it.copy(
+                        todayMood = moodType,
+                        todayMoodText = null
+                    )
+                }
+
+                // 显示保存成功反馈
+                // TODO: 可以使用Snackbar显示
+            }
+        }
+    }
+
+    fun saveOtherMood(text: String) {
+        viewModelScope.launch {
+            if (text.isNotBlank()) {
+                // 真实保存到数据库
+                repository.saveTodayMood(MoodType.OTHER, text)
+
+                _uiState.update { state ->
+                    state.copy(
+                        todayMood = MoodType.OTHER,
+                        todayMoodText = text,
+                        showOtherMoodDialog = false,
+                        otherMoodText = ""
+                    )
+                }
+
+                // 显示保存成功反馈
+            }
+        }
+    }
+    
+    fun updateOtherMoodText(text: String) {
+        _uiState.update { it.copy(otherMoodText = text) }
+    }
+    
+    fun closeOtherMoodDialog() {
+        _uiState.update { it.copy(showOtherMoodDialog = false, otherMoodText = "") }
+    }
+    
+    fun dismissAnniversaryPopup() {
+        _uiState.update { it.copy(showAnniversaryPopup = false) }
+    }
+    
+    private fun checkAnniversary(dayIndex: Int) {
+        if (dayIndex % 100 == 0) {
+            val message = when (dayIndex) {
+                100 -> "🎉 今天是我们在一起的第 100 天！\n谢谢你一直在这段关系里这么认真。"
+                200 -> "🎉 这是我们一起走过的第 2 个100天，\n期待下一个100天里，我们可以见到彼此更多次。"
+                300 -> "🎉 300天的陪伴！\n每一个日夜都让我们的感情更加深厚。"
+                else -> "🎉 今天是我们在一起的第 $dayIndex 天！\n感谢你一直以来的陪伴。"
+            }
+            
+            _uiState.update { state ->
+                state.copy(
+                    showAnniversaryPopup = true,
+                    anniversaryMessage = message
+                )
+            }
+        }
+    }
+    
+    private fun calculateDayIndex(startDate: String, targetDate: String): Int {
+        val start = LocalDate.parse(startDate)
+        val target = LocalDate.parse(targetDate)
+        return start.until(target).days + 1
+    }
+}
