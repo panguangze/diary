@@ -23,7 +23,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.presentation.viewmodel.SettingsViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.compose.material3.rememberDatePickerState
+import java.time.Instant
+import java.time.ZoneId
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
@@ -191,13 +195,38 @@ fun SettingsScreen(
     
     // 添加日期选择对话框
     if (showDatePickerDialog) {
+        val formatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+        val initialMillis = remember(uiState.startDate) {
+            uiState.startDate?.let {
+                runCatching {
+                    LocalDate.parse(it, formatter)
+                        .atStartOfDay()
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
+                        .toEpochMilli()
+                }.getOrNull()
+            }
+        }
+
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = initialMillis ?: System.currentTimeMillis()
+        )
+
         DatePickerDialog(
             onDismissRequest = { showDatePickerDialog = false },
             confirmButton = {
-                TextButton(onClick = {
-                    viewModel.updateStartDate(tempInput)
-                    showDatePickerDialog = false
-                }) {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val selectedDate = Instant.ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                                .format(formatter)
+                            viewModel.updateStartDate(selectedDate)
+                            showDatePickerDialog = false
+                        }
+                    }
+                ) {
                     Text("确定")
                 }
             },
@@ -207,23 +236,10 @@ fun SettingsScreen(
                 }
             }
         ) {
-            DatePicker(
-                selectedDate = if(tempInput.isNotEmpty()) {
-                    try {
-                        LocalDate.parse(tempInput).toEpochDay()
-                    } catch (e: Exception) {
-                        LocalDate.now().toEpochDay()
-                    }
-                } else {
-                    LocalDate.now().toEpochDay()
-                },
-                onSelectionChanged = { epochDay ->
-                    val selectedDate = LocalDate.ofEpochDay(epochDay)
-                    tempInput = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-                }
-            )
+            DatePicker(state = datePickerState)
         }
     }
+
 
     // 添加名字编辑对话框
     if (showNameEditDialog) {

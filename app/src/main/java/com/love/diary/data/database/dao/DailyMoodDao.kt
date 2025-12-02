@@ -55,7 +55,10 @@ interface DailyMoodDao {
         val moodTypeCode: String,
         val count: Int
     )
-
+    data class DailyMoodScore(
+        val date: String,
+        val moodScore: Int
+    )
     @Query("""
         SELECT moodTypeCode, COUNT(*) as count 
         FROM daily_mood 
@@ -80,8 +83,5 @@ interface DailyMoodDao {
         endDate: String
     ): List<DailyMoodScore>
 
-    data class DailyMoodScore(
-        val date: String,
-        val moodScore: Int
-    )
+
 }
