@@ -41,7 +41,7 @@ fun FirstRunScreen(
     // 默认使用今天的日期作为初始值
     LaunchedEffect(Unit) {
         if (startDate.isEmpty()) {
-            startDate = LocalDate.now().toString()
+            startDate = LocalDate.now().format(dateFormatter)
         }
     }
 
@@ -98,8 +98,19 @@ fun FirstRunScreen(
                     
                     // 日期选择器
                     if (showDatePicker) {
+                        // 确保有有效的日期用于初始化日期选择器
+                        val initialDate = try {
+                            if (startDate.isNotEmpty()) {
+                                LocalDate.parse(startDate)
+                            } else {
+                                LocalDate.now()
+                            }
+                        } catch (e: Exception) {
+                            LocalDate.now()
+                        }
+                        
                         val datePickerState = rememberDatePickerState(
-                            initialSelectedDateMillis = LocalDate.parse(startDate).atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                            initialSelectedDateMillis = initialDate.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
                         )
                         
                         DatePickerDialog(
