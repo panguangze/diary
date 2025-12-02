@@ -1,11 +1,11 @@
+```
 # Compiled and build artifacts
 *.class
 *.o
 *.obj
-*.exe
-*.dll
 *.so
-*.a
+*.dll
+*.exe
 *.out
 
 # Dependencies
@@ -22,6 +22,7 @@ target/
 *.log
 *.tmp
 *.swp
+*.swo
 
 # Environment
 .env
@@ -31,8 +32,6 @@ target/
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # System files
 .DS_Store
@@ -43,7 +42,7 @@ coverage/
 htmlcov/
 .coverage
 
-# Compressed files
+# Common compressed files
 *.zip
 *.gz
 *.tar
@@ -66,3 +65,4 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+```

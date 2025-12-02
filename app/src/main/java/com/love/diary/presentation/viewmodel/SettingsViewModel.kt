@@ -117,4 +117,67 @@ class SettingsViewModel @Inject constructor(
             repository.deleteAppConfig()
         }
     }
+    
+    fun updateStartDate(date: String) {
+        viewModelScope.launch {
+            val config = repository.getAppConfig()
+            val updated = if (config != null) {
+                config.copy(startDate = date)
+            } else {
+                AppConfigEntity(
+                    id = 1,
+                    startDate = date,
+                    coupleName = null,
+                    partnerNickname = null,
+                    showMoodTip = true,
+                    showStreak = true,
+                    showAnniversary = true
+                )
+            }
+            repository.updateAppConfig(updated)
+            _uiState.update { state -> state.copy(startDate = date) }
+        }
+    }
+    
+    fun updateCoupleName(name: String) {
+        viewModelScope.launch {
+            val config = repository.getAppConfig()
+            val updated = if (config != null) {
+                config.copy(coupleName = name)
+            } else {
+                AppConfigEntity(
+                    id = 1,
+                    startDate = null,
+                    coupleName = name,
+                    partnerNickname = null,
+                    showMoodTip = true,
+                    showStreak = true,
+                    showAnniversary = true
+                )
+            }
+            repository.updateAppConfig(updated)
+            _uiState.update { state -> state.copy(coupleName = name) }
+        }
+    }
+    
+    fun updatePartnerNickname(nickname: String) {
+        viewModelScope.launch {
+            val config = repository.getAppConfig()
+            val updated = if (config != null) {
+                config.copy(partnerNickname = nickname)
+            } else {
+                AppConfigEntity(
+                    id = 1,
+                    startDate = null,
+                    coupleName = null,
+                    partnerNickname = nickname,
+                    showMoodTip = true,
+                    showStreak = true,
+                    showAnniversary = true
+                )
+            }
+            repository.updateAppConfig(updated)
+            _uiState.update { state -> state.copy(partnerNickname = nickname) }
+        }
+    }
 }
