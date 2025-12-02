@@ -122,7 +122,7 @@ fun HomeScreen(
 
             // 日期显示
             Text(
-                text = "今天：2024-01-01（星期一）", // TODO: 从 ViewModel 获取真实日期
+                text = uiState.currentDateDisplay, // 从 ViewModel 获取真实日期
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -130,7 +130,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "🔥 连续记录：0天", // TODO: 从 ViewModel 获取真实数据
+                text = "🔥 连续记录：${uiState.currentStreak}天", // 从 ViewModel 获取真实数据
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
