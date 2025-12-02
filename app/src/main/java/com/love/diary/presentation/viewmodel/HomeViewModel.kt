@@ -229,6 +229,8 @@ class HomeViewModel @Inject constructor(
     private fun calculateDayIndex(startDate: String, targetDate: String): Int {
         val start = LocalDate.parse(startDate)
         val target = LocalDate.parse(targetDate)
-        return start.until(target).days + 1
+        // 使用ChronoUnit计算天数差异，这能更准确地处理所有日期边界情况
+        val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(start, target) + 1
+        return daysBetween.toInt()
     }
 }
