@@ -80,21 +80,32 @@ fun FirstRunScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    // 恋爱开始日期
-                    OutlinedTextField(
-                        value = startDate,
-                        onValueChange = { /* 只允许通过日期选择器修改 */ },
-                        label = { Text("恋爱开始日期") },
-                        placeholder = { Text("例如：2023-06-01") },
-                        leadingIcon = {
-                            Icon(Icons.Default.DateRange, contentDescription = null)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDatePicker = true },
-                        singleLine = true,
-                        readOnly = true  // 只读，只能通过日期选择器修改
-                    )
+                    // 恋爱开始日期显示
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = startDate,
+                            onValueChange = { /* 只允许通过日期选择器修改 */ },
+                            label = { Text("恋爱开始日期") },
+                            placeholder = { Text("例如：2023-06-01") },
+                            leadingIcon = {
+                                Icon(Icons.Default.DateRange, contentDescription = null)
+                            },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            readOnly = true  // 只读，只能通过日期选择器修改
+                        )
+                        
+                        Button(
+                            onClick = { showDatePicker = true },
+                            modifier = Modifier.padding(top = 16.dp)
+                        ) {
+                            Text("选择日期")
+                        }
+                    }
                     
                     // 日期选择器
                     if (showDatePicker) {
