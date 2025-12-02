@@ -188,7 +188,7 @@ fun SettingsScreen(
             )
         }
     }
-}
+    
     // 添加日期选择对话框
     if (showDatePickerDialog) {
         DatePickerDialog(
@@ -208,7 +208,15 @@ fun SettingsScreen(
             }
         ) {
             DatePicker(
-                selectedDate = LocalDate.parse(tempInput).toEpochDay(),
+                selectedDate = if(tempInput.isNotEmpty()) {
+                    try {
+                        LocalDate.parse(tempInput).toEpochDay()
+                    } catch (e: Exception) {
+                        LocalDate.now().toEpochDay()
+                    }
+                } else {
+                    LocalDate.now().toEpochDay()
+                },
                 onSelectionChanged = { epochDay ->
                     val selectedDate = LocalDate.ofEpochDay(epochDay)
                     tempInput = selectedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
@@ -284,6 +292,7 @@ fun SettingsScreen(
             }
         )
     }
+}
 
 @Composable
 fun SettingsCard(
