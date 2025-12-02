@@ -54,6 +54,32 @@ class DataBackupManager(
         }
     }
 
+    suspend fun exportDataToUri(uri: Uri): Result<Boolean> = withContext(Dispatchers.IO) {
+        try {
+            // 获取数据
+            val config = repository.getAppConfig()
+            val records = repository.getAllMoodRecords()
+
+            val backupData = BackupData(
+                backupDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()),
+                appConfig = config,
+                moodRecords = records
+            )
+
+            // 转换为JSON
+            val jsonData = gson.toJson(backupData)
+
+            // 写入到URI指定的文件
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                outputStream.write(jsonData.toByteArray())
+            }
+
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun importData(uri: Uri): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
             context.contentResolver.openInputStream(uri)?.use { inputStream ->
