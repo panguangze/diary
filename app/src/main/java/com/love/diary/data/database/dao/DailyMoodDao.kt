@@ -23,8 +23,11 @@ interface DailyMoodDao {
     @Query("SELECT * FROM daily_mood WHERE deleted = 0 ORDER BY date DESC LIMIT :limit OFFSET :offset")
     fun getRecentMoods(limit: Int, offset: Int): Flow<List<DailyMoodEntity>>
 
-    @Query("SELECT COUNT(*) FROM daily_mood WHERE deleted = 0")
-    suspend fun getTotalRecordCount(): Int
+    @Query("DELETE FROM daily_mood WHERE deleted = 0")
+    suspend fun deleteAllMoods()
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMoods(moods: List<DailyMoodEntity>)
 
     @Query("""
         SELECT * FROM daily_mood 

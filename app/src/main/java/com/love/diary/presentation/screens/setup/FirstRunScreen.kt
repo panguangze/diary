@@ -24,13 +24,21 @@ fun FirstRunScreen(
     onSetupComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var startDate by remember { mutableStateOf(LocalDate.now().toString()) }
+    var startDate by remember { mutableStateOf("") }
     var coupleName by remember { mutableStateOf("") }
     var yourName by remember { mutableStateOf("") }
     var partnerName by remember { mutableStateOf("") }
-
+    var showDatePicker by remember { mutableStateOf(false) }
+    
     val coroutineScope = rememberCoroutineScope()
     val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+    
+    // 默认使用今天的日期作为初始值
+    LaunchedEffect(Unit) {
+        if (startDate.isEmpty()) {
+            startDate = LocalDate.now().toString()
+        }
+    }
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -70,15 +78,53 @@ fun FirstRunScreen(
                     // 恋爱开始日期
                     OutlinedTextField(
                         value = startDate,
-                        onValueChange = { startDate = it },
+                        onValueChange = { /* 只允许通过日期选择器修改 */ },
                         label = { Text("恋爱开始日期") },
                         placeholder = { Text("例如：2023-06-01") },
                         leadingIcon = {
                             Icon(Icons.Default.DateRange, contentDescription = null)
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true },
+                        singleLine = true,
+                        readOnly = true  // 只读，只能通过日期选择器修改
                     )
+                    
+                    // 日期选择器
+                    if (showDatePicker) {
+                        DatePickerDialog(
+                            onDismissRequest = { showDatePicker = false },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showDatePicker = false
+                                    }
+                                ) {
+                                    Text("确定")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(
+                                    onClick = {
+                                        showDatePicker = false
+                                    }
+                                ) {
+                                    Text("取消")
+                                }
+                            }
+                        ) {
+                            DatePicker(
+                                selectedDateMillis = LocalDate.parse(startDate).atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli(),
+                                onSelectionChanged = { newDateMillis ->
+                                    val newDate = java.util.Date(newDateMillis).toInstant()
+                                        .atZone(java.time.ZoneId.systemDefault())
+                                        .toLocalDate()
+                                    startDate = newDate.format(dateFormatter)
+                                }
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
