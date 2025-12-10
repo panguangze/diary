@@ -24,6 +24,13 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.Home
     )
     
+    data object Habits : Screen(
+        route = "habits",
+        title = "打卡",
+        selectedIcon = Icons.Filled.Home,
+        unselectedIcon = Icons.Outlined.Home
+    )
+    
     data object History : Screen(
         route = "history",
         title = "记录",
