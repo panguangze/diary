@@ -20,6 +20,8 @@ import com.love.diary.data.model.HabitType
 import java.time.LocalDate
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -29,6 +31,7 @@ fun HabitListScreen(
     habitRepository: HabitRepository = remember { HabitRepository.getInstance(context) }
 ) {
     val habits by habitRepository.getAllHabits().collectAsState(initial = emptyList())
+    val coroutineScope = rememberCoroutineScope()
     
     Column(
         modifier = modifier
@@ -59,8 +62,10 @@ fun HabitListScreen(
             items(habits) { habit ->
                 HabitItemCard(
                     habit = habit,
-                    onToggle = { 
-                        habitRepository.toggleHabit(it)
+                    onToggle = { habitId ->
+                        coroutineScope.launch {
+                            habitRepository.toggleHabit(habitId)
+                        }
                     },
                     onClick = { /* 导航到详情页 */ }
                 )
