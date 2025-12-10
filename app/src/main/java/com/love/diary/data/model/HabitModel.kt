@@ -26,6 +26,7 @@ data class Habit(
     val isActive: Boolean = true,
     val color: String = "#6200EE", // 默认主题色
     val icon: String = "🎯", // 默认图标
+    val tags: String = "", // 逗号分隔的标签列表
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )

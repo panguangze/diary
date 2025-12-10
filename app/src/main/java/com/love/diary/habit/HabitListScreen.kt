@@ -2,9 +2,12 @@ package com.love.diary.habit
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +25,7 @@ import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import java.time.format.DateTimeParseException
 
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -32,6 +36,9 @@ fun HabitListScreen(
 ) {
     val habits by habitRepository.getAllHabits().collectAsState(initial = emptyList())
     val coroutineScope = rememberCoroutineScope()
+    
+    // 添加习惯对话框状态
+    var showAddHabitDialog by remember { mutableStateOf(false) }
     
     Column(
         modifier = modifier
@@ -50,7 +57,7 @@ fun HabitListScreen(
             )
             
             FloatingActionButton(
-                onClick = { /* 添加新习惯的逻辑 */ }
+                onClick = { showAddHabitDialog = true }
             ) {
                 Icon(Icons.Default.Add, contentDescription = "添加打卡")
             }
@@ -72,6 +79,19 @@ fun HabitListScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
+    }
+    
+    // 添加习惯对话框
+    if (showAddHabitDialog) {
+        AddHabitDialog(
+            onAdd = { habit ->
+                coroutineScope.launch {
+                    habitRepository.insertHabit(habit)
+                }
+                showAddHabitDialog = false
+            },
+            onDismiss = { showAddHabitDialog = false }
+        )
     }
 }
 
@@ -129,6 +149,21 @@ fun HabitItemCard(
                         fontSize = 12.sp,
                         color = if (habit.isCompletedToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                     )
+                    
+                    // 显示标签
+                    if (habit.tags.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyRow {
+                            items(habit.tags.split(",").filter { it.isNotEmpty() }) { tag ->
+                                InputChip(
+                                    selected = false,
+                                    onClick = { /* 点击标签的操作 */ },
+                                    label = { Text(tag) }
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                            }
+                        }
+                    }
                 }
                 
                 Button(
@@ -139,4 +174,177 @@ fun HabitItemCard(
             }
         }
     }
+}
+
+@Composable
+fun AddHabitDialog(
+    onAdd: (Habit) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var habitName by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf(HabitType.POSITIVE) }
+    var targetDate by remember { mutableStateOf("") }
+    var buttonLabel by remember { mutableStateOf("打卡") }
+    var tagText by remember { mutableStateOf("") }
+    var tags by remember { mutableStateOf(emptyList<String>()) }
+    
+    // 验证日期格式
+    fun isValidDate(dateString: String): Boolean {
+        return try {
+            LocalDate.parse(dateString)
+            true
+        } catch (e: DateTimeParseException) {
+            false
+        }
+    }
+    
+    // 添加标签
+    fun addTag() {
+        if (tagText.isNotBlank() && !tags.contains(tagText.trim())) {
+            tags = tags + listOf(tagText.trim())
+            tagText = ""
+        }
+    }
+    
+    // 移除标签
+    fun removeTag(tag: String) {
+        tags = tags.filter { it != tag }
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("添加打卡事项") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = habitName,
+                    onValueChange = { habitName = it },
+                    label = { Text("打卡名称") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("打卡类型", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // 打卡类型选择
+                Column {
+                    RadioButton(
+                        selected = selectedType == HabitType.POSITIVE,
+                        onClick = { selectedType = HabitType.POSITIVE }
+                    )
+                    Text(
+                        text = "正向打卡",
+                        modifier = Modifier.clickable { selectedType = HabitType.POSITIVE }
+                    )
+                    
+                    RadioButton(
+                        selected = selectedType == HabitType.COUNTDOWN,
+                        onClick = { selectedType = HabitType.COUNTDOWN }
+                    )
+                    Text(
+                        text = "倒计时打卡",
+                        modifier = Modifier.clickable { selectedType = HabitType.COUNTDOWN }
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                if (selectedType == HabitType.COUNTDOWN) {
+                    OutlinedTextField(
+                        value = targetDate,
+                        onValueChange = { targetDate = it },
+                        label = { Text("目标日期 (YYYY-MM-DD)") },
+                        placeholder = { Text("例如: 2024-12-31") },
+                        leadingIcon = {
+                            Icon(Icons.Default.DateRange, contentDescription = null)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = buttonLabel,
+                    onValueChange = { buttonLabel = it },
+                    label = { Text("按钮文字") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Text("标签", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // 标签输入和管理
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(
+                        value = tagText,
+                        onValueChange = { tagText = it },
+                        label = { Text("输入标签") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(
+                        onClick = { addTag() },
+                        enabled = tagText.isNotBlank()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "添加标签")
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // 显示现有标签
+                if (tags.isNotEmpty()) {
+                    LazyRow {
+                        items(tags.size) { index ->
+                            val tag = tags[index]
+                            InputChip(
+                                selected = false,
+                                onClick = { },
+                                label = { Text(tag) },
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = { removeTag(tag) }
+                                    ) {
+                                        Icon(Icons.Default.Close, contentDescription = "移除标签")
+                                    }
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (habitName.isNotBlank()) {
+                        val habit = Habit(
+                            name = habitName,
+                            type = selectedType,
+                            targetDate = if (selectedType == HabitType.COUNTDOWN && targetDate.isNotBlank() && isValidDate(targetDate)) targetDate else null,
+                            buttonLabel = buttonLabel.ifBlank { "打卡" },
+                            tags = tags.joinToString(",")
+                        )
+                        onAdd(habit)
+                    }
+                },
+                enabled = habitName.isNotBlank() && 
+                         (selectedType == HabitType.POSITIVE || 
+                          (selectedType == HabitType.COUNTDOWN && targetDate.isNotBlank() && isValidDate(targetDate)))
+            ) {
+                Text("添加")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
 }
