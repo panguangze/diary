@@ -21,6 +21,7 @@ import com.love.diary.presentation.screens.statistics.StatisticsScreen
 import com.love.diary.presentation.screens.settings.SettingsScreen
 import com.love.diary.presentation.screens.setup.FirstRunScreen
 import com.love.diary.presentation.viewmodel.HomeViewModel
+import com.love.diary.habit.HabitListScreen
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.net.Uri
@@ -127,8 +128,7 @@ fun MainApp() {
                 }
 
                 composable(Screen.Habits.route) {
-                    // 暂时用占位符，稍后创建HabitsScreen
-                    HabitsScreen(
+                    HabitListScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
