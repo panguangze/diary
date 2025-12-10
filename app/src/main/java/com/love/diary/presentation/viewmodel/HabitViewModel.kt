@@ -26,7 +26,8 @@ data class HabitUiState(
     val newHabitDescription: String = "",
     val newHabitButtonLabel: String = "打卡",
     val newHabitType: HabitType = HabitType.POSITIVE,
-    val newHabitTargetDate: String? = null
+    val newHabitTargetDate: String? = null,
+    val newHabitTags: String = ""
 )
 
 @HiltViewModel
@@ -110,7 +111,8 @@ class HabitViewModel @Inject constructor(
                 buttonLabel = _uiState.value.newHabitButtonLabel,
                 type = _uiState.value.newHabitType,
                 targetDate = if (_uiState.value.newHabitType == HabitType.COUNTDOWN) _uiState.value.newHabitTargetDate else null,
-                startDate = LocalDate.now().toString()
+                startDate = LocalDate.now().toString(),
+                tags = _uiState.value.newHabitTags
             )
             
             try {
@@ -149,13 +151,18 @@ class HabitViewModel @Inject constructor(
         _uiState.update { it.copy(newHabitTargetDate = date) }
     }
     
+    fun updateNewHabitTags(tags: String) {
+        _uiState.update { it.copy(newHabitTags = tags) }
+    }
+    
     private fun resetNewHabitForm() {
         _uiState.update { it.copy(
             newHabitName = "",
             newHabitDescription = "",
             newHabitButtonLabel = "打卡",
             newHabitType = HabitType.POSITIVE,
-            newHabitTargetDate = null
+            newHabitTargetDate = null,
+            newHabitTags = ""
         ) }
     }
     
