@@ -185,7 +185,6 @@ fun AddHabitDialog(
     var selectedType by remember { mutableStateOf(HabitType.POSITIVE) }
     var targetDate by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
-    var buttonLabel by remember { mutableStateOf("打卡") }
     var tagText by remember { mutableStateOf("") }
     var tags by remember { mutableStateOf(emptyList<String>()) }
     
@@ -253,29 +252,29 @@ fun AddHabitDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 if (selectedType == HabitType.COUNTDOWN) {
-                    OutlinedTextField(
-                        value = targetDate,
-                        onValueChange = { },
-                        label = { Text("目标日期") },
-                        placeholder = { Text("点击选择日期") },
-                        leadingIcon = {
-                            Icon(Icons.Default.DateRange, contentDescription = null)
-                        },
-                        readOnly = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showDatePicker = true }
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = targetDate,
+                            onValueChange = { },
+                            label = { Text("目标日期") },
+                            placeholder = { Text("请选择日期") },
+                            leadingIcon = {
+                                Icon(Icons.Default.DateRange, contentDescription = null)
+                            },
+                            readOnly = true,
+                            modifier = Modifier
+                                .weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(
+                            onClick = { showDatePicker = true }
+                        ) {
+                            Icon(Icons.Default.DateRange, contentDescription = "选择日期")
+                        }
+                    }
                 }
                 
-                Spacer(modifier = Modifier.height(8.dp))
                 
-                OutlinedTextField(
-                    value = buttonLabel,
-                    onValueChange = { buttonLabel = it },
-                    label = { Text("按钮文字") },
-                    modifier = Modifier.fillMaxWidth()
-                )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -332,7 +331,6 @@ fun AddHabitDialog(
                             name = habitName,
                             type = selectedType,
                             targetDate = if (selectedType == HabitType.COUNTDOWN && targetDate.isNotBlank() && isValidDate(targetDate)) targetDate else null,
-                            buttonLabel = buttonLabel.ifBlank { "打卡" },
                             tags = tags.joinToString(",")
                         )
                         onAdd(habit)
