@@ -94,15 +94,19 @@ fun MainApp() {
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                            1 -> navController.navigate(Screen.History.route) {
+                            1 -> navController.navigate(Screen.Habits.route) {
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                            2 -> navController.navigate(Screen.Statistics.route) {
+                            2 -> navController.navigate(Screen.History.route) {
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                            3 -> navController.navigate(Screen.Settings.route) {
+                            3 -> navController.navigate(Screen.Statistics.route) {
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                            4 -> navController.navigate(Screen.Settings.route) {
                                 launchSingleTop = true
                                 restoreState = true
                             }
@@ -118,6 +122,13 @@ fun MainApp() {
             ) {
                 composable(Screen.Home.route) {
                     HomeScreen(
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                composable(Screen.Habits.route) {
+                    // 暂时用占位符，稍后创建HabitsScreen
+                    HabitsScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 }
@@ -151,6 +162,7 @@ fun BottomNavigationBar(
 ) {
     val items = listOf(
         Screen.Home,
+        Screen.Habits,
         Screen.History,
         Screen.Statistics,
         Screen.Settings

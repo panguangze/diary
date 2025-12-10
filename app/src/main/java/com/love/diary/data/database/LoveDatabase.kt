@@ -7,12 +7,15 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.love.diary.data.database.dao.AppConfigDao
 import com.love.diary.data.database.dao.DailyMoodDao
+import com.love.diary.data.database.dao.HabitDao
 import com.love.diary.data.database.entities.AppConfigEntity
 import com.love.diary.data.database.entities.DailyMoodEntity
+import com.love.diary.data.model.Habit
+import com.love.diary.data.model.HabitRecord
 
 @Database(
-    entities = [AppConfigEntity::class, DailyMoodEntity::class],
-    version = 1,
+    entities = [AppConfigEntity::class, DailyMoodEntity::class, Habit::class, HabitRecord::class],
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -20,6 +23,7 @@ abstract class LoveDatabase : RoomDatabase() {
     
     abstract fun appConfigDao(): AppConfigDao
     abstract fun dailyMoodDao(): DailyMoodDao
+    abstract fun habitDao(): HabitDao
     
     companion object {
         @Volatile
