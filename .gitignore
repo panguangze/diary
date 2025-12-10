@@ -1,86 +1,57 @@
-```kotlin
-# Kotlin/Android build artifacts
+```
+# Compiled and build artifacts
 *.class
-*.jar
-*.war
-*.aar
+*.o
+*.obj
 *.so
+*.a
 *.dll
-*.dylib
+*.exe
+*.out
 
-# Gradle
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
 .gradle/
-build/
-intermediates/
-outputs/
-.externalNativeBuild
+target/
 
-# Android
-*.apk
-*.ap_
-app/build/
-
-# IDE files
-.idea/
-*.iml
-*.iws
-.vscode/
-
-# Temp files
-*.tmp
-*.temp
+# Logs and temp files
 *.log
-
-# System files
-.DS_Store
-Thumbs.db
+*.tmp
+*.swp
+*.swo
 
 # Environment
 .env
 .env.local
 *.env.*
 
+# Editors
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
 # Coverage
 coverage/
-*.coverage
 htmlcov/
+.coverage
 
-# Python (if any Python tools used)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-.mypy_cache/
-
-# Node (if any Node tools used)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Compiled files
-*.o
-*.obj
-*.out
-*.a
-*.lib
-*.dll
-*.so
-*.dylib
-*.class
-*.jar
-*.war
-*.ear
+# Common compressed files
 *.zip
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.7z
-*.rar
 *.gz
+*.tar
+*.tgz
 *.bz2
 *.xz
+*.7z
+*.rar
 *.zst
 *.lz4
 *.lzh
@@ -91,4 +62,8 @@ yarn-error.log*
 *.Z
 *.lz
 *.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
 ```

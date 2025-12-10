@@ -8,14 +8,17 @@ import androidx.room.TypeConverters
 import com.love.diary.data.database.dao.AppConfigDao
 import com.love.diary.data.database.dao.DailyMoodDao
 import com.love.diary.data.database.dao.HabitDao
+import com.love.diary.data.database.dao.CheckInDao
 import com.love.diary.data.database.entities.AppConfigEntity
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.Habit
 import com.love.diary.data.model.HabitRecord
+import com.love.diary.data.model.CheckIn
+import com.love.diary.data.model.CheckInConfig
 
 @Database(
-    entities = [AppConfigEntity::class, DailyMoodEntity::class, Habit::class, HabitRecord::class],
-    version = 3,
+    entities = [AppConfigEntity::class, DailyMoodEntity::class, Habit::class, HabitRecord::class, CheckIn::class, CheckInConfig::class],
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -24,6 +27,7 @@ abstract class LoveDatabase : RoomDatabase() {
     abstract fun appConfigDao(): AppConfigDao
     abstract fun dailyMoodDao(): DailyMoodDao
     abstract fun habitDao(): HabitDao
+    abstract fun checkInDao(): CheckInDao
     
     companion object {
         @Volatile

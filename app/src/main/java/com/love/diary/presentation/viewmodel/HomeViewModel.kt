@@ -27,12 +27,14 @@ data class HomeUiState(
     val coupleName: String? = null,
     val startDate: String = "",
     val currentDateDisplay: String = "",
-    val currentStreak: Int = 0
+    val currentStreak: Int = 0,
+    val currentCheckInConfig: String = "异地恋日记" // 添加当前打卡配置名称
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    val repository: AppRepository  // 改为public，以便在MainActivity中访问
+    val repository: AppRepository,  // 改为public，以便在MainActivity中访问
+    private val checkInRepository: CheckInRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -226,7 +228,32 @@ class HomeViewModel @Inject constructor(
         return repository.isFirstRun()
     }
     
-    private fun calculateDayIndex(startDate: String, targetDate: String): Int {
+    fun setCurrentCheckInConfig(configName: String) {
+        _uiState.update { it.copy(currentCheckInConfig = configName) }
+        // 根据配置名称加载相应的数据
+        if (configName == "异地恋日记") {
+            // 加载异地恋日记相关数据
+            loadInitialData()
+        } else {
+            // 对于其他打卡事项，我们可以加载通用的打卡数据
+            viewModelScope.launch {
+                val today = LocalDate.now()
+                val todayStr = today.toString()
+                val dayOfWeek = today.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.getDefault())
+                
+                _uiState.update { state ->
+                    state.copy(
+                        currentDateDisplay = "今天：$todayStr（$dayOfWeek）",
+                        dayIndex = 0, // 为其他打卡事项重置为0
+                        dayDisplay = "",
+                        todayMood = null,
+                        todayMoodText = null,
+                        isLoading = false
+                    )
+                }
+            }
+        }
+    }
         val start = LocalDate.parse(startDate)
         val target = LocalDate.parse(targetDate)
         // 使用ChronoUnit计算天数差异，这能更准确地处理所有日期边界情况
