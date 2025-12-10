@@ -358,8 +358,15 @@ fun AddHabitDialog(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        // 获取选择的日期并更新targetDate
+                        val selectedDateMillis = datePickerState.selectedDateMillis
+                        if (selectedDateMillis != null) {
+                            val selectedDate = LocalDate.ofEpochDay(selectedDateMillis / (24 * 60 * 60 * 1000))
+                            targetDate = selectedDate.toString()
+                        }
                         showDatePicker = false
-                    }
+                    },
+                    enabled = datePickerState.selectedDateMillis != null
                 ) {
                     Text("确定")
                 }
@@ -374,17 +381,13 @@ fun AddHabitDialog(
                 }
             }
         ) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = System.currentTimeMillis()
+            )
+            
             DatePicker(
-                state = rememberDatePickerState(
-                    initialSelectedDateMillis = System.currentTimeMillis()
-                )
-            ) {
-                val selectedDateMillis = it.selectedDateMillis
-                if (selectedDateMillis != null) {
-                    val selectedDate = LocalDate.ofEpochDay(selectedDateMillis / (24 * 60 * 60 * 1000))
-                    targetDate = selectedDate.toString()
-                }
-            }
+                state = datePickerState
+            )
         }
     }
 }
