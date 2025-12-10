@@ -253,6 +253,11 @@ class AppRepository @Inject constructor(
         return recordId > 0
     }
     
+    // 重载打卡方法，支持标签
+    suspend fun checkInHabitWithTag(habitId: Long, tag: String?): Boolean {
+        return checkInHabit(habitId, tag)
+    }
+    
     // 获取打卡统计信息
     suspend fun getHabitStats(habitId: Long): Pair<Int, Int> {
         val totalRecords = habitDao.getHabitRecordCount(habitId)

@@ -100,6 +100,17 @@ class HabitViewModel @Inject constructor(
         }
     }
     
+    // 带标签的打卡操作
+    fun checkInHabitWithTag(habitId: Long, tag: String?) {
+        viewModelScope.launch {
+            val success = repository.checkInHabitWithTag(habitId, tag)
+            if (success) {
+                // 重新加载习惯列表以更新计数
+                loadAllHabits()
+            }
+        }
+    }
+    
     // 创建新习惯
     fun createHabit() {
         viewModelScope.launch {
