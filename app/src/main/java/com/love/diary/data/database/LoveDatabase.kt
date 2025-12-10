@@ -15,7 +15,7 @@ import com.love.diary.data.model.HabitRecord
 
 @Database(
     entities = [AppConfigEntity::class, DailyMoodEntity::class, Habit::class, HabitRecord::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
