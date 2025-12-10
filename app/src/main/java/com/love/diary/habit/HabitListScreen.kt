@@ -30,6 +30,7 @@ import java.time.temporal.ChronoUnit
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerDefaults
 
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -353,6 +354,10 @@ fun AddHabitDialog(
     
     // 日期选择器对话框
     if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = System.currentTimeMillis()
+        )
+        
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
@@ -379,12 +384,9 @@ fun AddHabitDialog(
                 ) {
                     Text("取消")
                 }
-            }
+            },
+            colors = DatePickerDefaults.colors()
         ) {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = System.currentTimeMillis()
-            )
-            
             DatePicker(
                 state = datePickerState
             )
