@@ -101,6 +101,7 @@ fun HabitListScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitItemCard(
     habit: Habit,
@@ -176,6 +177,7 @@ fun HabitItemCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddHabitDialog(
     onAdd: (Habit) -> Unit,
