@@ -1,44 +1,96 @@
-```
-# Compiled and build artifacts
+```kotlin
+# Kotlin/Android specific
 *.class
-*.o
-*.obj
-*.so
-*.dll
-*.exe
-*.out
+*.jar
+*.war
+*.ear
+*.iml
+*.ipr
+*.iws
+*.kotlin_metadata
+*.kotlin_built
+*.apt_generated
+*.java~
+*~
 
-# Dependencies
+# Android
+/build/
 .gradle/
-node_modules/
-venv/
-.venv/
-__pycache__/
-.mypy_cache/
-.pytest_cache/
-target/
-dist/
-build/
+local.properties
+.pro
+captures/
+.externalNativeBuild
+.intermediates
+.kotlin
+cxx/
 
-# Logs and temp files
-*.log
-*.tmp
-*.swp
-*.swo
-
-# Environment
-.env
-.env.local
-.env.*
-
-# Editors
-.vscode/
+# IntelliJ IDEA
 .idea/
 *.iml
 *.ipr
 *.iws
+out/
 
-# System
+# Gradle
+.gradle/
+gradle-app.setting
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
+
+# Build outputs
+/bin/
+/gen/
+/obj/
+/libs/
+target/
+
+# Dependencies
+node_modules/
+vendor/bundle
+vendor/cache
+vendor/gems
+vendor/ruby
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git/modules/
+.project
+.pydevproject
+.vscode/
 ```
