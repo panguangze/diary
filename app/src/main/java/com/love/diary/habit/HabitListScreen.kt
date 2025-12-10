@@ -26,6 +26,10 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
 import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.DatePickerDialog
 
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -69,9 +73,10 @@ fun HabitListScreen(
             items(habits) { habit ->
                 HabitItemCard(
                     habit = habit,
-                    onToggle = { habitId ->
+                    onCheckIn = { habitId, tag ->
+                        // 使用HabitRepository的打卡功能，同时记录标签
                         coroutineScope.launch {
-                            habitRepository.toggleHabit(habitId)
+                            habitRepository.checkInHabit(habitId, tag)
                         }
                     },
                     onClick = { /* 导航到详情页 */ }
@@ -98,7 +103,7 @@ fun HabitListScreen(
 @Composable
 fun HabitItemCard(
     habit: Habit,
-    onToggle: (Long) -> Unit,
+    onCheckIn: (Long, String?) -> Unit, // 修改回调参数，支持打卡时传递标签
     onClick: (Long) -> Unit
 ) {
     Card(
@@ -133,7 +138,7 @@ fun HabitItemCard(
                                 val targetDate = habit.targetDate?.let { LocalDate.parse(it) }
                                 val today = LocalDate.now()
                                 val daysLeft = if (targetDate != null) {
-                                    java.time.temporal.ChronoUnit.DAYS.between(today, targetDate).toInt()
+                                    ChronoUnit.DAYS.between(today, targetDate).toInt()
                                 } else 0
                                 "距离目标还有 $daysLeft 天"
                             }
@@ -157,19 +162,13 @@ fun HabitItemCard(
                             items(habit.tags.split(",").filter { it.isNotEmpty() }) { tag ->
                                 InputChip(
                                     selected = false,
-                                    onClick = { /* 点击标签的操作 */ },
+                                    onClick = { onCheckIn(habit.id, tag) }, // 点击标签时打卡并记录标签
                                     label = { Text(tag) }
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                             }
                         }
                     }
-                }
-                
-                Button(
-                    onClick = { onToggle(habit.id) }
-                ) {
-                    Text(habit.buttonLabel)
                 }
             }
         }
@@ -184,6 +183,7 @@ fun AddHabitDialog(
     var habitName by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(HabitType.POSITIVE) }
     var targetDate by remember { mutableStateOf("") }
+    var showDatePicker by remember { mutableStateOf(false) }
     var buttonLabel by remember { mutableStateOf("打卡") }
     var tagText by remember { mutableStateOf("") }
     var tags by remember { mutableStateOf(emptyList<String>()) }
@@ -254,13 +254,16 @@ fun AddHabitDialog(
                 if (selectedType == HabitType.COUNTDOWN) {
                     OutlinedTextField(
                         value = targetDate,
-                        onValueChange = { targetDate = it },
-                        label = { Text("目标日期 (YYYY-MM-DD)") },
-                        placeholder = { Text("例如: 2024-12-31") },
+                        onValueChange = { },
+                        label = { Text("目标日期") },
+                        placeholder = { Text("点击选择日期") },
                         leadingIcon = {
                             Icon(Icons.Default.DateRange, contentDescription = null)
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        readOnly = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true }
                     )
                 }
                 
@@ -347,4 +350,41 @@ fun AddHabitDialog(
             }
         }
     )
+    
+    // 日期选择器对话框
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("取消")
+                }
+            }
+        ) {
+            DatePicker(
+                state = rememberDatePickerState(
+                    initialSelectedDateMillis = System.currentTimeMillis()
+                )
+            ) {
+                val selectedDateMillis = it.selectedDateMillis
+                if (selectedDateMillis != null) {
+                    val selectedDate = LocalDate.ofEpochDay(selectedDateMillis / (24 * 60 * 60 * 1000))
+                    targetDate = selectedDate.toString()
+                }
+            }
+        }
+    }
 }
