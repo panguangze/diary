@@ -44,7 +44,7 @@ class CheckInViewModel @Inject constructor(
                 }
                 
                 // 如果当前没有选中的打卡配置，且存在配置，则默认选择第一个
-                if (state.currentCheckInConfig == null && configs.isNotEmpty()) {
+                if (_uiState.value.currentCheckInConfig == null && configs.isNotEmpty()) {
                     selectCheckInConfig(configs.first())
                 }
             }
