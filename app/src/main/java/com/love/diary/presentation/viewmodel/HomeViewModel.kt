@@ -45,6 +45,58 @@ class HomeViewModel @Inject constructor(
         observeConfigChanges()
     }
     
+    // 从特殊打卡事项获取最新的打卡数据
+    private suspend fun loadSpecialHabitData() {
+        // 获取所有习惯
+        val allHabits = repository.getAllHabits().firstOrNull() ?: emptyList()
+        
+        // 查找名为"我们的名字"或包含coupleName的特殊习惯
+        val specialHabit = allHabits.find { 
+            it.name == "我们的名字" || 
+            (uiState.value.coupleName != null && it.name == uiState.value.coupleName)
+        }
+        
+        if (specialHabit != null) {
+            // 获取该习惯的最新打卡记录
+            val latestRecord = repository.getHabitRecordsFlow(specialHabit.id).firstOrNull()?.firstOrNull()
+            if (latestRecord != null) {
+                // 尝试将打卡标签映射到MoodType
+                val moodType = when (latestRecord.note) {
+                    "开心" -> MoodType.HAPPY
+                    "满足" -> MoodType.SATISFIED
+                    "正常" -> MoodType.NORMAL
+                    "失落" -> MoodType.SAD
+                    "生气" -> MoodType.ANGRY
+                    else -> MoodType.OTHER
+                }
+                
+                // 更新UI状态
+                _uiState.update { state ->
+                    state.copy(
+                        todayMood = moodType,
+                        todayMoodText = if (moodType == MoodType.OTHER) latestRecord.note else null
+                    )
+                }
+            } else {
+                // 如果没有找到记录，则将心情设置为null
+                _uiState.update { state ->
+                    state.copy(
+                        todayMood = null,
+                        todayMoodText = null
+                    )
+                }
+            }
+        } else {
+            // 如果没有找到特殊打卡事项，则将心情设置为null
+            _uiState.update { state ->
+                state.copy(
+                    todayMood = null,
+                    todayMoodText = null
+                )
+            }
+        }
+    }
+    
     private fun loadInitialData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
@@ -59,15 +111,8 @@ class HomeViewModel @Inject constructor(
                 }
             }
             
-            val todayMood = repository.getTodayMood()
-            todayMood?.let {
-                _uiState.update { state ->
-                    state.copy(
-                        todayMood = MoodType.fromCode(it.moodTypeCode),
-                        todayMoodText = it.moodText
-                    )
-                }
-            }
+            // 从特殊打卡事项获取数据，而不是从心情数据库
+            loadSpecialHabitData()
             
             val today = LocalDate.now()
             val todayStr = today.toString()
@@ -153,19 +198,35 @@ class HomeViewModel @Inject constructor(
             if (moodType == MoodType.OTHER) {
                 _uiState.update { it.copy(showOtherMoodDialog = true) }
             } else {
-                // 真实保存到数据库
-                repository.saveTodayMood(moodType)
-
-                // 更新UI状态
-                _uiState.update {
-                    it.copy(
-                        todayMood = moodType,
-                        todayMoodText = null
-                    )
+                // 获取特殊打卡事项并进行打卡
+                val allHabits = repository.getAllHabits().firstOrNull() ?: emptyList()
+                val specialHabit = allHabits.find { 
+                    it.name == "我们的名字" || 
+                    (uiState.value.coupleName != null && it.name == uiState.value.coupleName)
                 }
-
-                // 显示保存成功反馈
-                // TODO: 可以使用Snackbar显示
+                
+                if (specialHabit != null) {
+                    // 获取心情标签对应的文本
+                    val moodTag = when (moodType) {
+                        MoodType.HAPPY -> "开心"
+                        MoodType.SATISFIED -> "满足"
+                        MoodType.NORMAL -> "正常"
+                        MoodType.SAD -> "失落"
+                        MoodType.ANGRY -> "生气"
+                        else -> "其它"
+                    }
+                    
+                    // 对特殊打卡事项进行打卡
+                    checkInRepository.checkInHabit(specialHabit.id, moodTag)
+                    
+                    // 更新UI状态
+                    _uiState.update {
+                        it.copy(
+                            todayMood = moodType,
+                            todayMoodText = null
+                        )
+                    }
+                }
             }
         }
     }
@@ -173,19 +234,26 @@ class HomeViewModel @Inject constructor(
     fun saveOtherMood(text: String) {
         viewModelScope.launch {
             if (text.isNotBlank()) {
-                // 真实保存到数据库
-                repository.saveTodayMood(MoodType.OTHER, text)
-
-                _uiState.update { state ->
-                    state.copy(
-                        todayMood = MoodType.OTHER,
-                        todayMoodText = text,
-                        showOtherMoodDialog = false,
-                        otherMoodText = ""
-                    )
+                // 获取特殊打卡事项并进行打卡
+                val allHabits = repository.getAllHabits().firstOrNull() ?: emptyList()
+                val specialHabit = allHabits.find { 
+                    it.name == "我们的名字" || 
+                    (uiState.value.coupleName != null && it.name == uiState.value.coupleName)
                 }
-
-                // 显示保存成功反馈
+                
+                if (specialHabit != null) {
+                    // 对特殊打卡事项进行打卡，使用自定义文本作为标签
+                    checkInRepository.checkInHabit(specialHabit.id, text)
+                    
+                    _uiState.update { state ->
+                        state.copy(
+                            todayMood = MoodType.OTHER,
+                            todayMoodText = text,
+                            showOtherMoodDialog = false,
+                            otherMoodText = ""
+                        )
+                    }
+                }
             }
         }
     }
