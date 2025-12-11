@@ -1,3 +1,30 @@
-```
-*.bak
-```
+# Compiled and build artifacts
+*.class
+*.o
+*.obj
+*.out
+build/
+target/
+
+# Dependencies
+.gradle/
+libs/
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Editors
+.idea/
+*.iml
+*.iws
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+*.env.*
