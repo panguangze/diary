@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.love.diary.data.model.MoodType
 import com.love.diary.data.repository.AppRepository
+import com.love.diary.data.repository.CheckInRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
-    private val repository: AppRepository
+    private val repository: AppRepository,
+    private val checkInRepository: CheckInRepository
 ) : ViewModel() {
 
     data class StatisticsUiState(
@@ -28,8 +30,15 @@ class StatisticsViewModel @Inject constructor(
         val topMood: MoodType? = null,
         val moodStats: Map<MoodType, Int> = emptyMap(),
         val moodTrend: List<Pair<String, Int>> = emptyList(),
+        val checkInTrend: List<com.love.diary.data.model.CheckInTrend> = emptyList(),
+        val currentViewType: ViewType = ViewType.MOOD, // 当前查看的统计类型
         val isLoading: Boolean = true
     )
+
+    enum class ViewType {
+        MOOD,      // 心情统计
+        CHECK_IN   // 打卡统计
+    }
 
     private val _uiState = MutableStateFlow(StatisticsUiState())
     val uiState: StateFlow<StatisticsUiState> = _uiState.asStateFlow()
@@ -40,6 +49,26 @@ class StatisticsViewModel @Inject constructor(
 
     fun updateTimeRange(days: Int) {
         _uiState.update { it.copy(selectedDays = days, isLoading = true) }
+        loadStatistics()
+    }
+
+    fun switchToCheckInTrend(checkInName: String) {
+        _uiState.update { 
+            it.copy(
+                currentViewType = ViewType.CHECK_IN,
+                isLoading = true
+            ) 
+        }
+        loadCheckInStatistics(checkInName)
+    }
+
+    fun switchToMoodTrend() {
+        _uiState.update { 
+            it.copy(
+                currentViewType = ViewType.MOOD,
+                isLoading = true
+            ) 
+        }
         loadStatistics()
     }
 
@@ -88,8 +117,33 @@ class StatisticsViewModel @Inject constructor(
                     topMood = topMood,
                     moodStats = moodStats,
                     moodTrend = trendData,
+                    checkInTrend = emptyList(), // 清空打卡趋势数据
                     isLoading = false
                 )
+            }
+        }
+    }
+
+    private fun loadCheckInStatistics(checkInName: String) {
+        viewModelScope.launch {
+            try {
+                // 获取打卡趋势数据
+                val checkInTrend = checkInRepository.getCheckInTrendByName(checkInName)
+                
+                // 计算打卡统计
+                val totalRecords = checkInTrend.size
+                
+                _uiState.update { state ->
+                    state.copy(
+                        totalRecords = totalRecords,
+                        checkInTrend = checkInTrend,
+                        moodTrend = emptyList(), // 清空心情趋势数据
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false) }
+                // 可以添加错误处理逻辑
             }
         }
     }

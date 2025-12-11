@@ -4,6 +4,7 @@ import com.love.diary.data.database.LoveDatabase
 import com.love.diary.data.model.CheckIn
 import com.love.diary.data.model.CheckInConfig
 import com.love.diary.data.model.CheckInType
+import com.love.diary.data.model.CheckInTrend
 import com.love.diary.data.model.MoodType
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -147,7 +148,7 @@ class CheckInRepository @Inject constructor(
     }
 
     // 获取打卡趋势
-    suspend fun getCheckInTrendByName(name: String): List<Pair<String, Int>> {
+    suspend fun getCheckInTrendByName(name: String): List<CheckInTrend> {
         return checkInDao.getCheckInTrendByName(name)
     }
 }
