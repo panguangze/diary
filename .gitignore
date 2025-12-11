@@ -2,28 +2,25 @@
 *.class
 *.o
 *.obj
-*.out
+*.exe
 *.dll
 *.so
 *.a
-*.pyc
-__pycache__/
+*.out
+build/
+dist/
 
 # Dependencies
 node_modules/
 venv/
 .venv/
-.env
-.env.local
-*.env.*
-
-# Build directories
-dist/
-build/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
 target/
 .gradle/
 
-# Editors
+# Editor/IDE files
 .vscode/
 .idea/
 *.swp
@@ -33,34 +30,15 @@ target/
 # System files
 .DS_Store
 Thumbs.db
+.env
+.env.local
+*.env.*
 
-# Logs
+# Logs and coverage
 *.log
-
-# Coverage
 coverage/
 htmlcov/
 .coverage
-
-# Python specific
-.mypy_cache/
-.pytest_cache/
-
-# Java/Kotlin build artifacts
-*.jar
-*.war
-*.class
-build/
-target/
-.gradle/
-!*.kt
-!*.java
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.backup
 
 # Compressed files
 *.zip
@@ -85,30 +63,3 @@ target/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-
-# Android specific
-*.apk
-*.aab
-app/build/
-.gradle/
-local.properties
-captures/
-.externalNativeBuild/
-.cxx/
-.idea/caches/
-.idea/libraries/
-.idea/modules.xml
-.idea/workspace.xml
-.idea/navEditor/
-.idea/runConfigurations/
-.idea/compiler.xml
-.idea/deploymentTargetDropDown.xml
-.idea/deploymentTargetSelector.xml
-.idea/migrations.xml
-.idea/sonarlint/
-.idea/sqldialects.xml
-.idea/tasks.xml
-.idea/vcs.xml
-*.iml
-!*.kt
-!*.java
