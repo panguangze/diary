@@ -84,8 +84,7 @@ private fun StatisticsContent(
         // 心情分布
         item {
             MoodDistributionCard(
-                moodStats = uiState.moodStats,
-                totalRecords = uiState.totalRecords
+                uiState = uiState
             )
         }
 
