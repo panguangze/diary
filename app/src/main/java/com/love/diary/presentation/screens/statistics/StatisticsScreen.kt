@@ -91,7 +91,11 @@ private fun StatisticsContent(
 
         // 心情趋势
         item {
-            MoodTrendCard(trendData = uiState.moodTrend)
+            MoodTrendCard(
+                moodTrendData = uiState.moodTrend,
+                checkInTrendData = uiState.checkInTrend,
+                currentViewType = uiState.currentViewType
+            )
         }
 
         // 统计总结
@@ -171,23 +175,45 @@ fun StatisticsOverviewCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                StatItem(
-                    title = "记录天数",
-                    value = uiState.totalRecords.toString(),
-                    icon = Icons.Default.DateRange
-                )
+                if (uiState.currentViewType == StatisticsViewModel.ViewType.MOOD) {
+                    // 心情统计概览
+                    StatItem(
+                        title = "记录天数",
+                        value = uiState.totalRecords.toString(),
+                        icon = Icons.Default.DateRange
+                    )
 
-                StatItem(
-                    title = "平均心情",
-                    value = uiState.averageMood,
-                    icon = Icons.Default.TrendingUp
-                )
+                    StatItem(
+                        title = "平均心情",
+                        value = uiState.averageMood,
+                        icon = Icons.Default.TrendingUp
+                    )
 
-                StatItem(
-                    title = "最常心情",
-                    value = uiState.topMood?.emoji ?: "-",
-                    icon = Icons.Default.EmojiEmotions
-                )
+                    StatItem(
+                        title = "最常心情",
+                        value = uiState.topMood?.emoji ?: "-",
+                        icon = Icons.Default.EmojiEmotions
+                    )
+                } else {
+                    // 打卡统计概览
+                    StatItem(
+                        title = "打卡次数",
+                        value = uiState.totalRecords.toString(),
+                        icon = Icons.Default.CheckCircle
+                    )
+
+                    StatItem(
+                        title = "打卡天数",
+                        value = uiState.checkInTrend.distinctBy { it.date }.size.toString(),
+                        icon = Icons.Default.DateRange
+                    )
+
+                    StatItem(
+                        title = "最近打卡",
+                        value = uiState.checkInTrend.lastOrNull()?.date?.substring(5)?.replace("-", "/") ?: "-",
+                        icon = Icons.Default.AccessTime
+                    )
+                }
             }
         }
     }
@@ -230,55 +256,57 @@ fun StatItem(
 
 @Composable
 fun MoodDistributionCard(
-    moodStats: Map<MoodType, Int>,
-    totalRecords: Int,
+    uiState: StatisticsViewModel.StatisticsUiState,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+    if (uiState.currentViewType == StatisticsViewModel.ViewType.MOOD) {
+        Card(
+            modifier = modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            Text(
-                text = "心情分布",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium
-            )
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(
+                    text = "心情分布",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Medium
+                )
 
-            Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            MoodType.values().forEach { moodType ->
-                val count = moodStats[moodType] ?: 0
-                val percentage = if (totalRecords > 0) {
-                    (count.toFloat() / totalRecords * 100).roundToInt()
-                } else 0
+                MoodType.values().forEach { moodType ->
+                    val count = uiState.moodStats[moodType] ?: 0
+                    val percentage = if (uiState.totalRecords > 0) {
+                        (count.toFloat() / uiState.totalRecords * 100).roundToInt()
+                    } else 0
 
-                if (count > 0) {
-                    MoodDistributionItem(
-                        moodType = moodType,
-                        count = count,
-                        percentage = percentage,
-                        totalRecords = totalRecords
-                    )
+                    if (count > 0) {
+                        MoodDistributionItem(
+                            moodType = moodType,
+                            count = count,
+                            percentage = percentage,
+                            totalRecords = uiState.totalRecords
+                        )
 
-                    if (moodType != MoodType.values().last()) {
-                        Divider(modifier = Modifier.padding(vertical = 4.dp))
+                        if (moodType != MoodType.values().last()) {
+                            Divider(modifier = Modifier.padding(vertical = 4.dp))
+                        }
                     }
                 }
-            }
 
-            if (totalRecords == 0) {
-                Text(
-                    text = "暂无记录",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
+                if (uiState.totalRecords == 0) {
+                    Text(
+                        text = "暂无记录",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
             }
         }
     }
+    // 打卡视图中不显示此卡片
 }
 
 @Composable
@@ -338,7 +366,9 @@ fun MoodDistributionItem(
 
 @Composable
 fun MoodTrendCard(
-    trendData: List<Pair<String, Int>>,
+    moodTrendData: List<Pair<String, Int>>,
+    checkInTrendData: List<com.love.diary.data.model.CheckInTrend> = emptyList(),
+    currentViewType: StatisticsViewModel.ViewType = StatisticsViewModel.ViewType.MOOD,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -349,29 +379,46 @@ fun MoodTrendCard(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "心情趋势",
+                text = if (currentViewType == StatisticsViewModel.ViewType.MOOD) "心情趋势" else "打卡趋势",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Medium
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (trendData.isNotEmpty()) {
-                // 简单的趋势图表
-                SimpleTrendChart(trendData = trendData)
+            if (currentViewType == StatisticsViewModel.ViewType.MOOD) {
+                if (moodTrendData.isNotEmpty()) {
+                    // 心情趋势图表
+                    SimpleTrendChart(trendData = moodTrendData)
+                } else {
+                    Text(
+                        text = "暂无心情趋势数据",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
             } else {
-                Text(
-                    text = "暂无趋势数据",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
+                if (checkInTrendData.isNotEmpty()) {
+                    // 打卡趋势图表 - 将 CheckInTrend 转换为 Pair<String, Int> 以兼容图表
+                    val chartData = checkInTrendData.map { it.date to it.count }
+                    SimpleTrendChart(trendData = chartData)
+                } else {
+                    Text(
+                        text = "暂无打卡趋势数据",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "记录每一天的心情，有起伏才像真实的生活。",
+                text = if (currentViewType == StatisticsViewModel.ViewType.MOOD) 
+                    "记录每一天的心情，有起伏才像真实的生活。" 
+                    else "坚持打卡，见证自己的成长与进步。",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
@@ -505,37 +552,52 @@ fun StatisticsSummaryCard(
 // 注意：这不是 @Composable 函数，只是普通函数
 private fun generateSummaryText(uiState: StatisticsViewModel.StatisticsUiState): String {
     return buildString {
-        append("在最近 ${uiState.selectedDays} 天里，")
+        if (uiState.currentViewType == StatisticsViewModel.ViewType.MOOD) {
+            // 心情统计总结
+            append("在最近 ${uiState.selectedDays} 天里，")
 
-        if (uiState.totalRecords == 0) {
-            append("还没有记录过心情哦。")
-            return@buildString
-        }
-
-        append("你一共记录了 ${uiState.totalRecords} 天的心情。\n\n")
-
-        val topMood = uiState.topMood
-        val topCount = if (topMood != null) uiState.moodStats[topMood] ?: 0 else 0
-
-        if (topMood != null && topCount > 0) {
-            append("「${topMood.displayName}」出现了 ${topCount} 次。\n\n")
-
-            val summary = when (topMood) {
-                MoodType.HAPPY, MoodType.SATISFIED ->
-                    "在大多数时间里，你是开心而满足的。继续保持这种好心态～"
-                MoodType.NORMAL ->
-                    "平平淡淡才是真，细水长流的爱情最是珍贵。"
-                MoodType.SAD ->
-                    "最近你的状态有点低落，要记得内心也需要休息，我可以随时陪你聊聊。"
-                MoodType.ANGRY ->
-                    "你曾表达了一些愤怒，将情绪记录在此，说明你正在认真对待这段关系。"
-                MoodType.OTHER ->
-                    "每一天的心情都是独特的，感谢你愿意和我分享这些无法分类的时刻。"
-                else -> "感谢你认真记录每一天的心情。"
+            if (uiState.totalRecords == 0) {
+                append("还没有记录过心情哦。")
+                return@buildString
             }
-            append(summary)
+
+            append("你一共记录了 ${uiState.totalRecords} 天的心情。\n\n")
+
+            val topMood = uiState.topMood
+            val topCount = if (topMood != null) uiState.moodStats[topMood] ?: 0 else 0
+
+            if (topMood != null && topCount > 0) {
+                append("「${topMood.displayName}」出现了 ${topCount} 次。\n\n")
+
+                val summary = when (topMood) {
+                    MoodType.HAPPY, MoodType.SATISFIED ->
+                        "在大多数时间里，你是开心而满足的。继续保持这种好心态～"
+                    MoodType.NORMAL ->
+                        "平平淡淡才是真，细水长流的爱情最是珍贵。"
+                    MoodType.SAD ->
+                        "最近你的状态有点低落，要记得内心也需要休息，我可以随时陪你聊聊。"
+                    MoodType.ANGRY ->
+                        "你曾表达了一些愤怒，将情绪记录在此，说明你正在认真对待这段关系。"
+                    MoodType.OTHER ->
+                        "每一天的心情都是独特的，感谢你愿意和我分享这些无法分类的时刻。"
+                    else -> "感谢你认真记录每一天的心情。"
+                }
+                append(summary)
+            } else {
+                append("你的心情记录丰富多彩，每一天都是独特的体验。")
+            }
         } else {
-            append("你的心情记录丰富多彩，每一天都是独特的体验。")
+            // 打卡统计总结
+            append("在最近 ${uiState.selectedDays} 天里，")
+
+            if (uiState.totalRecords == 0) {
+                append("还没有打卡记录哦。")
+                return@buildString
+            }
+
+            append("你一共完成了 ${uiState.totalRecords} 次打卡。\n\n")
+            
+            append("坚持打卡，见证自己的成长与进步。")
         }
     }
 }

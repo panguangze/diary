@@ -3,6 +3,7 @@ package com.love.diary.data.database.dao
 import androidx.room.*
 import com.love.diary.data.model.CheckIn
 import com.love.diary.data.model.CheckInConfig
+import com.love.diary.data.model.CheckInTrend
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -59,5 +60,5 @@ interface CheckInDao {
 
     // 获取某个打卡事项的记录趋势
     @Query("SELECT date, count FROM checkins WHERE name = :name ORDER BY createdAt ASC")
-    suspend fun getCheckInTrendByName(name: String): List<Pair<String, Int>>
+    suspend fun getCheckInTrendByName(name: String): List<CheckInTrend>
 }
