@@ -222,13 +222,14 @@ fun FirstRunScreen(
                         )
                         
                         // 创建一个特殊的打卡事项，名称为用户输入的组合名，类型为正向打卡，标签为开心、满足等
-                        val specialHabitName = if (coupleName.isNotBlank()) coupleName else "我们的名字"
-                        val specialHabit = com.love.diary.data.model.Habit(
-                            name = specialHabitName,
-                            type = com.love.diary.data.model.HabitType.POSITIVE,
-                            tags = "开心,满足,正常,失落,生气,其它"
-                        )
-                        repository.createHabit(specialHabit)
+                        if (coupleName.isNotBlank()) {
+                            val specialHabit = com.love.diary.data.model.Habit(
+                                name = coupleName,
+                                type = com.love.diary.data.model.HabitType.POSITIVE,
+                                tags = "开心,满足,正常,失落,生气,其它"
+                            )
+                            repository.createHabit(specialHabit)
+                        }
                         
                         onSetupComplete()
                     }
