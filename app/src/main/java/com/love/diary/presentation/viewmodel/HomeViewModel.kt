@@ -217,7 +217,7 @@ class HomeViewModel @Inject constructor(
                     }
                     
                     // 对特殊打卡事项进行打卡
-                    checkInRepository.checkInHabit(specialHabit.id, moodTag)
+                    checkInRepository.checkInHabit(specialHabit.name, specialHabit.id, moodTag)
                     
                     // 更新UI状态
                     _uiState.update {
@@ -243,7 +243,7 @@ class HomeViewModel @Inject constructor(
                 
                 if (specialHabit != null) {
                     // 对特殊打卡事项进行打卡，使用自定义文本作为标签
-                    checkInRepository.checkInHabit(specialHabit.id, text)
+                    checkInRepository.checkInHabit(specialHabit.name, specialHabit.id, text)
                     
                     _uiState.update { state ->
                         state.copy(
