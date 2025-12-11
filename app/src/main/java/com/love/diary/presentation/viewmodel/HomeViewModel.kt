@@ -254,6 +254,8 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+    
+    private fun calculateDayIndex(startDate: String, targetDate: String): Int {
         val start = LocalDate.parse(startDate)
         val target = LocalDate.parse(targetDate)
         // 使用ChronoUnit计算天数差异，这能更准确地处理所有日期边界情况
