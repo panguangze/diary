@@ -63,7 +63,9 @@ fun HabitListScreen(
             )
             
             FloatingActionButton(
-                onClick = { showAddHabitDialog = true }
+                onClick = { 
+                    showAddHabitDialog = true 
+                }
             ) {
                 Icon(Icons.Default.Add, contentDescription = "添加打卡")
             }
