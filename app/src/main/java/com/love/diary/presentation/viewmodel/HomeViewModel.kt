@@ -34,8 +34,7 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    val repository: AppRepository,  // 改为public，以便在MainActivity中访问
-    private val checkInRepository: CheckInRepository
+    val repository: AppRepository  // 改为public，以便在MainActivity中访问
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -49,7 +48,7 @@ class HomeViewModel @Inject constructor(
     // 从统一打卡系统获取最新的异地恋日记打卡数据
     private suspend fun loadSpecialHabitData() {
         // 从统一打卡系统获取"异地恋日记"的最新记录
-        val checkInRecords = checkInRepository.getRecentCheckInsByName("异地恋日记", 1)
+        val checkInRecords = repository.getRecentCheckInsByName("异地恋日记", 1)
         if (checkInRecords.isNotEmpty()) {
             val latestRecord = checkInRecords.first()
             // 尝试将打卡标签映射到MoodType
@@ -200,7 +199,7 @@ class HomeViewModel @Inject constructor(
                     }
                     
                     // 对异地恋日记进行打卡 - 使用固定的打卡配置名称
-                    checkInRepository.checkInHabit("异地恋日记", specialHabit.id, moodTag)
+                    repository.checkInHabit("异地恋日记", moodTag)
                     
                     // 更新UI状态
                     _uiState.update {
@@ -226,7 +225,7 @@ class HomeViewModel @Inject constructor(
                 
                 if (specialHabit != null) {
                     // 对异地恋日记进行打卡 - 使用固定的打卡配置名称
-                    checkInRepository.checkInHabit("异地恋日记", specialHabit.id, text)
+                    repository.checkInHabit("异地恋日记", text)
                     
                     _uiState.update { state ->
                         state.copy(

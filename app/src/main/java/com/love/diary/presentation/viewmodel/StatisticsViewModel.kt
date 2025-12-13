@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.love.diary.data.model.MoodType
 import com.love.diary.data.repository.AppRepository
-import com.love.diary.data.repository.CheckInRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,8 +18,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
-    private val repository: AppRepository,
-    private val checkInRepository: CheckInRepository
+    private val repository: AppRepository
 ) : ViewModel() {
 
     data class StatisticsUiState(
@@ -128,7 +126,7 @@ class StatisticsViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // 获取打卡趋势数据
-                val checkInTrend = checkInRepository.getCheckInTrendByName(checkInName)
+                val checkInTrend = repository.getCheckInTrendByName(checkInName)
                 
                 // 计算打卡统计
                 val totalRecords = checkInTrend.size

@@ -4,67 +4,28 @@
 *.jar
 *.war
 *.aar
-*.apk
-*.dex
 
-# Android specific
+# Build directories
 build/
 .gradle/
-local.properties
-captures/
+target/
 
 # Dependencies
 .libs/
 lib/
 
-# IDE
+# IDE files
 .idea/
 *.iml
 *.ipr
 *.iws
+.vscode/
 
 # Temp files
 *.tmp
 *.temp
 *.log
 
-# Environment
-.env
-.env.local
-*.env.*
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Coverage
-.coverage
-coverage/
-htmlcov/
-
-# Python (if any mixed with Android project)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.pytest_cache/
-.mypy_cache/
-
-# Node (if any mixed with Android project)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Archives
-*.zip
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.7z
-*.rar
-*.gz
-*.bz2
-*.xz
-*.zst
+# Local configuration
+local.properties
 ```
