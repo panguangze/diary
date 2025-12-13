@@ -16,7 +16,8 @@ import javax.inject.Inject
 
 class AppRepository @Inject constructor(
     private val database: LoveDatabase,
-    private val eventDao: EventDao
+    private val eventDao: EventDao,
+    private val checkInRepository: CheckInRepository  // 添加新的打卡仓库
 ) {
 
     private val appConfigDao = database.appConfigDao()
@@ -326,5 +327,162 @@ class AppRepository @Inject constructor(
     // 删除事件配置
     suspend fun deleteEventConfig(id: Long) {
         eventDao.deactivateConfig(id) // 软删除
+    }
+
+    // === 新增功能：统一打卡管理 ===
+    
+    // 获取所有打卡配置
+    fun getAllCheckInConfigs(): Flow<List<CheckInConfig>> {
+        return checkInRepository.getAllCheckInConfigs()
+    }
+
+    // 根据类型获取打卡配置
+    fun getCheckInConfigsByType(type: CheckInType): Flow<List<CheckInConfig>> {
+        return checkInRepository.getCheckInConfigsByType(type)
+    }
+
+    // 获取特定打卡事项的记录
+    fun getCheckInsByName(name: String): Flow<List<CheckIn>> {
+        return checkInRepository.getCheckInsByName(name)
+    }
+
+    // 获取特定日期的打卡记录
+    fun getCheckInsByDate(date: String): Flow<List<CheckIn>> {
+        return checkInRepository.getCheckInsByDate(date)
+    }
+
+    // 获取指定日期范围内的打卡记录
+    fun getCheckInsBetweenDates(startDate: String, endDate: String): Flow<List<CheckIn>> {
+        return checkInRepository.getCheckInsBetweenDates(startDate, endDate)
+    }
+
+    // 获取特定类型的打卡记录
+    fun getCheckInsByType(type: CheckInType): Flow<List<CheckIn>> {
+        return checkInRepository.getCheckInsByType(type)
+    }
+
+    // 获取特定类型和日期范围内的打卡记录
+    fun getCheckInsByTypeAndDateRange(type: CheckInType, startDate: String, endDate: String): Flow<List<CheckIn>> {
+        return checkInRepository.getCheckInsByTypeAndDateRange(type, startDate, endDate)
+    }
+
+    // 获取所有唯一的打卡类型
+    fun getUniqueCheckInTypes(): Flow<List<CheckInType>> {
+        return checkInRepository.getUniqueCheckInTypes()
+    }
+
+    // 通用打卡功能
+    suspend fun checkIn(
+        name: String,
+        type: CheckInType,
+        moodType: MoodType? = null,
+        tag: String? = null,
+        note: String? = null,
+        attachmentUri: String? = null,
+        duration: Int? = null,
+        rating: Int? = null,
+        count: Int = 1
+    ): Long {
+        return checkInRepository.checkIn(
+            name = name,
+            type = type,
+            moodType = moodType,
+            tag = tag,
+            note = note,
+            attachmentUri = attachmentUri,
+            duration = duration,
+            rating = rating,
+            count = count
+        )
+    }
+
+    // 恋爱时间记录打卡（特殊打卡类型）
+    suspend fun checkInLoveDiary(
+        name: String = "恋爱日记",
+        moodType: MoodType,
+        note: String? = null,
+        attachmentUri: String? = null
+    ): Long {
+        return checkInRepository.checkInLoveDiary(
+            name = name,
+            moodType = moodType,
+            note = note,
+            attachmentUri = attachmentUri
+        )
+    }
+
+    // 普通打卡事项
+    suspend fun checkInHabit(
+        name: String,
+        tag: String? = null,
+        note: String? = null,
+        attachmentUri: String? = null
+    ): Long {
+        return checkInRepository.checkInHabit(
+            name = name,
+            tag = tag,
+            note = note,
+            attachmentUri = attachmentUri
+        )
+    }
+
+    // 里程碑事件打卡
+    suspend fun checkInMilestone(
+        name: String,
+        note: String? = null,
+        attachmentUri: String? = null,
+        rating: Int? = null
+    ): Long {
+        return checkInRepository.checkInMilestone(
+            name = name,
+            note = note,
+            attachmentUri = attachmentUri,
+            rating = rating
+        )
+    }
+
+    // 日常任务打卡
+    suspend fun checkInDailyTask(
+        name: String,
+        note: String? = null,
+        duration: Int? = null,
+        isCompleted: Boolean = true
+    ): Long {
+        return checkInRepository.checkInDailyTask(
+            name = name,
+            note = note,
+            duration = duration,
+            isCompleted = isCompleted
+        )
+    }
+
+    // 获取恋爱日记记录
+    fun getLoveDiaryRecords(): Flow<List<CheckIn>> {
+        return checkInRepository.getLoveDiaryRecords()
+    }
+
+    // 获取指定日期范围内的恋爱日记记录
+    suspend fun getLoveDiaryRecordsBetweenDates(startDate: String, endDate: String): List<CheckIn> {
+        return checkInRepository.getLoveDiaryRecordsBetweenDates(startDate, endDate)
+    }
+
+    // 获取最新的恋爱日记记录
+    suspend fun getLatestLoveDiaryRecord(): CheckIn? {
+        return checkInRepository.getLatestLoveDiaryRecord()
+    }
+
+    // 批量插入打卡记录
+    suspend fun insertCheckIns(checkIns: List<CheckIn>): List<Long> {
+        return checkInRepository.insertCheckIns(checkIns)
+    }
+
+    // 更新打卡记录
+    suspend fun updateCheckIn(checkIn: CheckIn) {
+        checkInRepository.updateCheckIn(checkIn)
+    }
+
+    // 删除打卡记录
+    suspend fun deleteCheckIn(id: Long) {
+        checkInRepository.deleteCheckIn(id)
     }
 }
