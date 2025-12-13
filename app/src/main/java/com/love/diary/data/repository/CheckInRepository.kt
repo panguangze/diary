@@ -307,6 +307,22 @@ class CheckInRepository @Inject constructor(
         )
     }
 
+    // 打卡 - 里程碑事件类型
+    suspend fun checkInMilestone(
+        name: String,
+        note: String? = null,
+        attachmentUri: String? = null,
+        rating: Int? = null
+    ): Long {
+        return checkIn(
+            name = name,
+            type = CheckInType.MILESTONE, // Using dedicated MILESTONE type
+            note = note,
+            attachmentUri = attachmentUri,
+            rating = rating
+        )
+    }
+
     // 获取特定打卡事项的记录
     fun getCheckInsByName(name: String): Flow<List<UnifiedCheckIn>> {
         return unifiedCheckInDao.getCheckInsByName(name)
