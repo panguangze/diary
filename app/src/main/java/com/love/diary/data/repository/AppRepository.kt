@@ -2,22 +2,21 @@ package com.love.diary.data.repository
 
 import com.love.diary.data.database.LoveDatabase
 import com.love.diary.data.database.dao.DailyMoodDao
+import com.love.diary.data.database.dao.EventDao
 import com.love.diary.data.database.dao.HabitDao
 import com.love.diary.data.database.entities.AppConfigEntity
 import com.love.diary.data.database.entities.DailyMoodEntity
-import com.love.diary.data.model.Habit
-import com.love.diary.data.model.HabitRecord
-import com.love.diary.data.model.HabitType
+import com.love.diary.data.model.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
-import com.love.diary.data.model.MoodType
 
 class AppRepository @Inject constructor(
-    private val database: LoveDatabase
+    private val database: LoveDatabase,
+    private val eventDao: EventDao
 ) {
 
     private val appConfigDao = database.appConfigDao()
@@ -265,5 +264,67 @@ class AppRepository @Inject constructor(
         val latestRecord = habitDao.getLatestHabitRecord(habitId)
         val currentCount = latestRecord?.count ?: 0
         return Pair(currentCount, totalRecords)
+    }
+
+    // === 新增功能：通用事件管理 ===
+    
+    // 获取指定日期的所有事件
+    suspend fun getEventsForDate(date: String): List<Event> {
+        return eventDao.getEventsByDate(date)
+    }
+
+    // 获取特定类型的所有事件
+    fun getEventsByType(eventType: EventType): Flow<List<Event>> {
+        return eventDao.getEventsByType(eventType, Int.MAX_VALUE, 0)
+    }
+
+    // 获取指定时间段内的事件
+    suspend fun getEventsBetweenDates(startDate: String, endDate: String): List<Event> {
+        return eventDao.getEventsBetweenDates(startDate, endDate)
+    }
+
+    // 创建新事件
+    suspend fun createEvent(event: Event): Long {
+        return eventDao.insertEvent(event)
+    }
+
+    // 更新事件
+    suspend fun updateEvent(event: Event) {
+        eventDao.updateEvent(event)
+    }
+
+    // 删除事件
+    suspend fun deleteEvent(eventId: Long) {
+        eventDao.deleteEventById(eventId)
+    }
+
+    // 获取活动事件配置
+    fun getActiveEventConfigs(): Flow<List<EventConfig>> {
+        return eventDao.getAllActiveConfigs()
+    }
+
+    // 根据事件类型获取配置
+    fun getEventConfigsByType(eventType: EventType): Flow<List<EventConfig>> {
+        return eventDao.getConfigsByEventType(eventType)
+    }
+
+    // 获取事件配置详情
+    suspend fun getEventConfigById(id: Long): EventConfig? {
+        return eventDao.getConfigById(id)
+    }
+
+    // 创建事件配置
+    suspend fun createEventConfig(config: EventConfig): Long {
+        return eventDao.insertConfig(config)
+    }
+
+    // 更新事件配置
+    suspend fun updateEventConfig(config: EventConfig) {
+        eventDao.updateConfig(config)
+    }
+
+    // 删除事件配置
+    suspend fun deleteEventConfig(id: Long) {
+        eventDao.deactivateConfig(id) // 软删除
     }
 }

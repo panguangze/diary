@@ -1,6 +1,7 @@
 package com.love.diary.di
 
 import com.love.diary.data.database.LoveDatabase
+import com.love.diary.data.database.dao.EventDao
 import com.love.diary.data.repository.AppRepository
 import dagger.Module
 import dagger.Provides
@@ -14,7 +15,16 @@ object RepositoryModule {
 
     @Singleton
     @Provides
-    fun provideAppRepository(database: LoveDatabase): AppRepository {
-        return AppRepository(database)
+    fun provideAppRepository(
+        database: LoveDatabase,
+        eventDao: EventDao
+    ): AppRepository {
+        return AppRepository(database, eventDao)
+    }
+    
+    @Singleton
+    @Provides
+    fun provideEventDao(database: LoveDatabase): EventDao {
+        return database.eventDao()
     }
 }
