@@ -50,4 +50,26 @@ object MigrationHelper {
             """)
         }
     }
+    
+    // 从版本5到版本6的迁移 - 更新checkins和checkin_configs表结构
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // 添加新列到checkins表
+            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `note` TEXT DEFAULT ''")
+            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `attachmentUri` TEXT DEFAULT ''")
+            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `duration` INTEGER DEFAULT 0")
+            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `rating` INTEGER DEFAULT 0")
+            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `isCompleted` INTEGER DEFAULT 1")
+            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `metadata` TEXT DEFAULT ''")
+            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `updatedAt` INTEGER NOT NULL DEFAULT 0")
+            
+            // 添加新列到checkin_configs表
+            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `targetValue` INTEGER DEFAULT 0")
+            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `reminderTime` TEXT DEFAULT ''")
+            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `isRecurring` INTEGER DEFAULT 0")
+            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `recurrencePattern` TEXT DEFAULT ''")
+            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `metadata` TEXT DEFAULT ''")
+            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `updatedAt` INTEGER NOT NULL DEFAULT 0")
+        }
+    }
 }
