@@ -4,7 +4,7 @@ import com.love.diary.data.database.LoveDatabase
 import com.love.diary.data.database.dao.EventDao
 import com.love.diary.data.database.dao.UnifiedCheckInDao
 import com.love.diary.data.repository.AppRepository
-import com.love.diary.data.repository.UnifiedCheckInRepository
+import com.love.diary.data.repository.CheckInRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,17 +19,18 @@ object RepositoryModule {
     @Provides
     fun provideAppRepository(
         database: LoveDatabase,
-        eventDao: EventDao
+        eventDao: EventDao,
+        checkInRepository: CheckInRepository
     ): AppRepository {
-        return AppRepository(database, eventDao)
+        return AppRepository(database, eventDao, checkInRepository)
     }
     
     @Singleton
     @Provides
-    fun provideUnifiedCheckInRepository(
+    fun provideCheckInRepository(
         database: LoveDatabase
-    ): UnifiedCheckInRepository {
-        return UnifiedCheckInRepository(database)
+    ): CheckInRepository {
+        return CheckInRepository(database)
     }
     
     @Singleton

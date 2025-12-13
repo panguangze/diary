@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import javax.inject.Inject
 
-class UnifiedCheckInRepository @Inject constructor(
+class CheckInRepository @Inject constructor(
     private val database: LoveDatabase
 ) {
     private val unifiedCheckInDao = database.unifiedCheckInDao()

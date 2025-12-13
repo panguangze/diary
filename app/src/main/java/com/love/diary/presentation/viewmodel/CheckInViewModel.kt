@@ -6,7 +6,7 @@ import com.love.diary.data.model.UnifiedCheckIn
 import com.love.diary.data.model.UnifiedCheckInConfig
 import com.love.diary.data.model.CheckInType
 import com.love.diary.data.model.MoodType
-import com.love.diary.data.repository.UnifiedCheckInRepository
+import com.love.diary.data.repository.CheckInRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +25,7 @@ data class CheckInUiState(
 
 @HiltViewModel
 class CheckInViewModel @Inject constructor(
-    private val checkInRepository: UnifiedCheckInRepository
+    private val checkInRepository: CheckInRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(CheckInUiState())

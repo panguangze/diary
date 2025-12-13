@@ -17,7 +17,7 @@ import javax.inject.Inject
 class AppRepository @Inject constructor(
     private val database: LoveDatabase,
     private val eventDao: EventDao,
-    private val checkInRepository: CheckInRepository  // 添加新的打卡仓库
+    private val checkInRepository: CheckInRepository
 ) {
 
     private val appConfigDao = database.appConfigDao()
@@ -469,6 +469,16 @@ class AppRepository @Inject constructor(
     // 获取最新的恋爱日记记录
     suspend fun getLatestLoveDiaryRecord(): CheckIn? {
         return checkInRepository.getLatestLoveDiaryRecord()
+    }
+
+    // 获取打卡趋势
+    suspend fun getCheckInTrendByName(name: String): List<CheckInTrend> {
+        return checkInRepository.getCheckInTrendByName(name)
+    }
+
+    // 获取指定数量的最近打卡记录
+    suspend fun getRecentCheckInsByName(name: String, limit: Int): List<CheckIn> {
+        return checkInRepository.getRecentCheckInsByName(name, limit)
     }
 
     // 批量插入打卡记录
