@@ -1,9 +1,11 @@
 ```
 # Kotlin/Android build artifacts
 *.class
-*.dex
 *.jar
+*.war
 *.aar
+*.apk
+*.dex
 
 # Android specific
 build/
@@ -13,6 +15,7 @@ captures/
 
 # Dependencies
 .libs/
+lib/
 
 # IDE
 .idea/
@@ -25,26 +28,43 @@ captures/
 *.temp
 *.log
 
-# Compiled files
-*.so
-*.dll
-*.dylib
-*.obj
-*.o
-*.out
-
-# Distribution / packaging
-dist/
-target/
-*.apk
-*.aab
-
 # Environment
 .env
 .env.local
 *.env.*
 
-# Cache directories
-.gradle/
-.caches/
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# Python (if any mixed with Android project)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Node (if any mixed with Android project)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archives
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.7z
+*.rar
+*.gz
+*.bz2
+*.xz
+*.zst
 ```

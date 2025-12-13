@@ -2,11 +2,11 @@ package com.love.diary.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.love.diary.data.model.CheckIn
-import com.love.diary.data.model.CheckInConfig
+import com.love.diary.data.model.UnifiedCheckIn
+import com.love.diary.data.model.UnifiedCheckInConfig
 import com.love.diary.data.model.CheckInType
 import com.love.diary.data.model.MoodType
-import com.love.diary.data.repository.CheckInRepository
+import com.love.diary.data.repository.UnifiedCheckInRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,16 +16,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class CheckInUiState(
-    val currentCheckInConfig: CheckInConfig? = null,
-    val checkInRecords: List<CheckIn> = emptyList(),
-    val allCheckInConfigs: List<CheckInConfig> = emptyList(),
+    val currentCheckInConfig: UnifiedCheckInConfig? = null,
+    val checkInRecords: List<UnifiedCheckIn> = emptyList(),
+    val allCheckInConfigs: List<UnifiedCheckInConfig> = emptyList(),
     val checkInTypes: List<CheckInType> = emptyList(),
     val isLoading: Boolean = false
 )
 
 @HiltViewModel
 class CheckInViewModel @Inject constructor(
-    private val checkInRepository: CheckInRepository
+    private val checkInRepository: UnifiedCheckInRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(CheckInUiState())
@@ -65,7 +65,7 @@ class CheckInViewModel @Inject constructor(
         }
     }
     
-    fun selectCheckInConfig(config: CheckInConfig) {
+    fun selectCheckInConfig(config: UnifiedCheckInConfig) {
         _uiState.update { state ->
             state.copy(currentCheckInConfig = config)
         }
@@ -97,7 +97,8 @@ class CheckInViewModel @Inject constructor(
         attachmentUri: String? = null,
         duration: Int? = null,
         rating: Int? = null,
-        count: Int = 1
+        count: Int = 1,
+        configId: Long? = null
     ) {
         viewModelScope.launch {
             checkInRepository.checkIn(
@@ -109,7 +110,8 @@ class CheckInViewModel @Inject constructor(
                 attachmentUri = attachmentUri,
                 duration = duration,
                 rating = rating,
-                count = count
+                count = count,
+                configId = configId
             )
         }
     }
@@ -146,45 +148,151 @@ class CheckInViewModel @Inject constructor(
         }
     }
     
-    fun checkInMilestone(
+    fun checkInExercise(
         name: String,
         note: String? = null,
-        attachmentUri: String? = null,
+        duration: Int? = null,
         rating: Int? = null
     ) {
         viewModelScope.launch {
-            checkInRepository.checkInMilestone(
+            checkInRepository.checkInExercise(
                 name = name,
                 note = note,
-                attachmentUri = attachmentUri,
+                duration = duration,
                 rating = rating
             )
         }
     }
     
-    fun checkInDailyTask(
+    fun checkInStudy(
         name: String,
         note: String? = null,
         duration: Int? = null,
-        isCompleted: Boolean = true
+        count: Int = 1
     ) {
         viewModelScope.launch {
-            checkInRepository.checkInDailyTask(
+            checkInRepository.checkInStudy(
                 name = name,
                 note = note,
                 duration = duration,
-                isCompleted = isCompleted
+                count = count
             )
         }
     }
     
-    fun createCheckInConfig(config: CheckInConfig) {
+    fun checkInWorkout(
+        name: String,
+        note: String? = null,
+        duration: Int? = null,
+        rating: Int? = null
+    ) {
+        viewModelScope.launch {
+            checkInRepository.checkInWorkout(
+                name = name,
+                note = note,
+                duration = duration,
+                rating = rating
+            )
+        }
+    }
+    
+    fun checkInDiet(
+        name: String,
+        note: String? = null,
+        tag: String? = null
+    ) {
+        viewModelScope.launch {
+            checkInRepository.checkInDiet(
+                name = name,
+                note = note,
+                tag = tag
+            )
+        }
+    }
+    
+    fun checkInMeditation(
+        name: String,
+        note: String? = null,
+        duration: Int? = null
+    ) {
+        viewModelScope.launch {
+            checkInRepository.checkInMeditation(
+                name = name,
+                note = note,
+                duration = duration
+            )
+        }
+    }
+    
+    fun checkInReading(
+        name: String,
+        note: String? = null,
+        duration: Int? = null,
+        count: Int = 1
+    ) {
+        viewModelScope.launch {
+            checkInRepository.checkInReading(
+                name = name,
+                note = note,
+                duration = duration,
+                count = count
+            )
+        }
+    }
+    
+    fun checkInWater(
+        name: String,
+        count: Int = 1,
+        note: String? = null
+    ) {
+        viewModelScope.launch {
+            checkInRepository.checkInWater(
+                name = name,
+                count = count,
+                note = note
+            )
+        }
+    }
+    
+    fun checkInSleep(
+        name: String,
+        duration: Int? = null,
+        moodType: MoodType? = null
+    ) {
+        viewModelScope.launch {
+            checkInRepository.checkInSleep(
+                name = name,
+                duration = duration,
+                moodType = moodType
+            )
+        }
+    }
+    
+    fun checkInCustom(
+        name: String,
+        type: CheckInType = CheckInType.CUSTOM,
+        note: String? = null,
+        tag: String? = null,
+        count: Int = 1
+    ) {
+        viewModelScope.launch {
+            checkInRepository.checkInCustom(
+                name = name,
+                type = type,
+                note = note,
+                tag = tag,
+                count = count
+            )
+        }
+    }
+    
+    fun createCheckInConfig(config: UnifiedCheckInConfig) {
         viewModelScope.launch {
             checkInRepository.saveCheckInConfig(config)
         }
     }
     
-    fun updateCheckInConfig(config: CheckInConfig) {
+    fun updateCheckInConfig(config: UnifiedCheckInConfig) {
         viewModelScope.launch {
             checkInRepository.updateCheckInConfig(config)
         }
