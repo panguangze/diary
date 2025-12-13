@@ -7,6 +7,7 @@ import com.love.diary.data.model.MoodType
 import com.love.diary.data.model.EventType
 import com.love.diary.data.model.UnifiedCheckIn
 import com.love.diary.data.repository.AppRepository
+import com.love.diary.data.repository.CheckInRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

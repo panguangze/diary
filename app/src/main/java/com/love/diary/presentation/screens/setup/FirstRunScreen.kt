@@ -223,9 +223,7 @@ fun FirstRunScreen(
                         
                         // 创建一个特殊的打卡事项，名称为用户输入的组合名，类型为正向打卡，标签为开心、满足等
                         // 如果用户没有输入组合名，则使用默认名称
-                        val habitName = if (coupleName.isNotBlank()) {
-                            coupleName
-                        } else {
+                        val habitName = coupleName.ifBlank {
                             "每日心情打卡"
                         }
                         
