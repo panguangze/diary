@@ -1,31 +1,51 @@
-```
-# Kotlin/Android build artifacts
 *.class
 *.jar
 *.war
+*.ear
+*.apk
 *.aar
-
-# Build directories
-build/
-.gradle/
 target/
-
-# Dependencies
-.libs/
-lib/
-
-# IDE files
-.idea/
-*.iml
-*.ipr
-*.iws
-.vscode/
-
-# Temp files
-*.tmp
-*.temp
+.gradle/
+build/
+.DS_Store
+Thumbs.db
 *.log
-
-# Local configuration
-local.properties
-```
+*.tmp
+*.swp
+*.swo
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.vscode/
+.idea/
+.env
+.env.local
+*.env.*
+coverage/
+htmlcov/
+.coverage
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
