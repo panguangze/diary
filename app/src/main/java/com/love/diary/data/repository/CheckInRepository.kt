@@ -80,6 +80,7 @@ class CheckInRepository @Inject constructor(
                     CheckInType.READING -> "阅读打卡"
                     CheckInType.WATER -> "喝水打卡"
                     CheckInType.SLEEP -> "睡眠打卡"
+                    CheckInType.MILESTONE -> "里程碑事件"
                     CheckInType.CUSTOM -> "自定义打卡"
                 },
                 buttonLabel = when(type) {
@@ -93,6 +94,7 @@ class CheckInRepository @Inject constructor(
                     CheckInType.READING -> "阅读"
                     CheckInType.WATER -> "喝水"
                     CheckInType.SLEEP -> "睡眠"
+                    CheckInType.MILESTONE -> "里程碑"
                     CheckInType.CUSTOM -> "打卡"
                 },
                 icon = when(type) {
@@ -106,6 +108,7 @@ class CheckInRepository @Inject constructor(
                     CheckInType.READING -> "📖"
                     CheckInType.WATER -> "💧"
                     CheckInType.SLEEP -> "😴"
+                    CheckInType.MILESTONE -> "🏆"
                     CheckInType.CUSTOM -> "🎯"
                 }
             )

@@ -62,6 +62,7 @@ fun CheckInDashboardScreen(
                                 CheckInType.READING -> "阅读打卡"
                                 CheckInType.WATER -> "喝水打卡"
                                 CheckInType.SLEEP -> "睡眠打卡"
+                                CheckInType.MILESTONE -> "里程碑事件"
                                 CheckInType.CUSTOM -> "自定义打卡"
                             },
                             style = MaterialTheme.typography.titleMedium
@@ -92,6 +93,7 @@ fun CheckInDashboardScreen(
                                                 CheckInType.READING -> "阅读"
                                                 CheckInType.WATER -> "喝水"
                                                 CheckInType.SLEEP -> "睡眠"
+                                                CheckInType.MILESTONE -> "里程碑事件"
                                                 else -> "自定义打卡"
                                             },
                                             type = checkInType
