@@ -59,6 +59,6 @@ interface CheckInDao {
     suspend fun getRecentCheckInsByName(name: String, limit: Int): List<CheckIn>
 
     // 获取某个打卡事项的记录趋势
-    @Query("SELECT date, count FROM checkins WHERE name = :name ORDER BY createdAt ASC")
+    @Query("SELECT date, COUNT(*) as count FROM checkins WHERE name = :name GROUP BY date ORDER BY date ASC")
     suspend fun getCheckInTrendByName(name: String): List<CheckInTrend>
 }
