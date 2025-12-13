@@ -45,49 +45,31 @@ class HomeViewModel @Inject constructor(
         observeConfigChanges()
     }
     
-    // 从特殊打卡事项获取最新的打卡数据
+    // 从统一打卡系统获取最新的异地恋日记打卡数据
     private suspend fun loadSpecialHabitData() {
-        // 获取所有习惯
-        val allHabits = repository.getAllHabits().firstOrNull() ?: emptyList()
-        
-        // 查找名为"我们的名字"或包含coupleName的特殊习惯
-        val specialHabit = allHabits.find { 
-            it.name == "我们的名字" || 
-            (uiState.value.coupleName != null && it.name == uiState.value.coupleName)
-        }
-        
-        if (specialHabit != null) {
-            // 获取该习惯的最新打卡记录
-            val latestRecord = repository.getHabitRecordsFlow(specialHabit.id).firstOrNull()?.firstOrNull()
-            if (latestRecord != null) {
-                // 尝试将打卡标签映射到MoodType
-                val moodType = when (latestRecord.note) {
-                    "开心" -> MoodType.HAPPY
-                    "满足" -> MoodType.SATISFIED
-                    "正常" -> MoodType.NORMAL
-                    "失落" -> MoodType.SAD
-                    "生气" -> MoodType.ANGRY
-                    else -> MoodType.OTHER
-                }
-                
-                // 更新UI状态
-                _uiState.update { state ->
-                    state.copy(
-                        todayMood = moodType,
-                        todayMoodText = if (moodType == MoodType.OTHER) latestRecord.note else null
-                    )
-                }
-            } else {
-                // 如果没有找到记录，则将心情设置为null
-                _uiState.update { state ->
-                    state.copy(
-                        todayMood = null,
-                        todayMoodText = null
-                    )
-                }
+        // 从统一打卡系统获取"异地恋日记"的最新记录
+        val checkInRecords = checkInRepository.getRecentCheckInsByName("异地恋日记", 1)
+        if (checkInRecords.isNotEmpty()) {
+            val latestRecord = checkInRecords.first()
+            // 尝试将打卡标签映射到MoodType
+            val moodType = when (latestRecord.tag) {
+                "开心" -> MoodType.HAPPY
+                "满足" -> MoodType.SATISFIED
+                "正常" -> MoodType.NORMAL
+                "失落" -> MoodType.SAD
+                "生气" -> MoodType.ANGRY
+                else -> MoodType.OTHER
+            }
+            
+            // 更新UI状态
+            _uiState.update { state ->
+                state.copy(
+                    todayMood = moodType,
+                    todayMoodText = if (moodType == MoodType.OTHER) latestRecord.tag else null
+                )
             }
         } else {
-            // 如果没有找到特殊打卡事项，则将心情设置为null
+            // 如果没有找到记录，则将心情设置为null
             _uiState.update { state ->
                 state.copy(
                     todayMood = null,
@@ -216,8 +198,8 @@ class HomeViewModel @Inject constructor(
                         else -> "其它"
                     }
                     
-                    // 对特殊打卡事项进行打卡
-                    checkInRepository.checkInHabit(specialHabit.name, specialHabit.id, moodTag)
+                    // 对异地恋日记进行打卡 - 使用固定的打卡配置名称
+                    checkInRepository.checkInHabit("异地恋日记", specialHabit.id, moodTag)
                     
                     // 更新UI状态
                     _uiState.update {
@@ -242,8 +224,8 @@ class HomeViewModel @Inject constructor(
                 }
                 
                 if (specialHabit != null) {
-                    // 对特殊打卡事项进行打卡，使用自定义文本作为标签
-                    checkInRepository.checkInHabit(specialHabit.name, specialHabit.id, text)
+                    // 对异地恋日记进行打卡 - 使用固定的打卡配置名称
+                    checkInRepository.checkInHabit("异地恋日记", specialHabit.id, text)
                     
                     _uiState.update { state ->
                         state.copy(

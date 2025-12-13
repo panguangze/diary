@@ -68,16 +68,12 @@ class CheckInRepository @Inject constructor(
             checkInDao.deleteCheckInById(todayCheckIn.id)
         }
 
-        // 计算计数（这里可以根据需要调整逻辑）
-        val previousCount = checkInDao.getCheckInCountByName(name)
-        val newCount = previousCount + 1
-
         val checkIn = CheckIn(
             name = name,
             type = CheckInType.LOVE_DIARY,
             moodType = moodType,
             date = today,
-            count = newCount
+            count = 1  // 每次打卡计数为1
         )
 
         return checkInDao.insertCheckIn(checkIn)
@@ -106,17 +102,13 @@ class CheckInRepository @Inject constructor(
             checkInDao.deleteCheckInById(todayCheckIn.id)
         }
 
-        // 计算计数
-        val previousCount = checkInDao.getCheckInCountByName(name)
-        val newCount = previousCount + 1
-
         val checkIn = CheckIn(
             name = name,
             type = CheckInType.HABIT,
             habitId = habitId,
             tag = tag,
             date = today,
-            count = newCount
+            count = 1  // 每次打卡计数为1
         )
 
         return checkInDao.insertCheckIn(checkIn)
