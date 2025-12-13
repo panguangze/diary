@@ -332,37 +332,37 @@ class AppRepository @Inject constructor(
     // === 新增功能：统一打卡管理 ===
     
     // 获取所有打卡配置
-    fun getAllCheckInConfigs(): Flow<List<CheckInConfig>> {
+    fun getAllCheckInConfigs(): Flow<List<UnifiedCheckInConfig>> {
         return checkInRepository.getAllCheckInConfigs()
     }
 
     // 根据类型获取打卡配置
-    fun getCheckInConfigsByType(type: CheckInType): Flow<List<CheckInConfig>> {
+    fun getCheckInConfigsByType(type: CheckInType): Flow<List<UnifiedCheckInConfig>> {
         return checkInRepository.getCheckInConfigsByType(type)
     }
 
     // 获取特定打卡事项的记录
-    fun getCheckInsByName(name: String): Flow<List<CheckIn>> {
+    fun getCheckInsByName(name: String): Flow<List<UnifiedCheckIn>> {
         return checkInRepository.getCheckInsByName(name)
     }
 
     // 获取特定日期的打卡记录
-    fun getCheckInsByDate(date: String): Flow<List<CheckIn>> {
+    fun getCheckInsByDate(date: String): Flow<List<UnifiedCheckIn>> {
         return checkInRepository.getCheckInsByDate(date)
     }
 
     // 获取指定日期范围内的打卡记录
-    fun getCheckInsBetweenDates(startDate: String, endDate: String): Flow<List<CheckIn>> {
+    fun getCheckInsBetweenDates(startDate: String, endDate: String): Flow<List<UnifiedCheckIn>> {
         return checkInRepository.getCheckInsBetweenDates(startDate, endDate)
     }
 
     // 获取特定类型的打卡记录
-    fun getCheckInsByType(type: CheckInType): Flow<List<CheckIn>> {
+    fun getCheckInsByType(type: CheckInType): Flow<List<UnifiedCheckIn>> {
         return checkInRepository.getCheckInsByType(type)
     }
 
     // 获取特定类型和日期范围内的打卡记录
-    fun getCheckInsByTypeAndDateRange(type: CheckInType, startDate: String, endDate: String): Flow<List<CheckIn>> {
+    fun getCheckInsByTypeAndDateRange(type: CheckInType, startDate: String, endDate: String): Flow<List<UnifiedCheckIn>> {
         return checkInRepository.getCheckInsByTypeAndDateRange(type, startDate, endDate)
     }
 
@@ -457,17 +457,17 @@ class AppRepository @Inject constructor(
     }
 
     // 获取恋爱日记记录
-    fun getLoveDiaryRecords(): Flow<List<CheckIn>> {
+    fun getLoveDiaryRecords(): Flow<List<UnifiedCheckIn>> {
         return checkInRepository.getLoveDiaryRecords()
     }
 
     // 获取指定日期范围内的恋爱日记记录
-    suspend fun getLoveDiaryRecordsBetweenDates(startDate: String, endDate: String): List<CheckIn> {
+    suspend fun getLoveDiaryRecordsBetweenDates(startDate: String, endDate: String): List<UnifiedCheckIn> {
         return checkInRepository.getLoveDiaryRecordsBetweenDates(startDate, endDate)
     }
 
     // 获取最新的恋爱日记记录
-    suspend fun getLatestLoveDiaryRecord(): CheckIn? {
+    suspend fun getLatestLoveDiaryRecord(): UnifiedCheckIn? {
         return checkInRepository.getLatestLoveDiaryRecord()
     }
 
@@ -477,17 +477,17 @@ class AppRepository @Inject constructor(
     }
 
     // 获取指定数量的最近打卡记录
-    suspend fun getRecentCheckInsByName(name: String, limit: Int): List<CheckIn> {
+    suspend fun getRecentCheckInsByName(name: String, limit: Int): List<UnifiedCheckIn> {
         return checkInRepository.getRecentCheckInsByName(name, limit)
     }
 
     // 批量插入打卡记录
-    suspend fun insertCheckIns(checkIns: List<CheckIn>): List<Long> {
+    suspend fun insertCheckIns(checkIns: List<UnifiedCheckIn>): List<Long> {
         return checkInRepository.insertCheckIns(checkIns)
     }
 
     // 更新打卡记录
-    suspend fun updateCheckIn(checkIn: CheckIn) {
+    suspend fun updateCheckIn(checkIn: UnifiedCheckIn) {
         checkInRepository.updateCheckIn(checkIn)
     }
 

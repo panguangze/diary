@@ -308,7 +308,7 @@ class CheckInViewModel @Inject constructor(
     fun loadCheckInsBetweenDates(startDate: String, endDate: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val records = checkInRepository.getCheckInsBetweenDates(startDate, endDate).value
+            val records = checkInRepository.getCheckInsBetweenDates(startDate, endDate).first()
             _uiState.update { state ->
                 state.copy(
                     checkInRecords = records,
@@ -322,7 +322,7 @@ class CheckInViewModel @Inject constructor(
     fun loadCheckInsByTypeAndDateRange(type: CheckInType, startDate: String, endDate: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val records = checkInRepository.getCheckInsByTypeAndDateRange(type, startDate, endDate).value
+            val records = checkInRepository.getCheckInsByTypeAndDateRange(type, startDate, endDate).first()
             _uiState.update { state ->
                 state.copy(
                     checkInRecords = records,
