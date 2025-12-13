@@ -9,19 +9,19 @@ import com.love.diary.data.database.dao.AppConfigDao
 import com.love.diary.data.database.dao.DailyMoodDao
 import com.love.diary.data.database.dao.EventDao
 import com.love.diary.data.database.dao.HabitDao
-import com.love.diary.data.database.dao.CheckInDao
+import com.love.diary.data.database.dao.UnifiedCheckInDao
 import com.love.diary.data.database.entities.AppConfigEntity
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.Event
 import com.love.diary.data.model.EventConfig
 import com.love.diary.data.model.Habit
 import com.love.diary.data.model.HabitRecord
-import com.love.diary.data.model.CheckIn
-import com.love.diary.data.model.CheckInConfig
+import com.love.diary.data.model.UnifiedCheckIn
+import com.love.diary.data.model.UnifiedCheckInConfig
 
 @Database(
-    entities = [AppConfigEntity::class, DailyMoodEntity::class, Habit::class, HabitRecord::class, Event::class, EventConfig::class, CheckIn::class, CheckInConfig::class],
-    version = 6,
+    entities = [AppConfigEntity::class, DailyMoodEntity::class, Habit::class, HabitRecord::class, Event::class, EventConfig::class, UnifiedCheckIn::class, UnifiedCheckInConfig::class],
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -31,7 +31,7 @@ abstract class LoveDatabase : RoomDatabase() {
     abstract fun dailyMoodDao(): DailyMoodDao
     abstract fun habitDao(): HabitDao
     abstract fun eventDao(): EventDao
-    abstract fun checkInDao(): CheckInDao
+    abstract fun unifiedCheckInDao(): UnifiedCheckInDao
     
     companion object {
         @Volatile
@@ -44,7 +44,7 @@ abstract class LoveDatabase : RoomDatabase() {
                     LoveDatabase::class.java,
                     "love_diary.db"
                 )
-                .addMigrations(MigrationHelper.MIGRATION_4_5, MigrationHelper.MIGRATION_5_6)
+                .addMigrations(MigrationHelper.MIGRATION_4_5, MigrationHelper.MIGRATION_5_6, MigrationHelper.MIGRATION_6_7)
                 .build()
                 INSTANCE = instance
                 instance
