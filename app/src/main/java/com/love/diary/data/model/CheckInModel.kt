@@ -19,6 +19,7 @@ enum class CheckInType {
     READING,       // 阅读打卡
     WATER,         // 喝水打卡
     SLEEP,         // 睡眠打卡
+    MILESTONE,     // 里程碑事件
     CUSTOM         // 自定义打卡
 }
 
