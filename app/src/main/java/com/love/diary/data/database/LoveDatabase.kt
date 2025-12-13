@@ -28,6 +28,7 @@ abstract class LoveDatabase : RoomDatabase() {
     abstract fun dailyMoodDao(): DailyMoodDao
     abstract fun habitDao(): HabitDao
     abstract fun eventDao(): EventDao
+    abstract fun checkInDao(): CheckInDao
     
     companion object {
         @Volatile
