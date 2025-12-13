@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.firstOrNull
 import com.love.diary.data.model.MoodType
+import com.love.diary.data.model.EventType
 import com.love.diary.data.repository.AppRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -311,5 +312,47 @@ class HomeViewModel @Inject constructor(
         // 使用ChronoUnit计算天数差异，这能更准确地处理所有日期边界情况
         val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(start, target) + 1
         return daysBetween.toInt()
+    }
+    
+    // === 新增功能：使用新的事件模型 ===
+    
+    // 获取今天的事件
+    suspend fun getTodaysEvents(): List<com.love.diary.data.model.Event> {
+        val today = LocalDate.now().toString()
+        return repository.getEventsForDate(today)
+    }
+    
+    // 创建新事件
+    suspend fun createEvent(name: String, type: EventType, moodType: MoodType? = null, tag: String? = null): Long {
+        val event = com.love.diary.data.model.Event(
+            name = name,
+            type = type,
+            moodType = moodType,
+            tag = tag
+        )
+        return repository.createEvent(event)
+    }
+    
+    // 获取活动事件配置
+    fun getActiveEventConfigs() = repository.getActiveEventConfigs()
+    
+    // 创建事件配置
+    suspend fun createEventConfig(
+        name: String, 
+        type: EventType, 
+        description: String? = null,
+        buttonLabel: String = "记录",
+        icon: String = "📝",
+        color: String = "#6200EE"
+    ): Long {
+        val config = com.love.diary.data.model.EventConfig(
+            name = name,
+            type = type,
+            description = description,
+            buttonLabel = buttonLabel,
+            icon = icon,
+            color = color
+        )
+        return repository.createEventConfig(config)
     }
 }
