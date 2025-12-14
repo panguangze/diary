@@ -82,18 +82,31 @@ class StatisticsViewModel @Inject constructor(
             val startDateStr = startDate.format(dateFormatter)
             val endDateStr = endDate.format(dateFormatter)
 
-            // 获取统计数据
-            val records = repository.getMoodsBetweenDates(startDateStr, endDateStr)
+            // 从统一打卡系统获取"异地恋日记"记录
+            val checkIns = repository.getRecentCheckInsByName("异地恋日记", days * 2) // 获取更多记录以确保覆盖日期范围
+            
+            // 过滤日期范围内的记录，使用LocalDate进行比较
+            val records = checkIns.filter { checkIn ->
+                try {
+                    val checkInDate = LocalDate.parse(checkIn.date)
+                    !checkInDate.isBefore(startDate) && !checkInDate.isAfter(endDate)
+                } catch (e: Exception) {
+                    false // 如果日期解析失败，排除该记录
+                }
+            }
+            
             val totalRecords = records.size
 
             // 计算心情统计
             val moodStats = mutableMapOf<MoodType, Int>()
             var totalScore = 0
 
-            records.forEach { record ->
-                val moodType = MoodType.fromCode(record.moodTypeCode)
+            records.forEach { checkIn ->
+                // 使用工具函数将tag映射到MoodType
+                val moodType = MoodType.fromTag(checkIn.tag)
+                
                 moodStats[moodType] = moodStats.getOrDefault(moodType, 0) + 1
-                totalScore += record.moodScore
+                totalScore += moodType.score
             }
 
             // 计算平均心情
@@ -105,8 +118,10 @@ class StatisticsViewModel @Inject constructor(
             val topMood = moodStats.maxByOrNull { it.value }?.key
 
             // 获取心情趋势数据
-            val trendData = repository.getMoodTrendBetweenDates(startDateStr, endDateStr)
-                .map { it.date to it.moodScore }
+            val trendData = records.map { checkIn ->
+                val moodType = MoodType.fromTag(checkIn.tag)
+                checkIn.date to moodType.score
+            }
 
             _uiState.update { state ->
                 state.copy(

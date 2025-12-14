@@ -80,5 +80,37 @@ enum class MoodType(
         fun fromCode(code: String): MoodType {
             return values().find { it.code == code } ?: OTHER
         }
+        
+        /**
+         * Get MoodType from Chinese display name tag
+         * @param tag The Chinese display name (e.g., "开心", "满足", etc.)
+         * @return Matching MoodType or OTHER if not found
+         */
+        fun fromTag(tag: String?): MoodType {
+            return when (tag) {
+                "开心" -> HAPPY
+                "满足" -> SATISFIED
+                "正常" -> NORMAL
+                "失落" -> SAD
+                "生气" -> ANGRY
+                else -> OTHER
+            }
+        }
+        
+        /**
+         * Convert MoodType to Chinese display name tag
+         * @param moodType The MoodType to convert
+         * @return Chinese display name
+         */
+        fun toTag(moodType: MoodType): String {
+            return when (moodType) {
+                HAPPY -> "开心"
+                SATISFIED -> "满足"
+                NORMAL -> "正常"
+                SAD -> "失落"
+                ANGRY -> "生气"
+                OTHER -> "其它"
+            }
+        }
     }
 }
