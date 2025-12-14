@@ -186,9 +186,6 @@ class SettingsViewModel @Inject constructor(
     fun clearMessage() {
         _uiState.update { it.copy(errorMessage = null, successMessage = null) }
     }
-            repository.deleteAppConfig()
-        }
-    }
     
     fun updateStartDate(date: String) {
         viewModelScope.launch {

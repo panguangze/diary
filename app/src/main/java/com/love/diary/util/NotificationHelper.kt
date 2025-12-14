@@ -51,6 +51,9 @@ class NotificationHelper(private val context: Context) {
      * Show daily reminder notification
      * @param title Notification title
      * @param message Notification message
+     * 
+     * Note: The icon should be replaced with app-specific icon (R.drawable.ic_notification)
+     * when the app icon resource is available
      */
     fun showDailyReminder(
         title: String = "记录今天的心情",
@@ -68,7 +71,8 @@ class NotificationHelper(private val context: Context) {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Replace with app icon
+            // TODO: Replace with app icon when available: R.drawable.ic_notification
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
@@ -90,6 +94,9 @@ class NotificationHelper(private val context: Context) {
     /**
      * Show anniversary notification
      * @param dayCount Number of days together
+     * 
+     * Note: The icon should be replaced with app-specific icon (R.drawable.ic_notification)
+     * when the app icon resource is available
      */
     fun showAnniversaryReminder(dayCount: Int) {
         val title = "纪念日提醒"
@@ -107,7 +114,8 @@ class NotificationHelper(private val context: Context) {
         )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.star_on) // Replace with app icon
+            // TODO: Replace with app icon when available: R.drawable.ic_notification
+            .setSmallIcon(android.R.drawable.star_on)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
