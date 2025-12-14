@@ -83,11 +83,16 @@ class StatisticsViewModel @Inject constructor(
             val endDateStr = endDate.format(dateFormatter)
 
             // 从统一打卡系统获取"异地恋日记"记录
-            val checkIns = repository.getRecentCheckInsByName("异地恋日记", days)
+            val checkIns = repository.getRecentCheckInsByName("异地恋日记", days * 2) // 获取更多记录以确保覆盖日期范围
             
-            // 过滤日期范围内的记录
+            // 过滤日期范围内的记录，使用LocalDate进行比较
             val records = checkIns.filter { checkIn ->
-                checkIn.date >= startDateStr && checkIn.date <= endDateStr
+                try {
+                    val checkInDate = LocalDate.parse(checkIn.date)
+                    !checkInDate.isBefore(startDate) && !checkInDate.isAfter(endDate)
+                } catch (e: Exception) {
+                    false // 如果日期解析失败，排除该记录
+                }
             }
             
             val totalRecords = records.size
