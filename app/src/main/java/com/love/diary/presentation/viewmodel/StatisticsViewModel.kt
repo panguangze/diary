@@ -97,15 +97,8 @@ class StatisticsViewModel @Inject constructor(
             var totalScore = 0
 
             records.forEach { checkIn ->
-                // 将tag映射到MoodType
-                val moodType = when (checkIn.tag) {
-                    "开心" -> MoodType.HAPPY
-                    "满足" -> MoodType.SATISFIED
-                    "正常" -> MoodType.NORMAL
-                    "失落" -> MoodType.SAD
-                    "生气" -> MoodType.ANGRY
-                    else -> MoodType.OTHER
-                }
+                // 使用工具函数将tag映射到MoodType
+                val moodType = MoodType.fromTag(checkIn.tag)
                 
                 moodStats[moodType] = moodStats.getOrDefault(moodType, 0) + 1
                 totalScore += moodType.score
@@ -121,14 +114,7 @@ class StatisticsViewModel @Inject constructor(
 
             // 获取心情趋势数据
             val trendData = records.map { checkIn ->
-                val moodType = when (checkIn.tag) {
-                    "开心" -> MoodType.HAPPY
-                    "满足" -> MoodType.SATISFIED
-                    "正常" -> MoodType.NORMAL
-                    "失落" -> MoodType.SAD
-                    "生气" -> MoodType.ANGRY
-                    else -> MoodType.OTHER
-                }
+                val moodType = MoodType.fromTag(checkIn.tag)
                 checkIn.date to moodType.score
             }
 

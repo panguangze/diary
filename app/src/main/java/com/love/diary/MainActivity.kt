@@ -136,9 +136,7 @@ fun MainAppContent(
         // 首次运行显示设置页
         FirstRunScreen(
             repository = repository,
-            onSetupComplete = {
-                isFirstRun = false
-            },
+            onSetupComplete = onSetupComplete,
             modifier = Modifier.fillMaxSize()
         )
     } else {

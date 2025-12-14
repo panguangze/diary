@@ -33,22 +33,32 @@ class HistoryViewModel @Inject constructor(
 
             // 从统一打卡系统获取"异地恋日记"记录
             repository.getCheckInsByName("异地恋日记").collect { checkIns ->
+                // 获取配置以计算dayIndex
+                val config = repository.getAppConfig()
+                val startDateStr = config?.startDate
+                
                 // 将UnifiedCheckIn转换为DailyMoodEntity用于显示
                 val moodRecords = checkIns.mapNotNull { checkIn ->
-                    // 尝试将tag映射到MoodType
-                    val moodType = when (checkIn.tag) {
-                        "开心" -> com.love.diary.data.model.MoodType.HAPPY
-                        "满足" -> com.love.diary.data.model.MoodType.SATISFIED
-                        "正常" -> com.love.diary.data.model.MoodType.NORMAL
-                        "失落" -> com.love.diary.data.model.MoodType.SAD
-                        "生气" -> com.love.diary.data.model.MoodType.ANGRY
-                        else -> com.love.diary.data.model.MoodType.OTHER
+                    // 使用工具函数将tag映射到MoodType
+                    val moodType = com.love.diary.data.model.MoodType.fromTag(checkIn.tag)
+                    
+                    // 计算dayIndex
+                    val dayIndex = if (startDateStr != null) {
+                        try {
+                            val startDate = java.time.LocalDate.parse(startDateStr)
+                            val checkInDate = java.time.LocalDate.parse(checkIn.date)
+                            java.time.temporal.ChronoUnit.DAYS.between(startDate, checkInDate).toInt() + 1
+                        } catch (e: Exception) {
+                            0
+                        }
+                    } else {
+                        0
                     }
                     
                     com.love.diary.data.database.entities.DailyMoodEntity(
                         id = checkIn.id,
                         date = checkIn.date,
-                        dayIndex = 0, // 可以根据需要计算
+                        dayIndex = dayIndex,
                         moodTypeCode = moodType.code,
                         moodScore = moodType.score,
                         moodText = checkIn.tag,

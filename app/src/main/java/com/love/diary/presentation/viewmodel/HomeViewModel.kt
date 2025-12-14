@@ -54,14 +54,7 @@ class HomeViewModel @Inject constructor(
         if (checkInRecords.isNotEmpty()) {
             val latestRecord = checkInRecords.first()
             // 尝试将打卡标签映射到MoodType
-            val moodType = when (latestRecord.tag) {
-                "开心" -> MoodType.HAPPY
-                "满足" -> MoodType.SATISFIED
-                "正常" -> MoodType.NORMAL
-                "失落" -> MoodType.SAD
-                "生气" -> MoodType.ANGRY
-                else -> MoodType.OTHER
-            }
+            val moodType = MoodType.fromTag(latestRecord.tag)
             
             // 更新UI状态
             _uiState.update { state ->
@@ -183,14 +176,7 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { it.copy(showOtherMoodDialog = true) }
             } else {
                 // 获取心情标签对应的文本
-                val moodTag = when (moodType) {
-                    MoodType.HAPPY -> "开心"
-                    MoodType.SATISFIED -> "满足"
-                    MoodType.NORMAL -> "正常"
-                    MoodType.SAD -> "失落"
-                    MoodType.ANGRY -> "生气"
-                    else -> "其它"
-                }
+                val moodTag = MoodType.toTag(moodType)
                 
                 // 对异地恋日记进行打卡 - 使用固定的打卡配置名称
                 repository.checkInHabit("异地恋日记", moodTag)
