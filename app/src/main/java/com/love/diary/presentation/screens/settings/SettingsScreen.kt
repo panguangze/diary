@@ -124,6 +124,13 @@ fun SettingsScreen(
         // 显示设置
         item {
             SettingsCard(title = "显示设置") {
+                ThemeSettingsItem(
+                    currentDarkMode = uiState.darkMode,
+                    onDarkModeChange = viewModel::setDarkMode
+                )
+                
+                Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                
                 SwitchSettingsItem(
                     title = "心情小提示",
                     subtitle = "在首页显示心情反馈文案",
@@ -449,4 +456,67 @@ fun SwitchSettingsItem(
             onCheckedChange = onCheckedChange
         )
     }
+}
+
+/**
+ * Theme settings item with radio button selection
+ */
+@Composable
+fun ThemeSettingsItem(
+    currentDarkMode: Boolean?,
+    onDarkModeChange: (Boolean?) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Text(
+            text = "主题设置",
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            ThemeOption(
+                label = "跟随系统",
+                isSelected = currentDarkMode == null,
+                onClick = { onDarkModeChange(null) }
+            )
+            
+            ThemeOption(
+                label = "浅色",
+                isSelected = currentDarkMode == false,
+                onClick = { onDarkModeChange(false) }
+            )
+            
+            ThemeOption(
+                label = "深色",
+                isSelected = currentDarkMode == true,
+                onClick = { onDarkModeChange(true) }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ThemeOption(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    FilterChip(
+        selected = isSelected,
+        onClick = onClick,
+        label = { Text(label) },
+        leadingIcon = if (isSelected) {
+            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
+        } else null
+    )
 }
