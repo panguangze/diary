@@ -204,4 +204,23 @@ object MigrationHelper {
             database.execSQL("CREATE INDEX IF NOT EXISTS idx_habit_records_habit_date ON habit_records(habitId, date)")
         }
     }
+    
+    /**
+     * Migration from version 8 to 9 - Add missing columns to app_config table
+     * 
+     * This migration adds the required columns to app_config table to match AppConfigEntity:
+     * - createdAt: Timestamp when the config was created
+     * - updatedAt: Timestamp when the config was last updated
+     * - reservedText1: Reserved text field for future use
+     * - reservedText2: Reserved text field for future use
+     */
+    val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add missing columns to app_config table
+            addColumnIfNotExists(database, "app_config", "createdAt", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(database, "app_config", "updatedAt", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(database, "app_config", "reservedText1", "TEXT DEFAULT NULL")
+            addColumnIfNotExists(database, "app_config", "reservedText2", "TEXT DEFAULT NULL")
+        }
+    }
 }
