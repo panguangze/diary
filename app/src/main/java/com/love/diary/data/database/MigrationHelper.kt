@@ -51,25 +51,50 @@ object MigrationHelper {
         }
     }
     
+    // Helper function to safely add a column if it doesn't already exist
+    private fun addColumnIfNotExists(
+        database: SupportSQLiteDatabase,
+        tableName: String,
+        columnName: String,
+        columnDefinition: String
+    ) {
+        // Check if column already exists
+        val cursor = database.query("PRAGMA table_info($tableName)")
+        var columnExists = false
+        while (cursor.moveToNext()) {
+            val nameIndex = cursor.getColumnIndex("name")
+            if (nameIndex >= 0 && cursor.getString(nameIndex) == columnName) {
+                columnExists = true
+                break
+            }
+        }
+        cursor.close()
+        
+        // Only add the column if it doesn't exist
+        if (!columnExists) {
+            database.execSQL("ALTER TABLE `$tableName` ADD COLUMN `$columnName` $columnDefinition")
+        }
+    }
+
     // 从版本5到版本6的迁移 - 更新checkins和checkin_configs表结构
     val MIGRATION_5_6 = object : Migration(5, 6) {
         override fun migrate(database: SupportSQLiteDatabase) {
             // 添加新列到checkins表
-            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `note` TEXT DEFAULT ''")
-            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `attachmentUri` TEXT DEFAULT ''")
-            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `duration` INTEGER DEFAULT 0")
-            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `rating` INTEGER DEFAULT 0")
-            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `isCompleted` INTEGER DEFAULT 1")
-            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `metadata` TEXT DEFAULT ''")
-            database.execSQL("ALTER TABLE `checkins` ADD COLUMN `updatedAt` INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(database, "checkins", "note", "TEXT DEFAULT ''")
+            addColumnIfNotExists(database, "checkins", "attachmentUri", "TEXT DEFAULT ''")
+            addColumnIfNotExists(database, "checkins", "duration", "INTEGER DEFAULT 0")
+            addColumnIfNotExists(database, "checkins", "rating", "INTEGER DEFAULT 0")
+            addColumnIfNotExists(database, "checkins", "isCompleted", "INTEGER DEFAULT 1")
+            addColumnIfNotExists(database, "checkins", "metadata", "TEXT DEFAULT ''")
+            addColumnIfNotExists(database, "checkins", "updatedAt", "INTEGER NOT NULL DEFAULT 0")
             
             // 添加新列到checkin_configs表
-            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `targetValue` INTEGER DEFAULT 0")
-            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `reminderTime` TEXT DEFAULT ''")
-            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `isRecurring` INTEGER DEFAULT 0")
-            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `recurrencePattern` TEXT DEFAULT ''")
-            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `metadata` TEXT DEFAULT ''")
-            database.execSQL("ALTER TABLE `checkin_configs` ADD COLUMN `updatedAt` INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(database, "checkin_configs", "targetValue", "INTEGER DEFAULT 0")
+            addColumnIfNotExists(database, "checkin_configs", "reminderTime", "TEXT DEFAULT ''")
+            addColumnIfNotExists(database, "checkin_configs", "isRecurring", "INTEGER DEFAULT 0")
+            addColumnIfNotExists(database, "checkin_configs", "recurrencePattern", "TEXT DEFAULT ''")
+            addColumnIfNotExists(database, "checkin_configs", "metadata", "TEXT DEFAULT ''")
+            addColumnIfNotExists(database, "checkin_configs", "updatedAt", "INTEGER NOT NULL DEFAULT 0")
         }
     }
     
