@@ -417,6 +417,11 @@ class AppRepository @Inject constructor(
     fun getCheckInConfigsByType(type: CheckInType): Flow<List<UnifiedCheckInConfig>> {
         return checkInRepository.getCheckInConfigsByType(type)
     }
+    
+    // 保存打卡配置
+    suspend fun saveCheckInConfig(config: UnifiedCheckInConfig): Long {
+        return checkInRepository.saveCheckInConfig(config)
+    }
 
     // 获取特定打卡事项的记录
     fun getCheckInsByName(name: String): Flow<List<UnifiedCheckIn>> {

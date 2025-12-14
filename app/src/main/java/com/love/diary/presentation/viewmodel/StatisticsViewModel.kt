@@ -82,18 +82,33 @@ class StatisticsViewModel @Inject constructor(
             val startDateStr = startDate.format(dateFormatter)
             val endDateStr = endDate.format(dateFormatter)
 
-            // 获取统计数据
-            val records = repository.getMoodsBetweenDates(startDateStr, endDateStr)
+            // 从统一打卡系统获取"异地恋日记"记录
+            val checkIns = repository.getRecentCheckInsByName("异地恋日记", days)
+            
+            // 过滤日期范围内的记录
+            val records = checkIns.filter { checkIn ->
+                checkIn.date >= startDateStr && checkIn.date <= endDateStr
+            }
+            
             val totalRecords = records.size
 
             // 计算心情统计
             val moodStats = mutableMapOf<MoodType, Int>()
             var totalScore = 0
 
-            records.forEach { record ->
-                val moodType = MoodType.fromCode(record.moodTypeCode)
+            records.forEach { checkIn ->
+                // 将tag映射到MoodType
+                val moodType = when (checkIn.tag) {
+                    "开心" -> MoodType.HAPPY
+                    "满足" -> MoodType.SATISFIED
+                    "正常" -> MoodType.NORMAL
+                    "失落" -> MoodType.SAD
+                    "生气" -> MoodType.ANGRY
+                    else -> MoodType.OTHER
+                }
+                
                 moodStats[moodType] = moodStats.getOrDefault(moodType, 0) + 1
-                totalScore += record.moodScore
+                totalScore += moodType.score
             }
 
             // 计算平均心情
@@ -105,8 +120,17 @@ class StatisticsViewModel @Inject constructor(
             val topMood = moodStats.maxByOrNull { it.value }?.key
 
             // 获取心情趋势数据
-            val trendData = repository.getMoodTrendBetweenDates(startDateStr, endDateStr)
-                .map { it.date to it.moodScore }
+            val trendData = records.map { checkIn ->
+                val moodType = when (checkIn.tag) {
+                    "开心" -> MoodType.HAPPY
+                    "满足" -> MoodType.SATISFIED
+                    "正常" -> MoodType.NORMAL
+                    "失落" -> MoodType.SAD
+                    "生气" -> MoodType.ANGRY
+                    else -> MoodType.OTHER
+                }
+                checkIn.date to moodType.score
+            }
 
             _uiState.update { state ->
                 state.copy(

@@ -40,11 +40,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val darkMode by remember { mutableStateOf<Boolean?>(null) }
-            
-            LoveDiaryTheme(darkTheme = darkMode ?: isSystemInDarkTheme()) {
-                MainApp()
-            }
+            MainApp()
         }
     }
 }
@@ -79,7 +75,55 @@ fun MainApp() {
             darkMode = config?.darkMode
         }
     }
+    
+    // Apply theme based on dark mode setting
+    LoveDiaryTheme(darkTheme = darkMode ?: isSystemInDarkTheme()) {
+        MainAppContent(
+            isLoading = isLoading,
+            isFirstRun = isFirstRun,
+            repository = repository,
+            onSetupComplete = { isFirstRun = false },
+            selectedTab = selectedTab,
+            onTabSelected = { index ->
+                selectedTab = index
+                when (index) {
+                    0 -> navController.navigate(Screen.Home.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                    1 -> navController.navigate(Screen.Habits.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                    2 -> navController.navigate(Screen.History.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                    3 -> navController.navigate(Screen.Statistics.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                    4 -> navController.navigate(Screen.Settings.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            },
+            navController = navController
+        )
+    }
+}
 
+@Composable
+fun MainAppContent(
+    isLoading: Boolean,
+    isFirstRun: Boolean,
+    repository: AppRepository,
+    onSetupComplete: () -> Unit,
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    navController: androidx.navigation.NavHostController
+) {
     if (isLoading) {
         // 加载中显示
         Box(
@@ -103,32 +147,7 @@ fun MainApp() {
             bottomBar = {
                 BottomNavigationBar(
                     selectedTab = selectedTab,
-                    onTabSelected = { index ->
-                        selectedTab = index
-                        when (index) {
-                            0 -> navController.navigate(Screen.Home.route) {
-                                // 防止重复添加相同的目标
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                            1 -> navController.navigate(Screen.Habits.route) {
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                            2 -> navController.navigate(Screen.History.route) {
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                            3 -> navController.navigate(Screen.Statistics.route) {
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                            4 -> navController.navigate(Screen.Settings.route) {
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    }
+                    onTabSelected = onTabSelected
                 )
             }
         ) { paddingValues ->

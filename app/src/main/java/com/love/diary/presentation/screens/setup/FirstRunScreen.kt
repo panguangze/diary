@@ -221,18 +221,16 @@ fun FirstRunScreen(
                             partnerNickname = if (partnerName.isNotBlank()) partnerName else null
                         )
                         
-                        // 创建一个特殊的打卡事项，名称为用户输入的组合名，类型为正向打卡，标签为开心、满足等
-                        // 如果用户没有输入组合名，则使用默认名称
-                        val habitName = coupleName.ifBlank {
-                            "每日心情打卡"
-                        }
-                        
-                        val specialHabit = com.love.diary.data.model.Habit(
-                            name = habitName,
-                            type = com.love.diary.data.model.HabitType.POSITIVE,
-                            tags = "开心,满足,正常,失落,生气,其它"
+                        // 创建默认的异地恋日记打卡配置
+                        val loveDiaryConfig = com.love.diary.data.model.UnifiedCheckInConfig(
+                            name = "异地恋日记",
+                            type = com.love.diary.data.model.CheckInType.HABIT,
+                            description = "记录我们每天的心情",
+                            buttonLabel = "记录心情",
+                            icon = "❤️",
+                            color = "#E91E63"
                         )
-                        repository.createHabit(specialHabit)
+                        repository.saveCheckInConfig(loveDiaryConfig)
                         
                         onSetupComplete()
                     }

@@ -31,8 +31,35 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
 
-            repository.getRecentMoods(limit = 100).collect { records ->
-                _moodRecords.value = records
+            // 从统一打卡系统获取"异地恋日记"记录
+            repository.getCheckInsByName("异地恋日记").collect { checkIns ->
+                // 将UnifiedCheckIn转换为DailyMoodEntity用于显示
+                val moodRecords = checkIns.mapNotNull { checkIn ->
+                    // 尝试将tag映射到MoodType
+                    val moodType = when (checkIn.tag) {
+                        "开心" -> com.love.diary.data.model.MoodType.HAPPY
+                        "满足" -> com.love.diary.data.model.MoodType.SATISFIED
+                        "正常" -> com.love.diary.data.model.MoodType.NORMAL
+                        "失落" -> com.love.diary.data.model.MoodType.SAD
+                        "生气" -> com.love.diary.data.model.MoodType.ANGRY
+                        else -> com.love.diary.data.model.MoodType.OTHER
+                    }
+                    
+                    com.love.diary.data.database.entities.DailyMoodEntity(
+                        id = checkIn.id,
+                        date = checkIn.date,
+                        dayIndex = 0, // 可以根据需要计算
+                        moodTypeCode = moodType.code,
+                        moodScore = moodType.score,
+                        moodText = checkIn.tag,
+                        hasText = checkIn.tag != null,
+                        isAnniversary = false,
+                        anniversaryType = null,
+                        createdAt = checkIn.createdAt,
+                        updatedAt = checkIn.updatedAt
+                    )
+                }
+                _moodRecords.value = moodRecords
                 _isLoading.value = false
             }
         }
