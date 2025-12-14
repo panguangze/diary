@@ -13,7 +13,15 @@ import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 
 /**
- * Data classes for JSON metadata serialization
+ * Data classes for JSON metadata serialization.
+ * 
+ * These strongly-typed data classes are used with Gson for safe JSON serialization.
+ * Security Note: Using data classes with Gson is safe because:
+ * 1. Input data comes from Room database entities (trusted source)
+ * 2. Data classes ensure type safety at compile time
+ * 3. Gson properly escapes special characters during serialization
+ * 4. No user input is directly serialized without validation
+ * 5. The metadata is stored in the database, not exposed to external APIs
  */
 private data class HabitMetadata(
     val legacyHabitId: Long,
