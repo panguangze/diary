@@ -166,7 +166,10 @@ class MigrationTest {
         cursor.close()
         
         // Verify required columns exist
-        val requiredColumns = setOf("createdAt", "updatedAt", "reservedText1", "reservedText2")
+        val requiredColumns = setOf(
+            "createdAt", "updatedAt", "reservedText1", "reservedText2",
+            "darkMode", "reservedInt1", "reservedInt2"
+        )
         assert(columnNames.containsAll(requiredColumns)) {
             "All required columns should exist. Found: $columnNames, Required: $requiredColumns"
         }

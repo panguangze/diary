@@ -217,10 +217,13 @@ object MigrationHelper {
     val MIGRATION_8_9 = object : Migration(8, 9) {
         override fun migrate(database: SupportSQLiteDatabase) {
             // Add missing columns to app_config table
-            addColumnIfNotExists(database, "app_config", "createdAt", "INTEGER NOT NULL DEFAULT 0")
-            addColumnIfNotExists(database, "app_config", "updatedAt", "INTEGER NOT NULL DEFAULT 0")
             addColumnIfNotExists(database, "app_config", "reservedText1", "TEXT DEFAULT NULL")
             addColumnIfNotExists(database, "app_config", "reservedText2", "TEXT DEFAULT NULL")
+            addColumnIfNotExists(database, "app_config", "createdAt", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(database, "app_config", "darkMode", "INTEGER DEFAULT NULL")
+            addColumnIfNotExists(database, "app_config", "reservedInt1", "INTEGER DEFAULT NULL")
+            addColumnIfNotExists(database, "app_config", "reservedInt2", "INTEGER DEFAULT NULL")
+            addColumnIfNotExists(database, "app_config", "updatedAt", "INTEGER NOT NULL DEFAULT 0")
         }
     }
 }
