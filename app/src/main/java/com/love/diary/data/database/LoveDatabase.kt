@@ -21,7 +21,7 @@ import com.love.diary.data.model.UnifiedCheckInConfig
 
 @Database(
     entities = [AppConfigEntity::class, DailyMoodEntity::class, Habit::class, HabitRecord::class, Event::class, EventConfig::class, UnifiedCheckIn::class, UnifiedCheckInConfig::class],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -44,7 +44,12 @@ abstract class LoveDatabase : RoomDatabase() {
                     LoveDatabase::class.java,
                     "love_diary.db"
                 )
-                .addMigrations(MigrationHelper.MIGRATION_4_5, MigrationHelper.MIGRATION_5_6, MigrationHelper.MIGRATION_6_7)
+                .addMigrations(
+                    MigrationHelper.MIGRATION_4_5, 
+                    MigrationHelper.MIGRATION_5_6, 
+                    MigrationHelper.MIGRATION_6_7,
+                    MigrationHelper.MIGRATION_7_8
+                )
                 .build()
                 INSTANCE = instance
                 instance

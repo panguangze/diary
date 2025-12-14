@@ -35,7 +35,7 @@ An Android diary application designed for long-distance relationships, allowing 
 - **UI Framework**: Jetpack Compose with Material 3
 - **Architecture**: MVVM (Model-View-ViewModel)
 - **Dependency Injection**: Hilt/Dagger
-- **Database**: Room with SQLite
+- **Database**: Room with SQLite (Version 8)
 - **Async Operations**: Kotlin Coroutines & Flow
 - **Navigation**: Jetpack Navigation Compose
 - **Image Loading**: Coil
@@ -50,6 +50,7 @@ app/
 │   ├── model/           # Data models
 │   └── repository/      # Repository layer
 ├── di/                  # Dependency injection modules
+├── docs/                # Architecture documentation
 ├── presentation/
 │   ├── components/      # Reusable UI components
 │   ├── screens/         # Screen composables
@@ -58,6 +59,13 @@ app/
 │   └── theme/           # Theme configuration
 └── util/                # Utility classes (Notification, Share)
 ```
+
+### Documentation
+
+Comprehensive documentation available in the `docs/` directory:
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Complete architecture guide
+- **[DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** - Database design and schema
+- **[REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md)** - Refactoring strategy and roadmap
 
 ## 🚀 Getting Started
 
@@ -157,6 +165,25 @@ app/
 - Unit tests for ViewModels and Repositories
 
 ## 🛠️ Development
+
+### Recent Improvements (v8)
+
+**Database Optimization**:
+- Added indexes for improved query performance on frequently accessed columns
+- Optimized check-in history and statistics queries
+- Better support for date range filtering
+
+**Architecture Enhancements**:
+- Comprehensive documentation added (Architecture, Database Schema, Refactoring Plan)
+- Bridge pattern implementation for gradual system migration
+- Improved code maintainability and scalability
+- Better separation of concerns between legacy and unified systems
+
+**Data Consistency**:
+- Dual-write strategy for backward compatibility
+- UnifiedCheckIn system as primary data store
+- Legacy Habit system maintained during transition
+- Seamless migration path for future improvements
 
 ### Code Style
 - Follow Kotlin coding conventions
