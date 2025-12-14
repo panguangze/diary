@@ -239,25 +239,30 @@ fun FirstRunScreen(
                         repository.saveCheckInConfig(loveDiaryConfig)
                         
                         // 创建默认的打卡事项（Habit）
-                        // 使用组合名字作为打卡事项名称，如果没有则使用默认名称
-                        val habitName = if (coupleName.isNotBlank()) {
-                            coupleName
-                        } else {
-                            "我们的打卡"
+                        try {
+                            // 使用组合名字作为打卡事项名称，如果没有则使用默认名称
+                            val habitName = if (coupleName.isNotBlank()) {
+                                coupleName
+                            } else {
+                                "我们的打卡"
+                            }
+                            
+                            // 创建默认习惯，使用心情选项作为标签
+                            val defaultHabit = Habit(
+                                name = habitName,
+                                description = "记录我们的日常",
+                                buttonLabel = "打卡",
+                                type = HabitType.POSITIVE,
+                                tags = "开心,满足,正常,失落,生气,其它",  // 使用主页心情选项作为标签
+                                icon = "💕",
+                                color = "#E91E63",
+                                startDate = startDate
+                            )
+                            habitRepository.insertHabit(defaultHabit)
+                        } catch (e: Exception) {
+                            // 即使创建默认习惯失败，也继续完成设置流程
+                            // 用户可以之后手动添加
                         }
-                        
-                        // 创建默认习惯，使用心情选项作为标签
-                        val defaultHabit = Habit(
-                            name = habitName,
-                            description = "记录我们的日常",
-                            buttonLabel = "打卡",
-                            type = HabitType.POSITIVE,
-                            tags = "开心,满足,正常,失落,生气,其它",  // 使用主页心情选项作为标签
-                            icon = "💕",
-                            color = "#E91E63",
-                            startDate = startDate
-                        )
-                        habitRepository.insertHabit(defaultHabit)
                         
                         onSetupComplete()
                     }
