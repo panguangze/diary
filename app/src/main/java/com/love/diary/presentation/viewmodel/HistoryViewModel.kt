@@ -58,9 +58,9 @@ class HistoryViewModel @Inject constructor(
                         0
                     }
                     
-                    // 对于OTHER类型，moodText存储自定义文本；对于其他类型，moodText为null
-                    val moodText = if (moodType == MoodType.OTHER) checkIn.tag else null
+                    // 对于OTHER类型，moodText存储自定义文本（如果有）；对于其他类型，moodText为null
                     val hasText = moodType == MoodType.OTHER && !checkIn.tag.isNullOrBlank()
+                    val moodText = if (hasText) checkIn.tag else null
                     
                     DailyMoodEntity(
                         id = checkIn.id,
