@@ -158,13 +158,24 @@ The database evolved with three overlapping systems:
 
 ### Performance Optimization
 
-Recommended indexes to add in future migration:
+**Database indexes** (implemented in version 8):
 ```sql
+-- UnifiedCheckIn indexes (added in v8)
 CREATE INDEX idx_unified_checkins_date ON unified_checkins(date);
 CREATE INDEX idx_unified_checkins_type ON unified_checkins(type);
 CREATE INDEX idx_unified_checkins_name ON unified_checkins(name);
 CREATE INDEX idx_unified_checkins_type_date ON unified_checkins(type, date);
+
+-- Legacy table indexes (added in v8 for transition period)
+CREATE INDEX idx_habits_active ON habits(isActive);
+CREATE INDEX idx_habit_records_habit_date ON habit_records(habitId, date);
 ```
+
+**Benefits**:
+- Significantly faster date range queries
+- Improved type-based filtering performance
+- Optimized name-based lookups
+- Efficient composite queries for statistics
 
 ## Repository Layer
 
