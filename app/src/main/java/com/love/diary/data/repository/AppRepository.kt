@@ -50,8 +50,9 @@ class AppRepository @Inject constructor(
     ) {
         require(startDate.isNotBlank()) { "Start date cannot be blank" }
         
+        // Validate date format - throws exception if invalid
         try {
-            LocalDate.parse(startDate) // Validate date format
+            LocalDate.parse(startDate, DATE_FORMATTER)
         } catch (e: Exception) {
             throw IllegalArgumentException("Invalid date format. Expected yyyy-MM-dd", e)
         }

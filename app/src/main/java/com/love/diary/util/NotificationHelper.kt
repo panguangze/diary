@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.love.diary.MainActivity
@@ -18,6 +19,7 @@ import com.love.diary.R
 class NotificationHelper(private val context: Context) {
 
     companion object {
+        private const val TAG = "NotificationHelper"
         private const val CHANNEL_ID = "diary_reminders"
         private const val CHANNEL_NAME = "日记提醒"
         private const val CHANNEL_DESCRIPTION = "每日心情记录提醒"
@@ -87,7 +89,7 @@ class NotificationHelper(private val context: Context) {
             )
         } catch (e: SecurityException) {
             // Handle case where notification permission is not granted
-            android.util.Log.w("NotificationHelper", "Notification permission not granted", e)
+            Log.w(TAG, "Notification permission not granted", e)
         }
     }
 
@@ -133,7 +135,7 @@ class NotificationHelper(private val context: Context) {
                 notification
             )
         } catch (e: SecurityException) {
-            android.util.Log.w("NotificationHelper", "Notification permission not granted", e)
+            Log.w(TAG, "Notification permission not granted", e)
         }
     }
 

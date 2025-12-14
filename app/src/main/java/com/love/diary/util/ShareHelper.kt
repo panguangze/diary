@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.net.Uri
+import android.util.Log
 import androidx.core.content.FileProvider
 import com.love.diary.data.model.MoodType
 import java.io.File
@@ -22,6 +23,7 @@ import java.time.format.DateTimeFormatter
 class ShareHelper(private val context: Context) {
 
     companion object {
+        private const val TAG = "ShareHelper"
         private const val AUTHORITY = "com.love.diary.fileprovider"
         private const val SHARE_IMAGE_WIDTH = 1080
         private const val SHARE_IMAGE_HEIGHT = 1920
@@ -130,7 +132,7 @@ class ShareHelper(private val context: Context) {
 
             context.startActivity(Intent.createChooser(intent, "分享心情卡片"))
         } catch (e: Exception) {
-            android.util.Log.e("ShareHelper", "Error sharing image", e)
+            Log.e(TAG, "Error sharing image", e)
             // Fallback to text sharing
             shareMoodAsText(date, moodType, moodText, dayIndex)
         }
