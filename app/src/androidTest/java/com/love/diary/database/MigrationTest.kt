@@ -126,7 +126,61 @@ class MigrationTest {
     }
     
     /**
-     * Test full migration path from version 4 to 8.
+     * Test migration from version 8 to 9.
+     * 
+     * Verifies that:
+     * 1. Migration completes successfully
+     * 2. Missing columns are added to app_config table
+     * 3. Existing data is preserved
+     * 4. Database schema is valid
+     */
+    @Test
+    @Throws(IOException::class)
+    fun migrate8To9() {
+        // Create database at version 8
+        var db = helper.createDatabase(TEST_DB, 8).apply {
+            // Insert some test data into version 8 schema
+            // Note: app_config at version 8 might not have all columns
+            execSQL("""
+                INSERT INTO app_config 
+                (id, startDate, startTimeMinutes, showMoodTip, showStreak, showAnniversary) 
+                VALUES 
+                (1, '2024-01-01', 0, 1, 1, 1)
+            """)
+            
+            close()
+        }
+        
+        // Re-open the database with version 9 and provide MIGRATION_8_9
+        db = helper.runMigrationsAndValidate(TEST_DB, 9, true, MigrationHelper.MIGRATION_8_9)
+        
+        // Verify columns were added
+        val cursor = db.query("PRAGMA table_info(app_config)")
+        val columnNames = mutableSetOf<String>()
+        while (cursor.moveToNext()) {
+            val nameColumnIndex = cursor.getColumnIndex("name")
+            if (nameColumnIndex >= 0) {
+                columnNames.add(cursor.getString(nameColumnIndex))
+            }
+        }
+        cursor.close()
+        
+        // Verify required columns exist
+        val requiredColumns = setOf("createdAt", "updatedAt", "reservedText1", "reservedText2")
+        assert(columnNames.containsAll(requiredColumns)) {
+            "All required columns should exist. Found: $columnNames, Required: $requiredColumns"
+        }
+        
+        // Verify data was preserved
+        val dataCursor = db.query("SELECT * FROM app_config WHERE id = 1")
+        assert(dataCursor.count > 0) { "Data should be preserved after migration" }
+        dataCursor.close()
+        
+        db.close()
+    }
+    
+    /**
+     * Test full migration path from version 4 to 9.
      * 
      * Verifies that sequential migrations work correctly.
      */
@@ -139,15 +193,16 @@ class MigrationTest {
             close()
         }
         
-        // Run all migrations up to version 8
+        // Run all migrations up to version 9
         val db = helper.runMigrationsAndValidate(
             TEST_DB, 
-            8, 
+            9, 
             true, 
             MigrationHelper.MIGRATION_4_5,
             MigrationHelper.MIGRATION_5_6,
             MigrationHelper.MIGRATION_6_7,
-            MigrationHelper.MIGRATION_7_8
+            MigrationHelper.MIGRATION_7_8,
+            MigrationHelper.MIGRATION_8_9
         )
         
         // Verify final schema is valid
@@ -181,21 +236,22 @@ class MigrationTest {
     }
     
     /**
-     * Test that database can be created from scratch at version 8.
+     * Test that database can be created from scratch at version 9.
      */
     @Test
-    fun createDatabaseVersion8() {
+    fun createDatabaseVersion9() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val db = Room.databaseBuilder(
             context,
             LoveDatabase::class.java,
-            "test-db-v8"
+            "test-db-v9"
         )
             .addMigrations(
                 MigrationHelper.MIGRATION_4_5,
                 MigrationHelper.MIGRATION_5_6,
                 MigrationHelper.MIGRATION_6_7,
-                MigrationHelper.MIGRATION_7_8
+                MigrationHelper.MIGRATION_7_8,
+                MigrationHelper.MIGRATION_8_9
             )
             .build()
         
@@ -204,6 +260,6 @@ class MigrationTest {
         assert(appConfigDao != null) { "Database should be created successfully" }
         
         db.close()
-        context.deleteDatabase("test-db-v8")
+        context.deleteDatabase("test-db-v9")
     }
 }
