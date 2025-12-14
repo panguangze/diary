@@ -177,4 +177,31 @@ object MigrationHelper {
             // database.execSQL("DROP TABLE IF EXISTS checkin_configs")
         }
     }
+    
+    /**
+     * Migration from version 7 to 8 - Add database indexes for performance optimization
+     * 
+     * This migration adds indexes to frequently queried columns to improve query performance:
+     * - unified_checkins: date, type, name, and composite indexes
+     * - habits: isActive for filtering active habits
+     * - habit_records: composite index on habitId and date for efficient lookups
+     * 
+     * These indexes are particularly important for:
+     * - Date range queries (history, statistics)
+     * - Type-based filtering (check-in dashboard)
+     * - Name-based lookups (individual habit/check-in history)
+     */
+    val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add indexes for UnifiedCheckIn table (primary check-in system)
+            database.execSQL("CREATE INDEX IF NOT EXISTS idx_unified_checkins_date ON unified_checkins(date)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS idx_unified_checkins_type ON unified_checkins(type)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS idx_unified_checkins_name ON unified_checkins(name)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS idx_unified_checkins_type_date ON unified_checkins(type, date)")
+            
+            // Add indexes for legacy tables (maintained during transition period)
+            database.execSQL("CREATE INDEX IF NOT EXISTS idx_habits_active ON habits(isActive)")
+            database.execSQL("CREATE INDEX IF NOT EXISTS idx_habit_records_habit_date ON habit_records(habitId, date)")
+        }
+    }
 }
