@@ -1,6 +1,7 @@
 package com.love.diary.habit
 
 import android.content.Context
+import com.google.gson.Gson
 import com.love.diary.data.database.LoveDatabase
 import com.love.diary.data.model.CheckInType
 import com.love.diary.data.model.Habit
@@ -10,6 +11,19 @@ import com.love.diary.data.model.UnifiedCheckIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
+
+/**
+ * Data classes for JSON metadata serialization
+ */
+private data class HabitMetadata(
+    val legacyHabitId: Long,
+    val tags: String
+)
+
+private data class CheckInMetadata(
+    val habitId: Long,
+    val habitType: String
+)
 
 interface HabitRepository {
     fun getAllHabits(): Flow<List<Habit>>
@@ -49,6 +63,8 @@ interface HabitRepository {
  * 3. Eventually: Deprecate legacy Habit tables
  */
 class DefaultHabitRepository(private val database: LoveDatabase) : HabitRepository {
+    private val gson = Gson()
+    
     override fun getAllHabits(): Flow<List<Habit>> {
         return database.habitDao().getAllHabits()
     }
@@ -65,6 +81,10 @@ class DefaultHabitRepository(private val database: LoveDatabase) : HabitReposito
         // This enables the habit to work with the unified system
         val existingConfig = database.unifiedCheckInDao().getCheckInConfigByName(habit.name)
         if (existingConfig == null) {
+            val metadata = HabitMetadata(
+                legacyHabitId = habitId,
+                tags = habit.tags
+            )
             val config = com.love.diary.data.model.UnifiedCheckInConfig(
                 name = habit.name,
                 type = CheckInType.HABIT,
@@ -75,7 +95,7 @@ class DefaultHabitRepository(private val database: LoveDatabase) : HabitReposito
                 icon = habit.icon,
                 color = habit.color,
                 isActive = habit.isActive,
-                metadata = """{"legacyHabitId":$habitId,"tags":"${habit.tags}"}"""
+                metadata = gson.toJson(metadata)
             )
             database.unifiedCheckInDao().insertCheckInConfig(config)
         }
@@ -90,6 +110,10 @@ class DefaultHabitRepository(private val database: LoveDatabase) : HabitReposito
         // Also update the corresponding UnifiedCheckInConfig
         val config = database.unifiedCheckInDao().getCheckInConfigByName(habit.name)
         config?.let {
+            val metadata = HabitMetadata(
+                legacyHabitId = habit.id,
+                tags = habit.tags
+            )
             val updatedConfig = it.copy(
                 description = habit.description,
                 buttonLabel = habit.buttonLabel,
@@ -97,7 +121,7 @@ class DefaultHabitRepository(private val database: LoveDatabase) : HabitReposito
                 icon = habit.icon,
                 color = habit.color,
                 isActive = habit.isActive,
-                metadata = """{"legacyHabitId":${habit.id},"tags":"${habit.tags}"}""",
+                metadata = gson.toJson(metadata),
                 updatedAt = System.currentTimeMillis()
             )
             database.unifiedCheckInDao().updateCheckInConfig(updatedConfig)
@@ -172,6 +196,10 @@ class DefaultHabitRepository(private val database: LoveDatabase) : HabitReposito
             // DUAL WRITE: Write to BOTH systems
             
             // 1. Write to UnifiedCheckIn (new unified system)
+            val checkInMetadata = CheckInMetadata(
+                habitId = habitId,
+                habitType = it.type.toString()
+            )
             val checkInId = database.unifiedCheckInDao().insertCheckIn(
                 UnifiedCheckIn(
                     name = it.name,
@@ -181,7 +209,7 @@ class DefaultHabitRepository(private val database: LoveDatabase) : HabitReposito
                     count = newCount,
                     note = tag,
                     isCompleted = true,
-                    metadata = """{"habitId":$habitId,"habitType":"${it.type}"}"""
+                    metadata = gson.toJson(checkInMetadata)
                 )
             )
             

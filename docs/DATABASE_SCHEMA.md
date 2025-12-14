@@ -1,7 +1,7 @@
 # Database Schema Documentation
 
 ## Overview
-The Love Diary application uses a Room database with SQLite. The current schema (version 7) contains entities for tracking mood/diary entries, habits, and unified check-ins.
+The Love Diary application uses a Room database with SQLite. The current schema (version 8) contains entities for tracking mood/diary entries, habits, and unified check-ins.
 
 ## Database Version History
 - **Version 1-3**: Initial schema with basic mood tracking
@@ -9,6 +9,7 @@ The Love Diary application uses a Room database with SQLite. The current schema 
 - **Version 5**: Added Events and EventConfig tables (Migration 4→5)
 - **Version 6**: Enhanced check-in tables with additional fields (Migration 5→6)
 - **Version 7**: Introduced UnifiedCheckIn system (Migration 6→7)
+- **Version 8**: Added performance indexes for optimization (Migration 7→8)
 
 ## Core Entities
 
