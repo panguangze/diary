@@ -1,9 +1,14 @@
 // presentation/screens/history/HistoryScreen.kt
 package com.love.diary.presentation.screens.history
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -137,13 +142,22 @@ fun MoodHistoryList(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        items(moodRecords) { record ->
-            MoodHistoryItem(
-                record = record,
-                dateFormatter = dateFormatter,
-                weekFormatter = weekFormatter,
-                onClick = { onItemClick(record.date) }
-            )
+        itemsIndexed(moodRecords) { index, record ->
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(animationSpec = tween(300, delayMillis = index * 50)) +
+                        slideInVertically(
+                            initialOffsetY = { it / 4 },
+                            animationSpec = tween(300, delayMillis = index * 50)
+                        )
+            ) {
+                MoodHistoryItem(
+                    record = record,
+                    dateFormatter = dateFormatter,
+                    weekFormatter = weekFormatter,
+                    onClick = { onItemClick(record.date) }
+                )
+            }
         }
     }
 }

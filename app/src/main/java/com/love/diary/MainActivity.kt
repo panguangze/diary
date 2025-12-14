@@ -186,14 +186,14 @@ fun BottomNavigationBar(
 
     NavigationBar {
         items.forEachIndexed { index, screen ->
-            NavigationBarItem(
+                NavigationBarItem(
                 selected = selectedTab == index,
                 onClick = { onTabSelected(index) },
                 icon = {
                     if (selectedTab == index) {
-                        Icon(screen.selectedIcon, contentDescription = screen.title)
+                        Icon(screen.selectedIcon, contentDescription = "${screen.title}，已选中")
                     } else {
-                        Icon(screen.unselectedIcon, contentDescription = screen.title)
+                        Icon(screen.unselectedIcon, contentDescription = "${screen.title}，未选中")
                     }
                 },
                 label = { Text(screen.title) }
