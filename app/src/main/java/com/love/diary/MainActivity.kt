@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,7 +40,9 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            LoveDiaryTheme {
+            val darkMode by remember { mutableStateOf<Boolean?>(null) }
+            
+            LoveDiaryTheme(darkTheme = darkMode ?: isSystemInDarkTheme()) {
                 MainApp()
             }
         }
@@ -54,6 +57,7 @@ fun MainApp() {
     // 检查是否需要首次运行设置
     var isFirstRun by remember { mutableStateOf(true) } // 将在LaunchedEffect中更新
     var isLoading by remember { mutableStateOf(true) }   // 将在LaunchedEffect中更新
+    var darkMode by remember { mutableStateOf<Boolean?>(null) } // Dark mode setting
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val repository = homeViewModel.repository // 获取repository实例
 
@@ -61,7 +65,19 @@ fun MainApp() {
         // 检查是否是首次运行
         val firstRun = homeViewModel.isFirstRun()
         isFirstRun = firstRun
+        
+        // Load dark mode setting
+        val config = repository.getAppConfig()
+        darkMode = config?.darkMode
+        
         isLoading = false
+    }
+    
+    // Observe config changes for dark mode
+    LaunchedEffect(Unit) {
+        repository.getAppConfigFlow().collect { config ->
+            darkMode = config?.darkMode
+        }
     }
 
     if (isLoading) {
@@ -170,14 +186,14 @@ fun BottomNavigationBar(
 
     NavigationBar {
         items.forEachIndexed { index, screen ->
-            NavigationBarItem(
+                NavigationBarItem(
                 selected = selectedTab == index,
                 onClick = { onTabSelected(index) },
                 icon = {
                     if (selectedTab == index) {
-                        Icon(screen.selectedIcon, contentDescription = screen.title)
+                        Icon(screen.selectedIcon, contentDescription = "${screen.title}，已选中")
                     } else {
-                        Icon(screen.unselectedIcon, contentDescription = screen.title)
+                        Icon(screen.unselectedIcon, contentDescription = "${screen.title}，未选中")
                     }
                 },
                 label = { Text(screen.title) }

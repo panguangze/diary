@@ -14,6 +14,14 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
+/**
+ * Main repository for accessing application data
+ * Provides a clean API for accessing database, preferences, and business logic
+ * 
+ * @property database The Room database instance
+ * @property eventDao DAO for event operations
+ * @property checkInRepository Repository for check-in operations
+ */
 class AppRepository @Inject constructor(
     private val database: LoveDatabase,
     private val eventDao: EventDao,
@@ -28,12 +36,27 @@ class AppRepository @Inject constructor(
         private val DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     }
 
-    // 在 AppRepository 类中添加
+    /**
+     * Initialize app configuration on first run
+     * @param startDate The relationship start date in yyyy-MM-dd format
+     * @param coupleName Optional couple display name
+     * @param partnerNickname Optional partner nickname
+     * @throws IllegalArgumentException if startDate is invalid
+     */
     suspend fun initializeFirstRun(
         startDate: String,
         coupleName: String? = null,
         partnerNickname: String? = null
     ) {
+        require(startDate.isNotBlank()) { "Start date cannot be blank" }
+        
+        // Validate date format - throws exception if invalid
+        try {
+            LocalDate.parse(startDate, DATE_FORMATTER)
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Invalid date format. Expected yyyy-MM-dd", e)
+        }
+        
         val config = AppConfigEntity(
             startDate = startDate,
             startTimeMinutes = 0,
@@ -48,32 +71,86 @@ class AppRepository @Inject constructor(
         saveAppConfig(config)
     }
 
+    /**
+     * Check if this is the first run (no config exists)
+     * @return true if no configuration exists
+     */
     suspend fun isFirstRun(): Boolean {
-        return appConfigDao.getConfig() == null
+        return try {
+            appConfigDao.getConfig() == null
+        } catch (e: Exception) {
+            // If there's an error accessing config, treat as first run
+            true
+        }
     }
 
     // === App Config ===
+    
+    /**
+     * Get current app configuration
+     * @return AppConfigEntity or null if not configured
+     */
     suspend fun getAppConfig(): AppConfigEntity? {
-        return appConfigDao.getConfig()
+        return try {
+            appConfigDao.getConfig()
+        } catch (e: Exception) {
+            // Log error and return null
+            null
+        }
     }
 
+    /**
+     * Get app configuration as a Flow for reactive updates
+     * @return Flow of AppConfigEntity (can emit null)
+     */
     fun getAppConfigFlow(): Flow<AppConfigEntity?> {
         return appConfigDao.getConfigFlow()
     }
 
+    /**
+     * Save or update app configuration
+     * @param config The configuration to save
+     */
     suspend fun saveAppConfig(config: AppConfigEntity) {
-        appConfigDao.insertConfig(config)
+        try {
+            appConfigDao.insertConfig(config)
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to save app config", e)
+        }
     }
 
+    /**
+     * Update existing app configuration
+     * @param config The updated configuration
+     */
     suspend fun updateAppConfig(config: AppConfigEntity) {
-        appConfigDao.updateConfig(config)
+        try {
+            appConfigDao.updateConfig(config)
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to update app config", e)
+        }
     }
     
+    /**
+     * Delete app configuration (for reset purposes)
+     */
     suspend fun deleteAppConfig() {
-        appConfigDao.deleteConfig()
+        try {
+            appConfigDao.deleteConfig()
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to delete app config", e)
+        }
     }
 
     // === Daily Mood ===
+    
+    /**
+     * Save today's mood entry
+     * @param moodType The mood type selected
+     * @param moodText Optional text note for the mood
+     * @return ID of the inserted mood record
+     * @throws IllegalStateException if save fails
+     */
     suspend fun saveTodayMood(
         moodType: MoodType,
         moodText: String? = null

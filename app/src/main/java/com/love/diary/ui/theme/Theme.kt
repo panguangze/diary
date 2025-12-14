@@ -7,6 +7,9 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
+/**
+ * Light theme color scheme with romantic pink/red tones
+ */
 private val LoveLightColorScheme = lightColorScheme(
     primary = Color(0xFFE91E63),
     secondary = Color(0xFFFF80AB),
@@ -21,6 +24,9 @@ private val LoveLightColorScheme = lightColorScheme(
     primaryContainer = Color(0xFFFFE0E9)
 )
 
+/**
+ * Dark theme color scheme with softer pink tones for night use
+ */
 private val LoveDarkColorScheme = darkColorScheme(
     primary = Color(0xFFFF80AB),
     secondary = Color(0xFFF48FB1),
@@ -33,6 +39,13 @@ private val LoveDarkColorScheme = darkColorScheme(
     onSurface = Color(0xFFE0E0E0)
 )
 
+/**
+ * Main theme composable for the Love Diary app
+ * Supports both light and dark themes
+ * 
+ * @param darkTheme Whether to use dark theme. Defaults to system setting
+ * @param content The content to be themed
+ */
 @Composable
 fun LoveDiaryTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

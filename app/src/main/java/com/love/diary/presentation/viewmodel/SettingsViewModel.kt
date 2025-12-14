@@ -14,6 +14,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * UI state for Settings screen
+ */
 data class SettingsUiState(
     val startDate: String? = null,
     val coupleName: String? = null,
@@ -21,7 +24,11 @@ data class SettingsUiState(
     val showMoodTip: Boolean = true,
     val showStreak: Boolean = true,
     val showAnniversary: Boolean = true,
-    val isLoading: Boolean = true
+    /** Dark mode: null = follow system, true = dark, false = light */
+    val darkMode: Boolean? = null,
+    val isLoading: Boolean = true,
+    val errorMessage: String? = null,
+    val successMessage: String? = null
 )
 
 @HiltViewModel
@@ -49,6 +56,7 @@ class SettingsViewModel @Inject constructor(
                         showMoodTip = it.showMoodTip,
                         showStreak = it.showStreak,
                         showAnniversary = it.showAnniversary,
+                        darkMode = it.darkMode,
                         isLoading = false
                     )
                 }
@@ -108,11 +116,13 @@ class SettingsViewModel @Inject constructor(
             try {
                 val result = backupManager.exportData()
                 if (result.isSuccess) {
-                    // 导出成功，可以显示通知或提示
-                    // 这里可以添加成功提示逻辑
+                    _uiState.update { it.copy(successMessage = "数据导出成功") }
+                } else {
+                    val error = result.exceptionOrNull()
+                    _uiState.update { it.copy(errorMessage = "导出失败: ${error?.message}") }
                 }
             } catch (e: Exception) {
-                // 处理错误
+                _uiState.update { it.copy(errorMessage = "导出失败: ${e.message}") }
             }
         }
     }
@@ -122,11 +132,13 @@ class SettingsViewModel @Inject constructor(
             try {
                 val result = backupManager.exportDataToUri(uri)
                 if (result.isSuccess) {
-                    // 导出成功，可以显示通知或提示
-                    // 这里可以添加成功提示逻辑
+                    _uiState.update { it.copy(successMessage = "数据导出成功") }
+                } else {
+                    val error = result.exceptionOrNull()
+                    _uiState.update { it.copy(errorMessage = "导出失败: ${error?.message}") }
                 }
             } catch (e: Exception) {
-                // 处理错误
+                _uiState.update { it.copy(errorMessage = "导出失败: ${e.message}") }
             }
         }
     }
@@ -143,20 +155,36 @@ class SettingsViewModel @Inject constructor(
                 if (result.isSuccess) {
                     // 导入成功，刷新UI状态
                     loadSettings()
-                    // 通知其他组件配置已更改
+                    _uiState.update { it.copy(successMessage = "数据导入成功") }
+                } else {
+                    val error = result.exceptionOrNull()
+                    _uiState.update { it.copy(errorMessage = "导入失败: ${error?.message}") }
                 }
             } catch (e: Exception) {
-                // 处理错误
+                _uiState.update { it.copy(errorMessage = "导入失败: ${e.message}") }
             }
         }
     }
 
     fun resetData() {
         viewModelScope.launch {
-            // 清空所有数据
-            repository.clearAllMoodRecords()
-            repository.deleteAppConfig()
+            try {
+                // 清空所有数据
+                repository.clearAllMoodRecords()
+                repository.deleteAppConfig()
+                _uiState.update { it.copy(successMessage = "数据已重置") }
+                loadSettings()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "重置失败: ${e.message}") }
+            }
         }
+    }
+    
+    /**
+     * Clear error or success message
+     */
+    fun clearMessage() {
+        _uiState.update { it.copy(errorMessage = null, successMessage = null) }
     }
     
     fun updateStartDate(date: String) {
@@ -240,6 +268,25 @@ class SettingsViewModel @Inject constructor(
             }
             repository.updateAppConfig(updated)
             _uiState.update { state -> state.copy(partnerNickname = nickname) }
+        }
+    }
+    
+    /**
+     * Toggle dark mode setting
+     * @param darkMode null = follow system, true = dark theme, false = light theme
+     */
+    fun setDarkMode(darkMode: Boolean?) {
+        viewModelScope.launch {
+            val config = repository.getAppConfig()
+            config?.let {
+                val updated = it.copy(
+                    darkMode = darkMode,
+                    startTimeMinutes = it.startTimeMinutes,
+                    updatedAt = System.currentTimeMillis()
+                )
+                repository.updateAppConfig(updated)
+                _uiState.update { state -> state.copy(darkMode = darkMode) }
+            }
         }
     }
 }

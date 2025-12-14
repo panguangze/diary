@@ -1,6 +1,10 @@
 package com.love.diary.presentation.screens.home
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -15,6 +19,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -181,21 +188,28 @@ fun HomeScreen(
             // 情绪反馈文案
             uiState.todayMood?.let { mood ->
                 Spacer(modifier = Modifier.height(24.dp))
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer
-                    )
+                
+                // Animated visibility for feedback card
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(animationSpec = tween(500)) + expandVertically()
                 ) {
-                    Text(
-                        text = mood.feedbackText,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(16.dp),
-                        textAlign = TextAlign.Center
-                    )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        )
+                    ) {
+                        Text(
+                            text = mood.feedbackText,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(16.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
@@ -314,16 +328,29 @@ fun MoodButton(
     } else {
         MaterialTheme.colorScheme.outline
     }
+    
+    // Animated scale for better user feedback
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.05f else 1f,
+        label = "mood_button_scale"
+    )
 
     Card(
         modifier = Modifier
             .height(100.dp)
             .aspectRatio(1f)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .border(
                 width = if (isSelected) 2.dp else 1.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(12.dp)
-            ),
+            )
+            .semantics { 
+                contentDescription = "${mood.displayName}心情按钮${if (isSelected) "，已选择" else ""}"
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = backgroundColor
