@@ -829,9 +829,11 @@ private fun TodayMoodSection(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 8.dp)
+                        .heightIn(max = 240.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    userScrollEnabled = false
                 ) {
                     items(MoodType.values()) { mood ->
                         MoodButton(
@@ -1042,7 +1044,7 @@ private fun MoodStatisticsPreviewSection(
             columns = GridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 160.dp),
+                .heightIn(min = 160.dp, max = 320.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             userScrollEnabled = false
