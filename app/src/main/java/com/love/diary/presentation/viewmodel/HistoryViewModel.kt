@@ -34,12 +34,13 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
 
-            // 从统一打卡系统获取"异地恋日记"记录
-            repository.getCheckInsByName("异地恋日记").collect { checkIns ->
-                // 获取配置以计算dayIndex
-                val config = repository.getAppConfig()
-                val startDateStr = config?.startDate
-                
+            // 获取配置以获取正确的默认打卡名称
+            val config = repository.getAppConfig()
+            val defaultCheckInName = config?.coupleName ?: "异地恋日记"
+            val startDateStr = config?.startDate
+            
+            // 从统一打卡系统获取对应名称的记录
+            repository.getCheckInsByName(defaultCheckInName).collect { checkIns ->
                 // 将UnifiedCheckIn转换为DailyMoodEntity用于显示
                 val moodRecords = checkIns.mapNotNull { checkIn ->
                     // 使用工具函数将tag映射到MoodType

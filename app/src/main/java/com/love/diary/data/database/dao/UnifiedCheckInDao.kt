@@ -91,4 +91,8 @@ interface UnifiedCheckInDao {
     // 获取恋爱日记的最新记录
     @Query("SELECT * FROM unified_checkins WHERE type = 'LOVE_DIARY' ORDER BY createdAt DESC LIMIT 1")
     suspend fun getLatestLoveDiaryRecord(): UnifiedCheckIn?
+    
+    // 批量更新打卡记录的名称（用于同步名称变更）
+    @Query("UPDATE unified_checkins SET name = :newName WHERE name = :oldName")
+    suspend fun updateCheckInRecordsName(oldName: String, newName: String): Int
 }
