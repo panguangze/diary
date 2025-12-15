@@ -105,8 +105,8 @@ class StatisticsViewModel @Inject constructor(
             var totalScore = 0
 
             records.forEach { checkIn ->
-                // 使用工具函数将tag映射到MoodType
-                val moodType = MoodType.fromTag(checkIn.tag)
+                // 使用 moodType 字段，如果为空则使用 tag 作为备用
+                val moodType = checkIn.moodType ?: MoodType.fromTag(checkIn.tag)
                 
                 moodStats[moodType] = moodStats.getOrDefault(moodType, 0) + 1
                 totalScore += moodType.score
@@ -122,7 +122,7 @@ class StatisticsViewModel @Inject constructor(
 
             // 获取心情趋势数据
             val trendData = records.map { checkIn ->
-                val moodType = MoodType.fromTag(checkIn.tag)
+                val moodType = checkIn.moodType ?: MoodType.fromTag(checkIn.tag)
                 checkIn.date to moodType.score
             }
 
