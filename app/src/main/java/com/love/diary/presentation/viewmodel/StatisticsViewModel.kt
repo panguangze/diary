@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 
@@ -30,7 +29,8 @@ class StatisticsViewModel @Inject constructor(
         val moodTrend: List<Pair<String, Int>> = emptyList(),
         val checkInTrend: List<com.love.diary.data.model.CheckInTrend> = emptyList(),
         val currentViewType: ViewType = ViewType.MOOD, // 当前查看的统计类型
-        val isLoading: Boolean = true
+        val isLoading: Boolean = true,
+        val primaryCheckInName: String = "异地恋日记"
     )
 
     enum class ViewType {
@@ -47,10 +47,13 @@ class StatisticsViewModel @Inject constructor(
 
     fun updateTimeRange(days: Int) {
         _uiState.update { it.copy(selectedDays = days, isLoading = true) }
-        loadStatistics()
+        when (_uiState.value.currentViewType) {
+            ViewType.MOOD -> loadStatistics()
+            ViewType.CHECK_IN -> loadCheckInStatistics()
+        }
     }
 
-    fun switchToCheckInTrend(checkInName: String) {
+    fun switchToCheckInTrend(checkInName: String? = null) {
         _uiState.update { 
             it.copy(
                 currentViewType = ViewType.CHECK_IN,
@@ -78,13 +81,9 @@ class StatisticsViewModel @Inject constructor(
             val endDate = LocalDate.now()
             val startDate = endDate.minusDays(days.toLong() - 1)
 
-            val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-            val startDateStr = startDate.format(dateFormatter)
-            val endDateStr = endDate.format(dateFormatter)
-
             // 获取配置以获取正确的默认打卡名称
             val config = repository.getAppConfig()
-            val defaultCheckInName = config?.coupleName ?: "异地恋日记"
+            val defaultCheckInName = config?.coupleName ?: _uiState.value.primaryCheckInName
             
             // 从统一打卡系统获取对应名称的记录
             val checkIns = repository.getRecentCheckInsByName(defaultCheckInName, days * 2) // 获取更多记录以确保覆盖日期范围
@@ -135,27 +134,40 @@ class StatisticsViewModel @Inject constructor(
                     moodStats = moodStats,
                     moodTrend = trendData,
                     checkInTrend = emptyList(), // 清空打卡趋势数据
+                    primaryCheckInName = defaultCheckInName,
                     isLoading = false
                 )
             }
         }
     }
 
-    private fun loadCheckInStatistics(checkInName: String) {
+    private fun loadCheckInStatistics(checkInName: String? = null) {
         viewModelScope.launch {
             try {
+                val days = _uiState.value.selectedDays
+                val endDate = LocalDate.now()
+                val startDate = endDate.minusDays(days.toLong() - 1)
+                val config = repository.getAppConfig()
+                val targetName = checkInName ?: config?.coupleName ?: _uiState.value.primaryCheckInName
                 // 获取打卡趋势数据
-                val checkInTrend = repository.getCheckInTrendByName(checkInName)
+                val checkInTrend = repository.getCheckInTrendByName(targetName)
+                val filteredTrend = checkInTrend.filter {
+                    runCatching { LocalDate.parse(it.date) }
+                        .getOrNull()
+                        ?.let { date -> !date.isBefore(startDate) && !date.isAfter(endDate) }
+                        ?: false
+                }
                 
                 // 计算打卡统计
-                val totalRecords = checkInTrend.size
+                val totalRecords = filteredTrend.sumOf { it.count }
                 
                 _uiState.update { state ->
                     state.copy(
                         totalRecords = totalRecords,
-                        checkInTrend = checkInTrend,
+                        checkInTrend = filteredTrend,
                         moodTrend = emptyList(), // 清空心情趋势数据
-                        isLoading = false
+                        isLoading = false,
+                        primaryCheckInName = targetName
                     )
                 }
             } catch (e: Exception) {

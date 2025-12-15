@@ -17,8 +17,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.love.diary.navigation.Screen
 import com.love.diary.presentation.screens.home.HomeScreen
-import com.love.diary.presentation.screens.history.HistoryScreen
-import com.love.diary.presentation.screens.statistics.StatisticsScreen
 import com.love.diary.presentation.screens.settings.SettingsScreen
 import com.love.diary.presentation.screens.setup.FirstRunScreen
 import com.love.diary.presentation.viewmodel.HomeViewModel
@@ -95,15 +93,7 @@ fun MainApp() {
                         launchSingleTop = true
                         restoreState = true
                     }
-                    2 -> navController.navigate(Screen.History.route) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                    3 -> navController.navigate(Screen.Statistics.route) {
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                    4 -> navController.navigate(Screen.Settings.route) {
+                    2 -> navController.navigate(Screen.Settings.route) {
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -166,18 +156,6 @@ fun MainAppContent(
                     )
                 }
 
-                composable(Screen.History.route) {
-                    HistoryScreen(
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-
-                composable(Screen.Statistics.route) {
-                    StatisticsScreen(
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-
                 composable(Screen.Settings.route) {
                     SettingsScreen(
                         modifier = Modifier.fillMaxSize()
@@ -196,8 +174,6 @@ fun BottomNavigationBar(
     val items = listOf(
         Screen.Home,
         Screen.Habits,
-        Screen.History,
-        Screen.Statistics,
         Screen.Settings
     )
 
