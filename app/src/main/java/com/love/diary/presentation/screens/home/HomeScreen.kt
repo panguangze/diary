@@ -729,15 +729,15 @@ private fun RecentMoodIconsRow(
             horizontalArrangement = Arrangement.spacedBy(iconSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-                    moodsToShow.forEach { moodRecord ->
-                        Box(
-                            modifier = Modifier
-                                .size(iconSize)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.primaryContainer)
-                                .clickable { onMoodClick(moodRecord) },
-                            contentAlignment = Alignment.Center
-                        ) {
+            moodsToShow.forEach { moodRecord ->
+                Box(
+                    modifier = Modifier
+                        .size(iconSize)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .clickable { onMoodClick(moodRecord) },
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
                         text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
                         style = MaterialTheme.typography.titleMedium
