@@ -1042,87 +1042,6 @@ private fun MoodStatisticsPreviewSection(
     }
 }
 
-@Composable
-private fun StatisticsPreviewSection(
-    uiState: StatisticsViewModel.StatisticsUiState,
-    onRangeChange: (Int) -> Unit,
-    onViewTypeChange: (StatisticsViewModel.ViewType) -> Unit,
-    onExpand: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "统计",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            TextButton(onClick = onExpand) { Text("展开") }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            listOf(7, 30, 90, 365).forEach { days ->
-                FilterChip(
-                    selected = uiState.selectedDays == days,
-                    onClick = { onRangeChange(days) },
-                    label = {
-                        Text(
-                            when (days) {
-                                7 -> "最近7天"
-                                30 -> "最近30天"
-                                90 -> "最近90天"
-                                else -> "全年"
-                            }
-                        )
-                    }
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            FilterChip(
-                selected = uiState.currentViewType == StatisticsViewModel.ViewType.MOOD,
-                onClick = { onViewTypeChange(StatisticsViewModel.ViewType.MOOD) },
-                label = { Text("心情") }
-            )
-            FilterChip(
-                selected = uiState.currentViewType == StatisticsViewModel.ViewType.CHECK_IN,
-                onClick = { onViewTypeChange(StatisticsViewModel.ViewType.CHECK_IN) },
-                label = { Text("打卡") }
-            )
-        }
-
-        StatisticsOverviewCard(uiState = uiState)
-
-        if (uiState.currentViewType == StatisticsViewModel.ViewType.MOOD) {
-            MoodTrendCard(
-                moodTrendData = uiState.moodTrend,
-                currentViewType = uiState.currentViewType
-            )
-        } else {
-            MoodTrendCard(
-                moodTrendData = emptyList(),
-                checkInTrendData = uiState.checkInTrend,
-                currentViewType = uiState.currentViewType
-            )
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoodCalendarBottomSheet(
@@ -1365,7 +1284,7 @@ private fun CalendarDayCell(
                     Text(
                         text = day.toString(),
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 8.sp
+                        fontSize = 10.sp
                     )
                 }
             } else {
