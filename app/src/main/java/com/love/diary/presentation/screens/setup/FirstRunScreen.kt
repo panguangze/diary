@@ -227,9 +227,16 @@ fun FirstRunScreen(
                             partnerNickname = if (partnerName.isNotBlank()) partnerName else null
                         )
                         
-                        // 创建默认的异地恋日记打卡配置
+                        // 使用组合名字作为默认打卡配置名称，如果没有则使用默认名称
+                        val defaultCheckInName = if (coupleName.isNotBlank()) {
+                            coupleName
+                        } else {
+                            "异地恋日记"
+                        }
+                        
+                        // 创建默认的打卡配置 (UnifiedCheckInConfig)
                         val loveDiaryConfig = com.love.diary.data.model.UnifiedCheckInConfig(
-                            name = "异地恋日记",
+                            name = defaultCheckInName,
                             type = com.love.diary.data.model.CheckInType.HABIT,
                             description = "记录我们每天的心情",
                             buttonLabel = "记录心情",
@@ -238,18 +245,11 @@ fun FirstRunScreen(
                         )
                         repository.saveCheckInConfig(loveDiaryConfig)
                         
-                        // 创建默认的打卡事项（Habit）
+                        // 创建默认的打卡事项（Habit）- 使用相同的名称保持同步
                         try {
-                            // 使用组合名字作为打卡事项名称，如果没有则使用默认名称
-                            val habitName = if (coupleName.isNotBlank()) {
-                                coupleName
-                            } else {
-                                "我们的打卡"
-                            }
-                            
                             // 创建默认习惯，使用心情选项作为标签
                             val defaultHabit = Habit(
-                                name = habitName,
+                                name = defaultCheckInName,
                                 description = "记录我们的日常",
                                 buttonLabel = "打卡",
                                 type = HabitType.POSITIVE,

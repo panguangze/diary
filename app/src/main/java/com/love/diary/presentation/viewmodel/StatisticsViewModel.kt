@@ -82,8 +82,12 @@ class StatisticsViewModel @Inject constructor(
             val startDateStr = startDate.format(dateFormatter)
             val endDateStr = endDate.format(dateFormatter)
 
-            // 从统一打卡系统获取"异地恋日记"记录
-            val checkIns = repository.getRecentCheckInsByName("异地恋日记", days * 2) // 获取更多记录以确保覆盖日期范围
+            // 获取配置以获取正确的默认打卡名称
+            val config = repository.getAppConfig()
+            val defaultCheckInName = config?.coupleName ?: "异地恋日记"
+            
+            // 从统一打卡系统获取对应名称的记录
+            val checkIns = repository.getRecentCheckInsByName(defaultCheckInName, days * 2) // 获取更多记录以确保覆盖日期范围
             
             // 过滤日期范围内的记录，使用LocalDate进行比较
             val records = checkIns.filter { checkIn ->

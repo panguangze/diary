@@ -425,6 +425,21 @@ class AppRepository @Inject constructor(
     suspend fun saveCheckInConfig(config: UnifiedCheckInConfig): Long {
         return checkInRepository.saveCheckInConfig(config)
     }
+    
+    // 获取打卡配置（根据名称）
+    suspend fun getCheckInConfigByName(name: String): UnifiedCheckInConfig? {
+        return checkInRepository.getCheckInConfigByName(name)
+    }
+    
+    // 更新打卡配置
+    suspend fun updateCheckInConfig(config: UnifiedCheckInConfig) {
+        checkInRepository.updateCheckInConfig(config)
+    }
+    
+    // 更新打卡记录的名称（用于同步名称变更）
+    suspend fun updateCheckInRecordsName(oldName: String, newName: String) {
+        checkInRepository.updateCheckInRecordsName(oldName, newName)
+    }
 
     // 获取特定打卡事项的记录
     fun getCheckInsByName(name: String): Flow<List<UnifiedCheckIn>> {

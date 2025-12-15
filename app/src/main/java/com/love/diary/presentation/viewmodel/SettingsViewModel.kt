@@ -241,20 +241,31 @@ class SettingsViewModel @Inject constructor(
                 )
             }
             
-            // 更新默认打卡事项的名称
-            // 尝试按以下优先级查找：旧的couple name -> "异地恋日记" 
-            val defaultHabit = if (oldCoupleName != null) {
-                repository.getHabitByName(oldCoupleName) ?: repository.getHabitByName("异地恋日记")
-            } else {
-                repository.getHabitByName("异地恋日记")
-            }
+            // 确定旧的默认打卡名称（按优先级查找）
+            val oldDefaultName = oldCoupleName ?: "异地恋日记"
             
+            // 更新默认打卡事项的名称（Legacy Habit系统）
+            val defaultHabit = repository.getHabitByName(oldDefaultName)
             if (defaultHabit != null && name.isNotBlank()) {
                 val updatedHabit = defaultHabit.copy(
                     name = name,
                     updatedAt = System.currentTimeMillis()
                 )
                 repository.updateHabit(updatedHabit)
+            }
+            
+            // 同时更新UnifiedCheckInConfig的名称（新统一打卡系统）
+            val defaultConfig = repository.getCheckInConfigByName(oldDefaultName)
+            if (defaultConfig != null && name.isNotBlank()) {
+                val updatedConfig = defaultConfig.copy(
+                    name = name,
+                    updatedAt = System.currentTimeMillis()
+                )
+                repository.updateCheckInConfig(updatedConfig)
+                
+                // 更新现有UnifiedCheckIn记录的名称，保持数据一致性
+                // 这样历史记录和统计页面可以继续使用新名称访问数据
+                repository.updateCheckInRecordsName(oldDefaultName, name)
             }
             
             repository.updateAppConfig(updated)
