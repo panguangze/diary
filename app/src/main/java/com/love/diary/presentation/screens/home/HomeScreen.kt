@@ -9,9 +9,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -100,37 +102,18 @@ fun HomeScreen(
 
     val commonMoods = remember { listOf(MoodType.HAPPY, MoodType.NORMAL, MoodType.SAD, MoodType.OTHER) }
     var showFullMoodGrid by rememberSaveable { mutableStateOf(false) }
-    var showHistorySheet by remember { mutableStateOf(false) }
+    var showCalendarSheet by remember { mutableStateOf(false) }
     var showStatsSheet by remember { mutableStateOf(false) }
     var showMoodEditSheet by remember { mutableStateOf(false) }
     var selectedHistoryItem by remember { mutableStateOf<DailyMoodEntity?>(null) }
-    var historyRange by rememberSaveable { mutableIntStateOf(7) }
 
-    val historySheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val calendarSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val statsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val editMoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val todayString = uiState.todayDate.ifBlank { LocalDate.now().toString() }
     val hasTodayMood = uiState.todayMood != null && uiState.todayMoodDate == todayString
-
-    val sortedHistory = remember(historyRecords) {
-        historyRecords.sortedByDescending { it.date }
-    }
-
-    val filteredHistoryByRange = remember(sortedHistory, historyRange) {
-        if (historyRange == 365) {
-            sortedHistory
-        } else {
-            val endDate = LocalDate.now()
-            val startDate = endDate.minusDays(historyRange.toLong() - 1)
-            sortedHistory.filter {
-                runCatching { LocalDate.parse(it.date) }.getOrNull()?.let { date ->
-                    !date.isBefore(startDate) && !date.isAfter(endDate)
-                } ?: false
-            }
-        }
-    }
 
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
@@ -152,7 +135,7 @@ fun HomeScreen(
             }
 
             item {
-                TodayMoodSection(
+                MoodTimelineCard(
                     uiState = uiState,
                     hasTodayMood = hasTodayMood,
                     commonMoods = commonMoods,
@@ -176,7 +159,9 @@ fun HomeScreen(
                                 dayIndex = uiState.dayIndex
                             )
                         }
-                    }
+                    },
+                    onRecentMoodClick = { selectedHistoryItem = it },
+                    onExpandCalendar = { showCalendarSheet = true }
                 )
             }
 
@@ -187,25 +172,9 @@ fun HomeScreen(
             }
 
             item {
-                RecentRecordsSection(
-                    records = sortedHistory.take(7),
-                    onItemClick = { selectedHistoryItem = it },
-                    onSeeMore = { showHistorySheet = true }
-                )
-            }
-
-            item {
-                StatisticsPreviewSection(
+                MoodStatisticsPreviewSection(
                     uiState = statisticsUiState,
                     onRangeChange = statisticsViewModel::updateTimeRange,
-                    onViewTypeChange = { type ->
-                        when (type) {
-                            StatisticsViewModel.ViewType.MOOD -> statisticsViewModel.switchToMoodTrend()
-                            StatisticsViewModel.ViewType.CHECK_IN -> statisticsViewModel.switchToCheckInTrend(
-                                uiState.coupleName ?: statisticsUiState.primaryCheckInName
-                            )
-                        }
-                    },
                     onExpand = { showStatsSheet = true }
                 )
             }
@@ -304,19 +273,21 @@ fun HomeScreen(
         )
     }
 
-    if (showHistorySheet) {
+    if (showCalendarSheet) {
         ModalBottomSheet(
-            sheetState = historySheetState,
-            onDismissRequest = { showHistorySheet = false }
+            sheetState = calendarSheetState,
+            onDismissRequest = { showCalendarSheet = false }
         ) {
-            HistorySheetContent(
-                records = filteredHistoryByRange,
-                selectedRange = historyRange,
-                onRangeChange = { historyRange = it },
-                onItemClick = {
-                    selectedHistoryItem = it
+            MoodCalendarBottomSheet(
+                onDismiss = { showCalendarSheet = false },
+                onDateClick = { date ->
+                    // Check if this date has a mood record
+                    val record = historyRecords.find { it.date == date }
+                    if (record != null) {
+                        selectedHistoryItem = record
+                    }
                 },
-                onClose = { showHistorySheet = false }
+                moodRecords = historyRecords
             )
         }
     }
@@ -480,6 +451,281 @@ private fun TodayOverviewBar(
                 text = "连续记录：${streak}天",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MoodTimelineCard(
+    uiState: com.love.diary.presentation.viewmodel.HomeUiState,
+    hasTodayMood: Boolean,
+    commonMoods: List<MoodType>,
+    showFullMoodGrid: Boolean,
+    onMoreToggle: () -> Unit,
+    onMoodSelected: (MoodType) -> Unit,
+    onEdit: () -> Unit,
+    onShare: () -> Unit,
+    onRecentMoodClick: (DailyMoodEntity) -> Unit,
+    onExpandCalendar: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Section 1: Today's Mood
+            Text(
+                text = "今天的心情",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            if (hasTodayMood && uiState.todayMood != null) {
+                TodayMoodDisplay(
+                    mood = uiState.todayMood,
+                    moodText = uiState.todayMoodText,
+                    onEdit = onEdit,
+                    onShare = onShare
+                )
+            } else {
+                TodayMoodInput(
+                    commonMoods = commonMoods,
+                    showFullMoodGrid = showFullMoodGrid,
+                    onMoreToggle = onMoreToggle,
+                    onMoodSelected = onMoodSelected,
+                    selectedMood = uiState.todayMood
+                )
+            }
+
+            // Section 2: Recent 10 Moods
+            RecentMoodsRow(
+                recentMoods = uiState.recentTenMoods,
+                onMoodClick = onRecentMoodClick
+            )
+
+            // Section 3: Expand Calendar Button
+            Button(
+                onClick = onExpandCalendar,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("展开日历")
+            }
+        }
+    }
+}
+
+@Composable
+private fun TodayMoodDisplay(
+    mood: MoodType,
+    moodText: String?,
+    onEdit: () -> Unit,
+    onShare: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(text = mood.emoji, style = MaterialTheme.typography.displaySmall)
+                Column {
+                    Text(
+                        text = mood.displayName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "今天的记录",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = onEdit) { Text("改一下") }
+                TextButton(onClick = onShare) { Text("分享") }
+            }
+        }
+
+        if (!moodText.isNullOrBlank()) {
+            Text(
+                text = moodText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+private fun TodayMoodInput(
+    commonMoods: List<MoodType>,
+    showFullMoodGrid: Boolean,
+    onMoreToggle: () -> Unit,
+    onMoodSelected: (MoodType) -> Unit,
+    selectedMood: MoodType?
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "选择今天的心情吧",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            commonMoods.forEach { mood ->
+                ElevatedCard(
+                    onClick = { onMoodSelected(mood) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(72.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(text = mood.emoji, style = MaterialTheme.typography.titleLarge)
+                        Text(text = mood.displayName, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+
+            OutlinedCard(
+                onClick = onMoreToggle,
+                modifier = Modifier
+                    .width(88.dp)
+                    .height(72.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "更多", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+
+        AnimatedVisibility(visible = showFullMoodGrid) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(MoodType.values()) { mood ->
+                    MoodButton(
+                        mood = mood,
+                        isSelected = selectedMood == mood,
+                        onClick = { onMoodSelected(mood) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentMoodsRow(
+    recentMoods: List<DailyMoodEntity>,
+    onMoodClick: (DailyMoodEntity) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "最近10次心情",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Medium
+        )
+
+        if (recentMoods.isEmpty()) {
+            Text(
+                text = "还没有历史记录",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        } else {
+            androidx.compose.foundation.lazy.LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(recentMoods) { moodRecord ->
+                    RecentMoodItem(
+                        moodRecord = moodRecord,
+                        onClick = { onMoodClick(moodRecord) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecentMoodItem(
+    moodRecord: DailyMoodEntity,
+    onClick: () -> Unit
+) {
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("MM-dd") }
+    val date = runCatching { LocalDate.parse(moodRecord.date) }.getOrNull()
+    val formattedDate = date?.format(dateFormatter) ?: moodRecord.date
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier.size(60.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+        )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = formattedDate,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -662,197 +908,6 @@ private fun FeedbackCard(mood: MoodType) {
     }
 }
 
-@Composable
-private fun RecentRecordsSection(
-    records: List<DailyMoodEntity>,
-    onItemClick: (DailyMoodEntity) -> Unit,
-    onSeeMore: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "最近记录",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            TextButton(onClick = onSeeMore) { Text("查看更多") }
-        }
-
-        if (records.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.History,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(48.dp)
-                )
-                Text(text = "还没有记录", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = "去上方记录今天的心情吧",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                records.forEach { record ->
-                    RecentRecordItem(record = record, onClick = { onItemClick(record) })
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun RecentRecordItem(
-    record: DailyMoodEntity,
-    onClick: () -> Unit
-) {
-    val dateFormatter = remember { DateTimeFormatter.ofPattern("MM-dd") }
-    val weekFormatter = remember { TextStyle.SHORT }
-    val date = runCatching { LocalDate.parse(record.date) }.getOrNull()
-    val dayOfWeek = date?.dayOfWeek?.getDisplayName(weekFormatter, Locale.getDefault()) ?: ""
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)),
-        onClick = onClick
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "${date?.format(dateFormatter) ?: record.date} $dayOfWeek",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = "第 ${record.dayIndex} 天",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(text = MoodType.fromCode(record.moodTypeCode).emoji, style = MaterialTheme.typography.titleLarge)
-                    Text(text = MoodType.fromCode(record.moodTypeCode).displayName, style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-
-            if (record.hasText && !record.moodText.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = record.moodText ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun HistorySheetContent(
-    records: List<DailyMoodEntity>,
-    selectedRange: Int,
-    onRangeChange: (Int) -> Unit,
-    onItemClick: (DailyMoodEntity) -> Unit,
-    onClose: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "最近记录", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            TextButton(onClick = onClose) { Text("关闭") }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            listOf(7, 30, 90, 365).forEach { range ->
-                FilterChip(
-                    selected = selectedRange == range,
-                    onClick = { onRangeChange(range) },
-                    label = {
-                        Text(
-                            when (range) {
-                                7 -> "7 天"
-                                30 -> "30 天"
-                                90 -> "90 天"
-                                else -> "全年"
-                            }
-                        )
-                    }
-                )
-            }
-        }
-
-        if (records.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.History,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(48.dp)
-                )
-                Text(text = "还没有记录", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = "去上方记录今天的心情吧",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                items(records) { record ->
-                    RecentRecordItem(record = record, onClick = { onItemClick(record) })
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HistoryDetailSheet(
@@ -927,6 +982,63 @@ private fun HistoryDetailSheet(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun MoodStatisticsPreviewSection(
+    uiState: StatisticsViewModel.StatisticsUiState,
+    onRangeChange: (Int) -> Unit,
+    onExpand: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "心情统计",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            TextButton(onClick = onExpand) { Text("展开") }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            listOf(7, 30, 90, 365).forEach { days ->
+                FilterChip(
+                    selected = uiState.selectedDays == days,
+                    onClick = { onRangeChange(days) },
+                    label = {
+                        Text(
+                            when (days) {
+                                7 -> "最近7天"
+                                30 -> "最近30天"
+                                90 -> "最近90天"
+                                else -> "全年"
+                            }
+                        )
+                    }
+                )
+            }
+        }
+
+        // Only show mood statistics
+        StatisticsOverviewCard(uiState = uiState)
+
+        MoodTrendCard(
+            moodTrendData = uiState.moodTrend,
+            currentViewType = StatisticsViewModel.ViewType.MOOD
+        )
     }
 }
 
@@ -1007,6 +1119,343 @@ private fun StatisticsPreviewSection(
                 checkInTrendData = uiState.checkInTrend,
                 currentViewType = uiState.currentViewType
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MoodCalendarBottomSheet(
+    onDismiss: () -> Unit,
+    onDateClick: (String) -> Unit,
+    moodRecords: List<DailyMoodEntity>
+) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("本月", "年历")
+    
+    val today = LocalDate.now()
+    var currentMonth by remember { mutableStateOf(today) }
+    
+    // Create a map of date -> mood for quick lookup
+    val moodMap = remember(moodRecords) {
+        moodRecords.associateBy { it.date }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "心情日历",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            TextButton(onClick = onDismiss) { Text("关闭") }
+        }
+
+        // Tabs
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                FilterChip(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    label = { Text(tab) }
+                )
+            }
+        }
+
+        when (selectedTab) {
+            0 -> MonthCalendarView(
+                currentMonth = currentMonth,
+                onMonthChange = { currentMonth = it },
+                moodMap = moodMap,
+                onDateClick = onDateClick,
+                today = today
+            )
+            1 -> YearCalendarView(
+                year = today.year,
+                moodMap = moodMap,
+                onMonthClick = { month ->
+                    currentMonth = LocalDate.of(today.year, month, 1)
+                    selectedTab = 0
+                },
+                today = today
+            )
+        }
+    }
+}
+
+@Composable
+private fun MonthCalendarView(
+    currentMonth: LocalDate,
+    onMonthChange: (LocalDate) -> Unit,
+    moodMap: Map<String, DailyMoodEntity>,
+    onDateClick: (String) -> Unit,
+    today: LocalDate
+) {
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy年MM月") }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Month navigation
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = { onMonthChange(currentMonth.minusMonths(1)) }) {
+                Text("< 上月")
+            }
+            Text(
+                text = currentMonth.format(dateFormatter),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            TextButton(onClick = { onMonthChange(currentMonth.plusMonths(1)) }) {
+                Text("下月 >")
+            }
+        }
+
+        // Day of week headers
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            listOf("日", "一", "二", "三", "四", "五", "六").forEach { day ->
+                Text(
+                    text = day,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // Calendar grid (7x6)
+        val firstDayOfMonth = currentMonth.withDayOfMonth(1)
+        val daysInMonth = currentMonth.lengthOfMonth()
+        val firstDayOfWeek = firstDayOfMonth.dayOfWeek.value % 7 // Sunday = 0
+        
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(7),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 400.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Empty cells before first day
+            items(firstDayOfWeek) {
+                Box(modifier = Modifier.size(48.dp))
+            }
+            
+            // Days of the month
+            items(daysInMonth) { dayIndex ->
+                val day = dayIndex + 1
+                val date = currentMonth.withDayOfMonth(day)
+                val dateStr = date.toString()
+                val moodRecord = moodMap[dateStr]
+                val isToday = date == today
+                
+                CalendarDayCell(
+                    day = day,
+                    moodRecord = moodRecord,
+                    isToday = isToday,
+                    onClick = {
+                        if (moodRecord != null) {
+                            onDateClick(dateStr)
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun YearCalendarView(
+    year: Int,
+    moodMap: Map<String, DailyMoodEntity>,
+    onMonthClick: (Int) -> Unit,
+    today: LocalDate
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "${year}年",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 600.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(12) { monthIndex ->
+                val month = monthIndex + 1
+                MiniMonthGrid(
+                    year = year,
+                    month = month,
+                    moodMap = moodMap,
+                    onClick = { onMonthClick(month) },
+                    today = today
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CalendarDayCell(
+    day: Int,
+    moodRecord: DailyMoodEntity?,
+    isToday: Boolean,
+    onClick: () -> Unit
+) {
+    val backgroundColor = when {
+        isToday -> MaterialTheme.colorScheme.primaryContainer
+        moodRecord != null -> MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+        else -> MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+    }
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .size(48.dp)
+            .border(
+                width = if (isToday) 2.dp else 0.dp,
+                color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(8.dp)
+            ),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (moodRecord != null) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
+                        fontSize = 16.sp
+                    )
+                    Text(
+                        text = day.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 8.sp
+                    )
+                }
+            } else {
+                Text(
+                    text = day.toString(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MiniMonthGrid(
+    year: Int,
+    month: Int,
+    moodMap: Map<String, DailyMoodEntity>,
+    onClick: () -> Unit,
+    today: LocalDate
+) {
+    val monthName = remember(month) {
+        val date = LocalDate.of(year, month, 1)
+        date.format(DateTimeFormatter.ofPattern("M月"))
+    }
+
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = monthName,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+
+            // Mini grid showing mood icons
+            val firstDay = LocalDate.of(year, month, 1)
+            val daysInMonth = firstDay.lengthOfMonth()
+            val firstDayOfWeek = firstDay.dayOfWeek.value % 7
+
+            androidx.compose.foundation.layout.FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                // Empty cells
+                repeat(firstDayOfWeek) {
+                    Box(modifier = Modifier.size(12.dp))
+                }
+
+                // Days
+                repeat(daysInMonth) { dayIndex ->
+                    val day = dayIndex + 1
+                    val date = LocalDate.of(year, month, day)
+                    val dateStr = date.toString()
+                    val moodRecord = moodMap[dateStr]
+
+                    Box(
+                        modifier = Modifier.size(12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (moodRecord != null) {
+                            Text(
+                                text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
+                                fontSize = 6.sp
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(2.dp)
+                                    )
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
