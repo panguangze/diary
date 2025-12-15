@@ -12,6 +12,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -77,6 +78,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -117,16 +119,12 @@ fun HomeScreen(
     val historyViewModel: HistoryViewModel = hiltViewModel()
     val statisticsViewModel: StatisticsViewModel = hiltViewModel()
     val historyRecords by historyViewModel.moodRecords.collectAsState()
-    val statisticsUiState by statisticsViewModel.uiState.collectAsState()
-
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
     var showCalendarSheet by remember { mutableStateOf(false) }
-    var showStatsSheet by remember { mutableStateOf(false) }
     var selectedHistoryItem by remember { mutableStateOf<DailyMoodEntity?>(null) }
 
-    val statsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val todayString = uiState.todayDate.ifBlank { LocalDate.now().toString() }
@@ -167,17 +165,13 @@ fun HomeScreen(
                 )
             }
 
-            if (uiState.todayMood != null) {
-                item {
-                    FeedbackCard(mood = uiState.todayMood!!)
-                }
-            }
-
             item {
-                MoodStatisticsPreviewSection(
-                    uiState = statisticsUiState,
-                    onRangeChange = statisticsViewModel::updateTimeRange,
-                    onExpand = { showStatsSheet = true }
+                StatisticsScreen(
+                    viewModel = statisticsViewModel,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 720.dp)
+                        .padding(horizontal = 16.dp)
                 )
             }
 
@@ -310,20 +304,6 @@ fun HomeScreen(
         }
     }
 
-    if (showStatsSheet) {
-        ModalBottomSheet(
-            sheetState = statsSheetState,
-            onDismissRequest = { showStatsSheet = false }
-        ) {
-            StatisticsScreen(
-                viewModel = statisticsViewModel,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 720.dp)
-                    .padding(bottom = 24.dp)
-            )
-        }
-    }
 }
 
 @Composable
@@ -475,6 +455,8 @@ private fun MoodTimelineCard(
                 onMoodSelected = onMoodSelected
             )
 
+            MoodPromptText(selectedMood = uiState.todayMood)
+
             if (uiState.todayMood != null) {
                 MoodNoteInput(
                     note = noteText,
@@ -601,6 +583,19 @@ private fun MoodNoteInput(
     }
 }
 
+@Composable
+private fun MoodPromptText(selectedMood: MoodType?) {
+    val prompt = selectedMood?.feedbackText ?: "选一个心情，记录今天的状态"
+
+    Text(
+        text = prompt,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.fillMaxWidth(),
+        maxLines = 2
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecentMoodsList(
@@ -613,7 +608,7 @@ private fun RecentMoodsList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "最近10次心情",
+            text = "最近心情",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium
         )
@@ -624,39 +619,68 @@ private fun RecentMoodsList(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = BorderStroke(1.dp, NeutralStroke)
         ) {
-            Column(modifier = Modifier.padding(vertical = 12.dp)) {
-                if (recentMoods.isEmpty()) {
-                    Text(
-                        text = "还没有历史记录",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    )
-                } else {
-                    recentMoods.forEachIndexed { index, moodRecord ->
-                        RecentMoodListItem(
-                            moodRecord = moodRecord,
-                            onClick = { onMoodClick(moodRecord) }
-                        )
-                        if (index != recentMoods.lastIndex) {
-                            Divider(
-                                color = NeutralStroke,
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                        }
-                    }
-                }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RecentMoodIconsRow(
+                    recentMoods = recentMoods,
+                    onMoodClick = onMoodClick,
+                    modifier = Modifier.weight(1f)
+                )
 
+                Spacer(modifier = Modifier.width(8.dp))
+
+                MoreMoodsButton(
+                    onClick = onMoreClick,
+                    modifier = Modifier.width(88.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentMoodIconsRow(
+    recentMoods: List<DailyMoodEntity>,
+    onMoodClick: (DailyMoodEntity) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BoxWithConstraints(modifier = modifier) {
+        val density = LocalDensity.current
+        val iconSize = 36.dp
+        val iconSpacing = 8.dp
+        val targetCount = minOf(10, recentMoods.size)
+        val availablePx = with(density) { maxWidth.toPx() }
+        val iconPx = with(density) { iconSize.toPx() }
+        val spacingPx = with(density) { iconSpacing.toPx() }
+        val maxIconsFit = if (targetCount == 0) {
+            0
+        } else {
+            ((availablePx + spacingPx) / (iconPx + spacingPx)).toInt().coerceIn(1, targetCount)
+        }
+        val moodsToShow = recentMoods.take(maxIconsFit)
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(iconSpacing),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            moodsToShow.forEach { moodRecord ->
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    contentAlignment = Alignment.CenterEnd
+                        .size(iconSize)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(HighlightBlue)
+                        .clickable { onMoodClick(moodRecord) },
+                    contentAlignment = Alignment.Center
                 ) {
-                    MoreMoodsButton(onClick = onMoreClick)
+                    Text(
+                        text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
+                        style = MaterialTheme.typography.titleMedium
+                    )
                 }
             }
         }
@@ -709,13 +733,16 @@ private fun RecentMoodListItem(
 }
 
 @Composable
-private fun MoreMoodsButton(onClick: () -> Unit) {
+private fun MoreMoodsButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
     OutlinedButton(
         onClick = onClick,
-        modifier = Modifier
+        modifier = modifier
             .heightIn(min = 40.dp),
         shape = RoundedCornerShape(8.dp),
         border = BorderStroke(1.dp, NeutralStroke),
