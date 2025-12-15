@@ -1069,14 +1069,16 @@ private fun StatPreviewCard(
     title: String,
     value: String
 ) {
+    val shape = RoundedCornerShape(12.dp)
     ElevatedCard(
-        modifier = Modifier.heightIn(min = 140.dp),
+        modifier = Modifier
+            .heightIn(min = 140.dp)
+            .border(BorderStroke(1.dp, NeutralStroke), shape),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, NeutralStroke)
     ) {
         Column(
             modifier = Modifier
