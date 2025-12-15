@@ -66,6 +66,7 @@ Comprehensive documentation available in the `docs/` directory:
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Complete architecture guide
 - **[DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** - Database design and schema
 - **[REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md)** - Refactoring strategy and roadmap
+- **[PRODUCT_REDESIGN.md](docs/PRODUCT_REDESIGN.md)** - Product PM plan for long-distance diary + check-in
 
 ## 🚀 Getting Started
 
