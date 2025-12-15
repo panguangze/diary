@@ -25,6 +25,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Celebration
@@ -1438,9 +1439,21 @@ private fun MiniMonthGrid(
                         contentAlignment = Alignment.Center
                     ) {
                         if (moodRecord != null) {
-                            Text(
-                                text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
-                                fontSize = 6.sp
+                            // Use colored circle instead of tiny emoji for better accessibility
+                            Box(
+                                modifier = Modifier
+                                    .size(10.dp)
+                                    .background(
+                                        when (MoodType.fromCode(moodRecord.moodTypeCode)) {
+                                            MoodType.HAPPY -> MaterialTheme.colorScheme.primary
+                                            MoodType.SATISFIED -> MaterialTheme.colorScheme.tertiary
+                                            MoodType.NORMAL -> MaterialTheme.colorScheme.secondary
+                                            MoodType.SAD -> MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                                            MoodType.ANGRY -> MaterialTheme.colorScheme.error
+                                            MoodType.OTHER -> MaterialTheme.colorScheme.outline
+                                        },
+                                        shape = CircleShape
+                                    )
                             )
                         } else {
                             Box(
