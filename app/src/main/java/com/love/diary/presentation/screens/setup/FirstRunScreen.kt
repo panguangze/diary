@@ -185,8 +185,6 @@ fun FirstRunScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(Dimens.SectionSpacing))
-
                     // 组合名字
                     OutlinedTextField(
                         value = coupleName,
@@ -196,8 +194,6 @@ fun FirstRunScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
-
-                    Spacer(modifier = Modifier.height(Dimens.SectionSpacing))
 
                     // 个人昵称
                     Row(
