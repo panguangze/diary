@@ -37,7 +37,9 @@ app/src/main/java/com/love/diary/
 │   └── viewmodel/       # ViewModels
 ├── ui/
 │   └── theme/           # Theme configuration
-└── util/                # Utility classes (Notification, Share)
+└── util/                # Utility classes
+    ├── NotificationHelper.kt  # Local notifications and reminders
+    └── ShareHelper.kt         # Content sharing (text and images)
 ```
 
 ## Building and Testing
@@ -120,7 +122,7 @@ app/src/main/java/com/love/diary/
 
 ### Room Configuration
 - Database version: 8
-- Schema location: `app/schemas/`
+- Schema location: `app/schemas/` (configured via KSP in app build.gradle.kts)
 - Use Type Converters for complex types (see `Converters.kt`)
 - Add database migrations for schema changes (see `MigrationHelper.kt`)
 
@@ -189,9 +191,9 @@ Key tables:
 ### Adding a New Database Entity
 1. Create entity class in `data/database/entities/`
 2. Create DAO interface in `data/database/dao/`
-3. Update `LoveDatabase` with new entities and version
+3. Update `LoveDatabase` with new entities and increment version
 4. Create migration in `MigrationHelper.kt`
-5. Export schema to `app/schemas/`
+5. Build project to export schema to `app/schemas/` (automatic via KSP)
 6. Update repository if needed
 
 ### Adding a New Dependency
