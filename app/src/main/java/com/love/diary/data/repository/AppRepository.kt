@@ -216,6 +216,24 @@ class AppRepository @Inject constructor(
         dailyMoodDao.insertMoods(records)
     }
 
+    // === 新增方法：获取最近N条心情记录 ===
+    suspend fun getRecentNMoods(limit: Int = 10): List<DailyMoodEntity> {
+        val today = getTodayDateString()
+        return dailyMoodDao.getRecentNMoods(limit, today)
+    }
+
+    // === 新增方法：获取指定月份的心情记录 ===
+    suspend fun getMoodsForMonth(year: Int, month: Int): List<DailyMoodEntity> {
+        val monthPrefix = String.format("%04d-%02d", year, month)
+        return dailyMoodDao.getMoodsForMonth(monthPrefix)
+    }
+
+    // === 新增方法：获取指定年份的心情记录 ===
+    suspend fun getMoodsForYear(year: Int): List<DailyMoodEntity> {
+        val yearPrefix = String.format("%04d", year)
+        return dailyMoodDao.getMoodsForYear(yearPrefix)
+    }
+
     // === Helper Methods ===
     private fun getTodayDateString(): String {
         return LocalDate.now().format(DATE_FORMATTER)

@@ -83,5 +83,32 @@ interface DailyMoodDao {
         endDate: String
     ): List<DailyMoodScore>
 
+    // Get recent N mood records (for recent 10 moods row)
+    @Query("""
+        SELECT * FROM daily_mood 
+        WHERE deleted = 0 
+        AND date <= :maxDate
+        ORDER BY date DESC 
+        LIMIT :limit
+    """)
+    suspend fun getRecentNMoods(limit: Int, maxDate: String): List<DailyMoodEntity>
+
+    // Get all mood records for a specific month
+    @Query("""
+        SELECT * FROM daily_mood 
+        WHERE deleted = 0 
+        AND date LIKE :monthPrefix || '%'
+        ORDER BY date ASC
+    """)
+    suspend fun getMoodsForMonth(monthPrefix: String): List<DailyMoodEntity>
+
+    // Get all mood records for a specific year
+    @Query("""
+        SELECT * FROM daily_mood 
+        WHERE deleted = 0 
+        AND date LIKE :yearPrefix || '%'
+        ORDER BY date ASC
+    """)
+    suspend fun getMoodsForYear(yearPrefix: String): List<DailyMoodEntity>
 
 }

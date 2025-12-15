@@ -34,50 +34,31 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
 
-            // 获取配置以获取正确的默认打卡名称
+            // 获取配置以获取正确的startDate
             val config = repository.getAppConfig()
-            val defaultCheckInName = config?.coupleName ?: "异地恋日记"
             val startDateStr = config?.startDate
             
-            // 从统一打卡系统获取对应名称的记录
-            repository.getCheckInsByName(defaultCheckInName).collect { checkIns ->
-                // 将UnifiedCheckIn转换为DailyMoodEntity用于显示
-                val moodRecords = checkIns.mapNotNull { checkIn ->
-                    // 使用工具函数将tag映射到MoodType
-                    val moodType = MoodType.fromTag(checkIn.tag)
-                    
-                    // 计算dayIndex
-                    val dayIndex = if (startDateStr != null) {
-                        try {
+            // 从DailyMood数据库获取所有记录
+            repository.getRecentMoods(365).collect { moodRecords ->
+                // 如果需要，可以计算dayIndex
+                val records = if (startDateStr != null) {
+                    moodRecords.map { mood ->
+                        // dayIndex应该已经存储在数据库中，但以防万一，我们可以重新计算
+                        val dayIndex = try {
                             val startDate = LocalDate.parse(startDateStr)
-                            val checkInDate = LocalDate.parse(checkIn.date)
-                            java.time.temporal.ChronoUnit.DAYS.between(startDate, checkInDate).toInt() + 1
+                            val moodDate = LocalDate.parse(mood.date)
+                            java.time.temporal.ChronoUnit.DAYS.between(startDate, moodDate).toInt() + 1
                         } catch (e: Exception) {
-                            0
+                            mood.dayIndex // 使用数据库中存储的值
                         }
-                    } else {
-                        0
+                        
+                        mood.copy(dayIndex = dayIndex)
                     }
-                    
-                    // 对于OTHER类型，moodText存储自定义文本（如果有）；对于其他类型，moodText为null
-                    val hasText = moodType == MoodType.OTHER && !checkIn.tag.isNullOrBlank()
-                    val moodText = if (hasText) checkIn.tag else null
-                    
-                    DailyMoodEntity(
-                        id = checkIn.id,
-                        date = checkIn.date,
-                        dayIndex = dayIndex,
-                        moodTypeCode = moodType.code,
-                        moodScore = moodType.score,
-                        moodText = moodText,
-                        hasText = hasText,
-                        isAnniversary = false,
-                        anniversaryType = null,
-                        createdAt = checkIn.createdAt,
-                        updatedAt = checkIn.updatedAt
-                    )
+                } else {
+                    moodRecords
                 }
-                _moodRecords.value = moodRecords
+                
+                _moodRecords.value = records
                 _isLoading.value = false
             }
         }
