@@ -437,8 +437,8 @@ class AppRepository @Inject constructor(
     }
     
     // 更新打卡记录的名称（用于同步名称变更）
-    suspend fun updateCheckInRecordsName(oldName: String, newName: String) {
-        checkInRepository.updateCheckInRecordsName(oldName, newName)
+    suspend fun updateCheckInRecordsName(oldName: String, newName: String): Int {
+        return checkInRepository.updateCheckInRecordsName(oldName, newName)
     }
 
     // 获取特定打卡事项的记录

@@ -402,7 +402,7 @@ class CheckInRepository @Inject constructor(
     }
     
     // 更新打卡记录的名称（批量更新，用于同步名称变更）
-    suspend fun updateCheckInRecordsName(oldName: String, newName: String) {
-        unifiedCheckInDao.updateCheckInRecordsName(oldName, newName)
+    suspend fun updateCheckInRecordsName(oldName: String, newName: String): Int {
+        return unifiedCheckInDao.updateCheckInRecordsName(oldName, newName)
     }
 }

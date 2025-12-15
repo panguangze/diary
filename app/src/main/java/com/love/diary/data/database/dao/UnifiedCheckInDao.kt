@@ -94,5 +94,5 @@ interface UnifiedCheckInDao {
     
     // 批量更新打卡记录的名称（用于同步名称变更）
     @Query("UPDATE unified_checkins SET name = :newName WHERE name = :oldName")
-    suspend fun updateCheckInRecordsName(oldName: String, newName: String)
+    suspend fun updateCheckInRecordsName(oldName: String, newName: String): Int
 }
