@@ -74,7 +74,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -104,7 +103,6 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
-private val NeutralStroke = Color(0xFFE5E7EB)
 private val MoodGridMaxHeight = 240.dp
 private val StatsGridMinHeight = 160.dp
 private val StatsGridMaxHeight = 320.dp
@@ -1166,7 +1164,7 @@ private fun StatPreviewCard(
     ElevatedCard(
         modifier = Modifier
             .heightIn(min = 140.dp)
-            .border(BorderStroke(1.dp, NeutralStroke), shape),
+            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.elevatedCardColors(
@@ -1190,7 +1188,7 @@ private fun StatPreviewCard(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Divider(color = NeutralStroke, thickness = 1.dp)
+            Divider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
             Text(
                 text = "默认展开，数据实时更新",
                 style = MaterialTheme.typography.labelMedium,
