@@ -28,15 +28,85 @@ fun StatisticsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    if (uiState.isLoading) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
+    when (uiState.contentState) {
+        StatisticsViewModel.ContentState.LOADING -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
-    } else {
-        StatisticsContent(uiState = uiState, viewModel = viewModel, modifier = modifier)
+
+        StatisticsViewModel.ContentState.EMPTY -> {
+            EmptyState(
+                onRetry = viewModel::refresh,
+                modifier = modifier
+            )
+        }
+
+        StatisticsViewModel.ContentState.ERROR -> {
+            ErrorState(
+                message = uiState.errorMessage ?: "加载失败",
+                onRetry = viewModel::refresh,
+                modifier = modifier
+            )
+        }
+
+        StatisticsViewModel.ContentState.CONTENT -> {
+            StatisticsContent(uiState = uiState, viewModel = viewModel, modifier = modifier)
+        }
+    }
+}
+
+@Composable
+private fun EmptyState(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "最近7天还没有心情记录，去写一条吧",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onRetry) {
+            Text("去记录")
+        }
+    }
+}
+
+@Composable
+private fun ErrorState(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.error
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onRetry) {
+            Text("重试")
+        }
     }
 }
 

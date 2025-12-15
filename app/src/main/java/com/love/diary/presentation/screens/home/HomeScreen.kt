@@ -157,14 +157,16 @@ fun HomeScreen(
                         if (mood != uiState.todayMood) viewModel.updateOtherMoodText("")
                         viewModel.selectMood(mood, noteToSave)
                     },
-                    onRecentMoodClick = { selectedHistoryItem = it },
-                    onExpandCalendar = { showCalendarSheet = true },
-                    onNoteChange = viewModel::updateOtherMoodText,
-                    onSaveNote = { mood, text ->
-                        viewModel.selectMood(mood, text.ifBlank { null })
-                    }
-                )
-            }
+                onRecentMoodClick = { selectedHistoryItem = it },
+                onExpandCalendar = { showCalendarSheet = true },
+                onNoteChange = viewModel::updateOtherMoodText,
+                onSaveNote = { text ->
+                    viewModel.saveDescription(text)
+                },
+                onEnterEdit = viewModel::enterDescriptionEditMode,
+                onCancelEdit = viewModel::cancelDescriptionEdit
+            )
+        }
 
             item {
                 StatisticsScreen(
@@ -381,6 +383,47 @@ private fun RelationshipCard(uiState: com.love.diary.presentation.viewmodel.Home
 }
 
 @Composable
+private fun MoodNoteViewer(
+    note: String?,
+    onEdit: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(BackgroundSubtle, RoundedCornerShape(12.dp))
+            .clickable { onEdit() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = BackgroundSubtle)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "今天的心情描述",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = note?.takeIf { it.isNotBlank() } ?: "点击添加一些描述吧",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = onEdit) {
+                    Text("修改")
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun TodayOverviewBar(
     dateDisplay: String,
     streak: Int
@@ -421,7 +464,9 @@ private fun MoodTimelineCard(
     onRecentMoodClick: (DailyMoodEntity) -> Unit,
     onExpandCalendar: () -> Unit,
     onNoteChange: (String) -> Unit,
-    onSaveNote: (MoodType, String) -> Unit
+    onSaveNote: (String) -> Unit,
+    onEnterEdit: () -> Unit,
+    onCancelEdit: () -> Unit
 ) {
     val noteText = uiState.otherMoodText.ifBlank { uiState.todayMoodText.orEmpty() }
 
@@ -458,11 +503,23 @@ private fun MoodTimelineCard(
 
             MoodPromptText(selectedMood = uiState.todayMood)
 
-            if (uiState.todayMood != null) {
+            val isEditingDescription = uiState.isDescriptionEditing ||
+                uiState.todayMood == null ||
+                uiState.todayMoodText.isNullOrBlank()
+
+            if (isEditingDescription) {
                 MoodNoteInput(
                     note = noteText,
                     onNoteChange = onNoteChange,
-                    onSave = { onSaveNote(uiState.todayMood, noteText) }
+                    onSave = { onSaveNote(noteText) },
+                    onCancel = if (!uiState.todayMoodText.isNullOrBlank()) onCancelEdit else null,
+                    isSaveEnabled = uiState.todayMood != null,
+                    errorMessage = uiState.descriptionError
+                )
+            } else {
+                MoodNoteViewer(
+                    note = uiState.todayMoodText,
+                    onEdit = onEnterEdit
                 )
             }
 
@@ -548,7 +605,11 @@ private fun MoodSelectorRow(
 private fun MoodNoteInput(
     note: String,
     onNoteChange: (String) -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onCancel: (() -> Unit)? = null,
+    isSaveEnabled: Boolean = true,
+    errorMessage: String? = null,
+    saveLabel: String = "保存记录"
 ) {
     Column(
         modifier = Modifier
@@ -573,12 +634,28 @@ private fun MoodNoteInput(
             shape = RoundedCornerShape(12.dp)
         )
 
+        if (!errorMessage.isNullOrBlank()) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
-            TextButton(onClick = onSave) {
-                Text("保存记录")
+            onCancel?.let {
+                TextButton(onClick = it) {
+                    Text("取消")
+                }
+            }
+            TextButton(
+                onClick = onSave,
+                enabled = isSaveEnabled
+            ) {
+                Text(saveLabel)
             }
         }
     }

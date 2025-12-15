@@ -157,27 +157,42 @@ class AppRepository @Inject constructor(
     ): Long {
         val today = getTodayDateString()
 
-        val config = getAppConfig()
-        val dayIndex = config?.let {
-            calculateDayIndex(it.startDate, today)
-        } ?: 1
+        val existing = dailyMoodDao.getMoodByDate(today)
+        val now = System.currentTimeMillis()
 
-        val anniversaryInfo = checkAnniversary(dayIndex)
+        return if (existing != null) {
+            val updated = existing.copy(
+                moodTypeCode = moodType.code,
+                moodScore = moodType.score,
+                moodText = moodText,
+                hasText = moodText?.isNotBlank() ?: false,
+                updatedAt = now
+            )
+            dailyMoodDao.updateMood(updated)
+            existing.id
+        } else {
+            val config = getAppConfig()
+            val dayIndex = config?.let {
+                calculateDayIndex(it.startDate, today)
+            } ?: 1
 
-        val moodEntity = DailyMoodEntity(
-            date = today,
-            dayIndex = dayIndex,
-            moodTypeCode = moodType.code,
-            moodScore = moodType.score,
-            moodText = moodText,
-            hasText = moodText?.isNotBlank() ?: false,
-            isAnniversary = anniversaryInfo.isAnniversary,
-            anniversaryType = anniversaryInfo.type,
-            createdAt = System.currentTimeMillis(),
-            updatedAt = System.currentTimeMillis()
-        )
+            val anniversaryInfo = checkAnniversary(dayIndex)
 
-        return dailyMoodDao.insertMood(moodEntity)
+            val moodEntity = DailyMoodEntity(
+                date = today,
+                dayIndex = dayIndex,
+                moodTypeCode = moodType.code,
+                moodScore = moodType.score,
+                moodText = moodText,
+                hasText = moodText?.isNotBlank() ?: false,
+                isAnniversary = anniversaryInfo.isAnniversary,
+                anniversaryType = anniversaryInfo.type,
+                createdAt = now,
+                updatedAt = now
+            )
+
+            dailyMoodDao.insertMood(moodEntity)
+        }
     }
 
     suspend fun getTodayMood(): DailyMoodEntity? {
