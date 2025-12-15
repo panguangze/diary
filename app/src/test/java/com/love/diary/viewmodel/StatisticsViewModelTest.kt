@@ -124,9 +124,8 @@ class StatisticsViewModelTest {
         assertEquals(1, state.moodStats[MoodType.SAD]) // 1 SAD mood
         assertEquals(MoodType.HAPPY, state.topMood) // Most frequent is HAPPY
         
-        // Average mood calculation (see MoodType.kt for score values):
-        // HAPPY=2, SATISFIED=1, NORMAL=0, SAD=-1, ANGRY=-2
-        // (2*2 + 1*1 + 1*0 + 1*(-1)) / 5 = (4 + 1 + 0 - 1) / 5 = 0.8
+        // Average mood is calculated as sum of all scores divided by total records
+        // Expected: (HAPPY.score*2 + SATISFIED.score + NORMAL.score + SAD.score) / 5
         assertEquals("0.8", state.averageMood)
     }
 
@@ -154,7 +153,7 @@ class StatisticsViewModelTest {
                 type = CheckInType.LOVE_DIARY,
                 date = today.minusDays(2).toString(),
                 moodType = null,
-                tag = "开心" // Should map to HAPPY
+                tag = MoodType.toTag(MoodType.HAPPY) // Using toTag for consistency
             ),
             UnifiedCheckIn(
                 id = 2,
@@ -162,7 +161,7 @@ class StatisticsViewModelTest {
                 type = CheckInType.LOVE_DIARY,
                 date = today.minusDays(1).toString(),
                 moodType = null,
-                tag = "满足" // Should map to SATISFIED
+                tag = MoodType.toTag(MoodType.SATISFIED) // Using toTag for consistency
             )
         )
 
