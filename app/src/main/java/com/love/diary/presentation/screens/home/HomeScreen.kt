@@ -1637,11 +1637,11 @@ fun MoodButton(
         label = "mood_button_scale"
     )
 
-        Card(
-            modifier = modifier
-                .height(76.dp)
-                .graphicsLayer {
-                    scaleX = scale
+    Card(
+        modifier = modifier
+            .height(76.dp)
+            .graphicsLayer {
+                scaleX = scale
                 scaleY = scale
             }
             .semantics {
