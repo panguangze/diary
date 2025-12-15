@@ -5,9 +5,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.firstOrNull
 import com.love.diary.data.model.MoodType
 import com.love.diary.data.model.EventType
-import com.love.diary.data.model.UnifiedCheckIn
 import com.love.diary.data.repository.AppRepository
-import com.love.diary.data.repository.CheckInRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +20,7 @@ data class HomeUiState(
     val dayDisplay: String = "",
     val todayMood: MoodType? = null,
     val todayMoodText: String? = null,
+    val todayMoodDate: String? = null,
     val showAnniversaryPopup: Boolean = false,
     val anniversaryMessage: String = "",
     val showOtherMoodDialog: Boolean = false,
@@ -30,6 +29,7 @@ data class HomeUiState(
     val coupleName: String? = null,
     val startDate: String = "",
     val currentDateDisplay: String = "",
+    val todayDate: String = "",
     val currentStreak: Int = 0,
     val currentCheckInConfig: String = "异地恋日记" // 添加当前打卡配置名称
 )
@@ -56,22 +56,33 @@ class HomeViewModel @Inject constructor(
         val checkInRecords = repository.getRecentCheckInsByName(habitName, 1)
         if (checkInRecords.isNotEmpty()) {
             val latestRecord = checkInRecords.first()
+            val today = LocalDate.now().toString()
             // 尝试将打卡标签映射到MoodType
             val moodType = MoodType.fromTag(latestRecord.tag)
             
             // 更新UI状态
             _uiState.update { state ->
-                state.copy(
-                    todayMood = moodType,
-                    todayMoodText = if (moodType == MoodType.OTHER) latestRecord.tag else null
-                )
+                if (latestRecord.date == today) {
+                    state.copy(
+                        todayMood = moodType,
+                        todayMoodText = if (moodType == MoodType.OTHER) latestRecord.tag else null,
+                        todayMoodDate = latestRecord.date
+                    )
+                } else {
+                    state.copy(
+                        todayMood = null,
+                        todayMoodText = null,
+                        todayMoodDate = null
+                    )
+                }
             }
         } else {
             // 如果没有找到记录，则将心情设置为null
             _uiState.update { state ->
                 state.copy(
                     todayMood = null,
-                    todayMoodText = null
+                    todayMoodText = null,
+                    todayMoodDate = null
                 )
             }
         }
@@ -108,6 +119,7 @@ class HomeViewModel @Inject constructor(
                         dayIndex = dayIndex,
                         dayDisplay = dayDisplay,
                         currentDateDisplay = "今天：$todayStr（$dayOfWeek）",
+                        todayDate = todayStr,
                         currentStreak = currentStreak,
                         isLoading = false
                     )
@@ -115,7 +127,7 @@ class HomeViewModel @Inject constructor(
                 
                 checkAnniversary(dayIndex)
             } ?: run {
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, todayDate = todayStr, currentDateDisplay = "今天：$todayStr（$dayOfWeek）") }
             }
         }
     }
@@ -138,6 +150,7 @@ class HomeViewModel @Inject constructor(
                             startDate = it.startDate,
                             dayIndex = dayIndex,
                             dayDisplay = dayDisplay,
+                            todayDate = todayStr,
                             currentStreak = currentStreak
                         )
                     }
@@ -191,7 +204,8 @@ class HomeViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         todayMood = moodType,
-                        todayMoodText = null
+                        todayMoodText = null,
+                        todayMoodDate = LocalDate.now().toString()
                     )
                 }
             }
@@ -212,7 +226,8 @@ class HomeViewModel @Inject constructor(
                         todayMood = MoodType.OTHER,
                         todayMoodText = text,
                         showOtherMoodDialog = false,
-                        otherMoodText = ""
+                        otherMoodText = "",
+                        todayMoodDate = LocalDate.now().toString()
                     )
                 }
             }
