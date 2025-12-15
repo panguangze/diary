@@ -108,6 +108,7 @@ private val BackgroundSubtle = Color(0xFFF9FAFB)
 private val MoodGridMaxHeight = 240.dp
 private val StatsGridMinHeight = 160.dp
 private val StatsGridMaxHeight = 320.dp
+private const val RecentMoodIconTargetCount = 10
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -652,13 +653,14 @@ private fun RecentMoodIconsRow(
         val density = LocalDensity.current
         val iconSize = 36.dp
         val iconSpacing = 8.dp
-        val targetCount = minOf(10, recentMoods.size)
+        val targetCount = minOf(RecentMoodIconTargetCount, recentMoods.size)
         val availablePx = with(density) { maxWidth.toPx() }
         val iconPx = with(density) { iconSize.toPx() }
         val spacingPx = with(density) { iconSpacing.toPx() }
         val maxIconsFit = if (targetCount == 0) {
             0
         } else {
+            // Calculate how many fixed-size icon slots fit into the single available row (no wrap)
             ((availablePx + spacingPx) / (iconPx + spacingPx)).toInt().coerceIn(1, targetCount)
         }
         val moodsToShow = recentMoods.take(maxIconsFit)
