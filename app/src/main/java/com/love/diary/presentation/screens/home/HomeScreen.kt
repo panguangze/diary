@@ -4,8 +4,12 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,29 +24,37 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Divider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,11 +66,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -66,24 +78,28 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.presentation.viewmodel.HistoryViewModel
 import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.presentation.viewmodel.StatisticsViewModel
-import com.love.diary.presentation.screens.statistics.MoodTrendCard
-import com.love.diary.presentation.screens.statistics.StatisticsOverviewCard
 import com.love.diary.presentation.screens.statistics.StatisticsScreen
 import com.love.diary.util.ShareHelper
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
+
+private val PrimaryBlue = Color(0xFF4C8DFF)
+private val PrimaryPressed = Color(0xFF3B74D8)
+private val HighlightBlue = Color(0xFFE8F1FF)
+private val NeutralStroke = Color(0xFFE5E7EB)
+private val BackgroundSubtle = Color(0xFFF9FAFB)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,20 +116,14 @@ fun HomeScreen(
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
-    val commonMoods = remember { listOf(MoodType.HAPPY, MoodType.NORMAL, MoodType.SAD, MoodType.OTHER) }
-    var showFullMoodGrid by rememberSaveable { mutableStateOf(false) }
     var showCalendarSheet by remember { mutableStateOf(false) }
     var showStatsSheet by remember { mutableStateOf(false) }
-    var showMoodEditSheet by remember { mutableStateOf(false) }
     var selectedHistoryItem by remember { mutableStateOf<DailyMoodEntity?>(null) }
 
-    val calendarSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val statsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val editMoodSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val todayString = uiState.todayDate.ifBlank { LocalDate.now().toString() }
-    val hasTodayMood = uiState.todayMood != null && uiState.todayMoodDate == todayString
 
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
@@ -137,31 +147,17 @@ fun HomeScreen(
             item {
                 MoodTimelineCard(
                     uiState = uiState,
-                    hasTodayMood = hasTodayMood,
-                    commonMoods = commonMoods,
-                    showFullMoodGrid = showFullMoodGrid,
-                    onMoreToggle = { showFullMoodGrid = !showFullMoodGrid },
                     onMoodSelected = { mood ->
-                        if (mood == MoodType.OTHER) {
-                            viewModel.updateOtherMoodText("")
-                            viewModel.showOtherMoodDialog()
-                        } else {
-                            viewModel.selectMood(mood)
-                        }
-                    },
-                    onEdit = { showMoodEditSheet = true },
-                    onShare = {
-                        uiState.todayMood?.let { mood ->
-                            ShareHelper(context).shareMoodAsText(
-                                date = todayString,
-                                moodType = mood,
-                                moodText = uiState.todayMoodText,
-                                dayIndex = uiState.dayIndex
-                            )
-                        }
+                        val noteToSave = uiState.otherMoodText.ifBlank { null }
+                        if (mood != uiState.todayMood) viewModel.updateOtherMoodText("")
+                        viewModel.selectMood(mood, noteToSave)
                     },
                     onRecentMoodClick = { selectedHistoryItem = it },
-                    onExpandCalendar = { showCalendarSheet = true }
+                    onExpandCalendar = { showCalendarSheet = true },
+                    onNoteChange = viewModel::updateOtherMoodText,
+                    onSaveNote = { mood, text ->
+                        viewModel.selectMood(mood, text.ifBlank { null })
+                    }
                 )
             }
 
@@ -274,22 +270,16 @@ fun HomeScreen(
     }
 
     if (showCalendarSheet) {
-        ModalBottomSheet(
-            sheetState = calendarSheetState,
-            onDismissRequest = { showCalendarSheet = false }
-        ) {
-            MoodCalendarBottomSheet(
-                onDismiss = { showCalendarSheet = false },
-                onDateClick = { date ->
-                    // Check if this date has a mood record
-                    val record = historyRecords.find { it.date == date }
-                    if (record != null) {
-                        selectedHistoryItem = record
-                    }
-                },
-                moodRecords = historyRecords
-            )
-        }
+        MoodCalendarDialog(
+            onDismiss = { showCalendarSheet = false },
+            onDateClick = { date ->
+                val record = historyRecords.find { it.date == date }
+                if (record != null) {
+                    selectedHistoryItem = record
+                }
+            },
+            moodRecords = historyRecords
+        )
     }
 
     selectedHistoryItem?.let { record ->
@@ -325,26 +315,6 @@ fun HomeScreen(
                     .fillMaxWidth()
                     .heightIn(max = 720.dp)
                     .padding(bottom = 24.dp)
-            )
-        }
-    }
-
-    if (showMoodEditSheet && !uiState.showOtherMoodDialog) {
-        ModalBottomSheet(
-            sheetState = editMoodSheetState,
-            onDismissRequest = { showMoodEditSheet = false }
-        ) {
-            MoodSelectionSheet(
-                selectedMood = uiState.todayMood,
-                onMoodSelected = { mood ->
-                    if (mood == MoodType.OTHER) {
-                        viewModel.updateOtherMoodText("")
-                        viewModel.showOtherMoodDialog()
-                    } else {
-                        viewModel.selectMood(mood)
-                        showMoodEditSheet = false
-                    }
-                }
             )
         }
     }
@@ -460,16 +430,14 @@ private fun TodayOverviewBar(
 @Composable
 private fun MoodTimelineCard(
     uiState: com.love.diary.presentation.viewmodel.HomeUiState,
-    hasTodayMood: Boolean,
-    commonMoods: List<MoodType>,
-    showFullMoodGrid: Boolean,
-    onMoreToggle: () -> Unit,
     onMoodSelected: (MoodType) -> Unit,
-    onEdit: () -> Unit,
-    onShare: () -> Unit,
     onRecentMoodClick: (DailyMoodEntity) -> Unit,
-    onExpandCalendar: () -> Unit
+    onExpandCalendar: () -> Unit,
+    onNoteChange: (String) -> Unit,
+    onSaveNote: (MoodType, String) -> Unit
 ) {
+    val noteText = uiState.otherMoodText.ifBlank { uiState.todayMoodText.orEmpty() }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -483,44 +451,37 @@ private fun MoodTimelineCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Section 1: Today's Mood
-            Text(
-                text = "今天的心情",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            if (hasTodayMood && uiState.todayMood != null) {
-                TodayMoodDisplay(
-                    mood = uiState.todayMood,
-                    moodText = uiState.todayMoodText,
-                    onEdit = onEdit,
-                    onShare = onShare
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "今天的心情",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
                 )
-            } else {
-                TodayMoodInput(
-                    commonMoods = commonMoods,
-                    showFullMoodGrid = showFullMoodGrid,
-                    onMoreToggle = onMoreToggle,
-                    onMoodSelected = onMoodSelected,
-                    selectedMood = uiState.todayMood
+                Text(
+                    text = "6 个图标单行等间距，点击即可切换心情",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Section 2: Recent 10 Moods
-            RecentMoodsRow(
+            MoodSelectorRow(
+                selectedMood = uiState.todayMood,
+                onMoodSelected = onMoodSelected
+            )
+
+            if (uiState.todayMood != null) {
+                MoodNoteInput(
+                    note = noteText,
+                    onNoteChange = onNoteChange,
+                    onSave = { onSaveNote(uiState.todayMood, noteText) }
+                )
+            }
+
+            RecentMoodsList(
                 recentMoods = uiState.recentTenMoods,
-                onMoodClick = onRecentMoodClick
+                onMoodClick = onRecentMoodClick,
+                onMoreClick = onExpandCalendar
             )
-
-            // Section 3: Expand Calendar Button
-            Button(
-                onClick = onExpandCalendar,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("展开日历")
-            }
         }
     }
 }
@@ -538,7 +499,7 @@ private fun TodayMoodDisplay(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -560,10 +521,6 @@ private fun TodayMoodDisplay(
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                TextButton(onClick = onEdit) { Text("改一下") }
-                TextButton(onClick = onShare) { Text("分享") }
-            }
         }
 
         if (!moodText.isNullOrBlank()) {
@@ -577,94 +534,76 @@ private fun TodayMoodDisplay(
 }
 
 @Composable
-private fun TodayMoodInput(
-    commonMoods: List<MoodType>,
-    showFullMoodGrid: Boolean,
-    onMoreToggle: () -> Unit,
-    onMoodSelected: (MoodType) -> Unit,
-    selectedMood: MoodType?
+private fun MoodSelectorRow(
+    selectedMood: MoodType?,
+    onMoodSelected: (MoodType) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MoodType.values().forEach { mood ->
+            MoodButton(
+                mood = mood,
+                isSelected = selectedMood == mood,
+                onClick = { onMoodSelected(mood) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MoodNoteInput(
+    note: String,
+    onNoteChange: (String) -> Unit,
+    onSave: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(BackgroundSubtle, RoundedCornerShape(12.dp))
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = "选择今天的心情吧",
+            text = "今天的心情描述（可选）",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
+        OutlinedTextField(
+            value = note,
+            onValueChange = onNoteChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 96.dp),
+            placeholder = { Text("写下一句话，直接保存在今天的记录里") },
+            shape = RoundedCornerShape(12.dp)
+        )
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.End
         ) {
-            commonMoods.forEach { mood ->
-                ElevatedCard(
-                    onClick = { onMoodSelected(mood) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(72.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(text = mood.emoji, style = MaterialTheme.typography.titleLarge)
-                        Text(text = mood.displayName, style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
-
-            OutlinedCard(
-                onClick = onMoreToggle,
-                modifier = Modifier
-                    .width(88.dp)
-                    .height(72.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "更多", style = MaterialTheme.typography.bodyMedium)
-                }
-            }
-        }
-
-        AnimatedVisibility(visible = showFullMoodGrid) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 420.dp)
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(MoodType.values()) { mood ->
-                    MoodButton(
-                        mood = mood,
-                        isSelected = selectedMood == mood,
-                        onClick = { onMoodSelected(mood) }
-                    )
-                }
+            TextButton(onClick = onSave) {
+                Text("保存记录")
             }
         }
     }
 }
 
 @Composable
-private fun RecentMoodsRow(
+private fun RecentMoodsList(
     recentMoods: List<DailyMoodEntity>,
-    onMoodClick: (DailyMoodEntity) -> Unit
+    onMoodClick: (DailyMoodEntity) -> Unit,
+    onMoreClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
             text = "最近10次心情",
@@ -672,32 +611,53 @@ private fun RecentMoodsRow(
             fontWeight = FontWeight.Medium
         )
 
-        if (recentMoods.isEmpty()) {
-            Text(
-                text = "还没有历史记录",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        } else {
-            androidx.compose.foundation.lazy.LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(recentMoods) { moodRecord ->
-                    RecentMoodItem(
-                        moodRecord = moodRecord,
-                        onClick = { onMoodClick(moodRecord) }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, NeutralStroke)
+        ) {
+            Column(modifier = Modifier.padding(vertical = 12.dp)) {
+                if (recentMoods.isEmpty()) {
+                    Text(
+                        text = "还没有历史记录",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
                     )
+                } else {
+                    recentMoods.forEachIndexed { index, moodRecord ->
+                        RecentMoodListItem(
+                            moodRecord = moodRecord,
+                            onClick = { onMoodClick(moodRecord) }
+                        )
+                        if (index != recentMoods.lastIndex) {
+                            Divider(
+                                color = NeutralStroke,
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    MoreMoodsButton(onClick = onMoreClick)
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RecentMoodItem(
+private fun RecentMoodListItem(
     moodRecord: DailyMoodEntity,
     onClick: () -> Unit
 ) {
@@ -705,29 +665,73 @@ private fun RecentMoodItem(
     val date = runCatching { LocalDate.parse(moodRecord.date) }.getOrNull()
     val formattedDate = date?.format(dateFormatter) ?: moodRecord.date
 
-    Card(
-        onClick = onClick,
-        modifier = Modifier.size(60.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
-        )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = formattedDate,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            )
+            Text(
+                text = MoodType.fromCode(moodRecord.moodTypeCode).displayName,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(HighlightBlue, RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
                 style = MaterialTheme.typography.titleMedium
             )
-            Text(
-                text = formattedDate,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
+    }
+}
+
+@Composable
+private fun MoreMoodsButton(onClick: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .heightIn(min = 40.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, NeutralStroke),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (isPressed) Color(0xFFF3F4F6) else Color.White,
+            contentColor = PrimaryBlue
+        ),
+        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+        interactionSource = interactionSource
+    ) {
+        Text(
+            text = "更多",
+            style = MaterialTheme.typography.bodyMedium,
+            color = PrimaryBlue
+        )
+        Icon(
+            imageVector = Icons.Filled.ChevronRight,
+            contentDescription = null,
+            tint = PrimaryBlue,
+            modifier = Modifier
+                .padding(start = 4.dp)
+                .size(16.dp)
+        )
     }
 }
 
@@ -855,7 +859,7 @@ private fun TodayMoodCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -864,11 +868,6 @@ private fun TodayMoodCard(
                         Text(text = mood.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(text = "今天的记录", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(onClick = onEdit) { Text("改一下") }
-                    TextButton(onClick = onShare) { Text("分享") }
                 }
             }
 
@@ -1005,14 +1004,15 @@ private fun MoodStatisticsPreviewSection(
             Text(
                 text = "心情统计",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
-            TextButton(onClick = onExpand) { Text("展开") }
+            TextButton(onClick = onExpand) { Text("更多统计") }
         }
 
-        Row(
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             listOf(7, 30, 90, 365).forEach { days ->
                 FilterChip(
@@ -1032,84 +1032,172 @@ private fun MoodStatisticsPreviewSection(
             }
         }
 
-        // Only show mood statistics
-        StatisticsOverviewCard(uiState = uiState)
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 160.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            userScrollEnabled = false
+        ) {
+            items(
+                listOf(
+                    "记录天数" to uiState.totalRecords.toString(),
+                    "平均心情" to uiState.averageMood,
+                    "最常心情" to (uiState.topMood?.displayName ?: "-"),
+                    "统计范围" to "最近${uiState.selectedDays}天"
+                )
+            ) { (title, value) ->
+                StatPreviewCard(
+                    title = title,
+                    value = value
+                )
+            }
+        }
+    }
+}
 
-        MoodTrendCard(
-            moodTrendData = uiState.moodTrend,
-            currentViewType = StatisticsViewModel.ViewType.MOOD
-        )
+@Composable
+private fun StatPreviewCard(
+    title: String,
+    value: String
+) {
+    ElevatedCard(
+        modifier = Modifier.heightIn(min = 140.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, NeutralStroke)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Divider(color = NeutralStroke, thickness = 1.dp)
+            Text(
+                text = "默认展开，数据实时更新",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun MoodCalendarBottomSheet(
+private fun MoodCalendarDialog(
     onDismiss: () -> Unit,
     onDateClick: (String) -> Unit,
     moodRecords: List<DailyMoodEntity>
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("本月", "年历")
-    
+
     val today = LocalDate.now()
     var currentMonth by remember { mutableStateOf(today) }
-    
+
     // Create a map of date -> mood for quick lookup
     val moodMap = remember(moodRecords) {
         moodRecords.associateBy { it.date }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+    val scrollState = rememberScrollState()
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(top = 64.dp),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Text(
-                text = "心情日历",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            TextButton(onClick = onDismiss) { Text("关闭") }
-        }
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .widthIn(max = 360.dp),
+                shape = RoundedCornerShape(16.dp),
+                tonalElevation = 0.dp,
+                shadowElevation = 24.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "心情日历",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "关闭日历"
+                            )
+                        }
+                    }
 
-        // Tabs
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            tabs.forEachIndexed { index, tab ->
-                FilterChip(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    label = { Text(tab) }
-                )
+                    // Tabs
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        tabs.forEachIndexed { index, tab ->
+                            FilterChip(
+                                selected = selectedTab == index,
+                                onClick = { selectedTab = index },
+                                label = { Text(tab) }
+                            )
+                        }
+                    }
+
+                    when (selectedTab) {
+                        0 -> MonthCalendarView(
+                            currentMonth = currentMonth,
+                            onMonthChange = { currentMonth = it },
+                            moodMap = moodMap,
+                            onDateClick = onDateClick,
+                            today = today
+                        )
+                        1 -> YearCalendarView(
+                            year = today.year,
+                            moodMap = moodMap,
+                            onMonthClick = { month ->
+                                currentMonth = LocalDate.of(today.year, month, 1)
+                                selectedTab = 0
+                            },
+                            today = today
+                        )
+                    }
+                }
             }
-        }
-
-        when (selectedTab) {
-            0 -> MonthCalendarView(
-                currentMonth = currentMonth,
-                onMonthChange = { currentMonth = it },
-                moodMap = moodMap,
-                onDateClick = onDateClick,
-                today = today
-            )
-            1 -> YearCalendarView(
-                year = today.year,
-                moodMap = moodMap,
-                onMonthClick = { month ->
-                    currentMonth = LocalDate.of(today.year, month, 1)
-                    selectedTab = 0
-                },
-                today = today
-            )
         }
     }
 }
@@ -1432,47 +1520,45 @@ private fun MoodSelectionSheet(
 fun MoodButton(
     mood: MoodType,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surface
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val targetScale = when {
+        isPressed -> 0.98f
+        isSelected -> 1.12f
+        else -> 1f
     }
-
-    val borderColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.outline
-    }
-
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.05f else 1f,
+        targetValue = targetScale,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 140),
         label = "mood_button_scale"
     )
 
     Card(
-        modifier = Modifier
-            .height(100.dp)
-            .aspectRatio(1f)
+        modifier = modifier
+            .height(76.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
-            .border(
-                width = if (isSelected) 2.dp else 1.dp,
-                color = borderColor,
-                shape = RoundedCornerShape(12.dp)
-            )
             .semantics {
                 contentDescription =
-                    "${mood.displayName}心情按钮${if (isSelected) "，已选择" else ""}"
+                    "心情-${mood.displayName}${if (isSelected) "，已选择" else ""}"
             },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
+            containerColor = when {
+                isPressed -> PrimaryPressed.copy(alpha = 0.16f)
+                isSelected -> HighlightBlue
+                else -> Color.Transparent
+            }
         ),
-        onClick = onClick
+        border = if (isSelected) BorderStroke(1.dp, PrimaryBlue) else null,
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 8.dp else 0.dp),
+        onClick = onClick,
+        interactionSource = interactionSource
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -1481,14 +1567,15 @@ fun MoodButton(
         ) {
             Text(
                 text = mood.emoji,
-                fontSize = 32.sp
+                fontSize = 28.sp
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = mood.displayName,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }

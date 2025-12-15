@@ -2,7 +2,6 @@ package com.love.diary.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.firstOrNull
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.data.model.EventType
@@ -63,13 +62,15 @@ class HomeViewModel @Inject constructor(
                 state.copy(
                     todayMood = moodType,
                     todayMoodText = todayMood.moodText,
-                    todayMoodDate = todayMood.date
+                    todayMoodDate = todayMood.date,
+                    otherMoodText = todayMood.moodText ?: ""
                 )
             } else {
                 state.copy(
                     todayMood = null,
                     todayMoodText = null,
-                    todayMoodDate = null
+                    todayMoodDate = null,
+                    otherMoodText = ""
                 )
             }
         }
@@ -182,28 +183,25 @@ class HomeViewModel @Inject constructor(
         return streak
     }
 
-    fun selectMood(moodType: MoodType) {
+    fun selectMood(moodType: MoodType, moodText: String? = null) {
         viewModelScope.launch {
-            if (moodType == MoodType.OTHER) {
-                _uiState.update { it.copy(showOtherMoodDialog = true) }
-            } else {
-                // Save to DailyMood database
-                repository.saveTodayMood(moodType, null)
-                
-                // Update UI state
-                _uiState.update {
-                    it.copy(
-                        todayMood = moodType,
-                        todayMoodText = null,
-                        todayMoodDate = LocalDate.now().toString()
-                    )
-                }
-                
-                // Reload recent moods and streak
-                loadRecentTenMoods()
-                val currentStreak = calculateCurrentStreak()
-                _uiState.update { it.copy(currentStreak = currentStreak) }
+            val textToSave = moodText?.takeIf { it.isNotBlank() }
+
+            repository.saveTodayMood(moodType, textToSave)
+
+            _uiState.update {
+                it.copy(
+                    todayMood = moodType,
+                    todayMoodText = textToSave,
+                    todayMoodDate = LocalDate.now().toString(),
+                    otherMoodText = textToSave ?: "",
+                    showOtherMoodDialog = false
+                )
             }
+
+            loadRecentTenMoods()
+            val currentStreak = calculateCurrentStreak()
+            _uiState.update { it.copy(currentStreak = currentStreak) }
         }
     }
 
@@ -218,7 +216,7 @@ class HomeViewModel @Inject constructor(
                         todayMood = MoodType.OTHER,
                         todayMoodText = text,
                         showOtherMoodDialog = false,
-                        otherMoodText = "",
+                        otherMoodText = text,
                         todayMoodDate = LocalDate.now().toString()
                     )
                 }
