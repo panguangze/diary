@@ -1074,6 +1074,7 @@ fun MoodButton(
     Card(
         modifier = Modifier
             .height(100.dp)
+            .aspectRatio(1f)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
