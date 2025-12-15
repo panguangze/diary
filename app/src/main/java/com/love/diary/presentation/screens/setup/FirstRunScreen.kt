@@ -17,13 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import com.love.diary.data.repository.AppRepository
-import com.love.diary.habit.HabitRepository
-import com.love.diary.data.model.Habit
-import com.love.diary.data.model.HabitType
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
-import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 
@@ -39,8 +35,6 @@ fun FirstRunScreen(
     var partnerName by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     
-    val context = LocalContext.current
-    val habitRepository = remember { HabitRepository.getInstance(context) }
     val coroutineScope = rememberCoroutineScope()
     val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
     
@@ -226,43 +220,6 @@ fun FirstRunScreen(
                             coupleName = if (coupleName.isNotBlank()) coupleName else null,
                             partnerNickname = if (partnerName.isNotBlank()) partnerName else null
                         )
-                        
-                        // 使用组合名字作为默认打卡配置名称，如果没有则使用默认名称
-                        val defaultCheckInName = if (coupleName.isNotBlank()) {
-                            coupleName
-                        } else {
-                            "异地恋日记"
-                        }
-                        
-                        // 创建默认的打卡配置 (UnifiedCheckInConfig)
-                        val loveDiaryConfig = com.love.diary.data.model.UnifiedCheckInConfig(
-                            name = defaultCheckInName,
-                            type = com.love.diary.data.model.CheckInType.HABIT,
-                            description = "记录我们每天的心情",
-                            buttonLabel = "记录心情",
-                            icon = "❤️",
-                            color = "#E91E63"
-                        )
-                        repository.saveCheckInConfig(loveDiaryConfig)
-                        
-                        // 创建默认的打卡事项（Habit）- 使用相同的名称保持同步
-                        try {
-                            // 创建默认习惯，使用心情选项作为标签
-                            val defaultHabit = Habit(
-                                name = defaultCheckInName,
-                                description = "记录我们的日常",
-                                buttonLabel = "打卡",
-                                type = HabitType.POSITIVE,
-                                tags = "开心,满足,正常,失落,生气,其它",  // 使用主页心情选项作为标签
-                                icon = "💕",
-                                color = "#E91E63",
-                                startDate = startDate
-                            )
-                            habitRepository.insertHabit(defaultHabit)
-                        } catch (e: Exception) {
-                            // 即使创建默认习惯失败，也继续完成设置流程
-                            // 用户可以之后手动添加
-                        }
                         
                         onSetupComplete()
                     }
