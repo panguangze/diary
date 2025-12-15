@@ -121,6 +121,21 @@ fun HabitItemCard(
     var showOtherTagInputDialog by remember { mutableStateOf(false) }
     var otherTagText by remember { mutableStateOf("") }
     val currentHabitId = remember { mutableLongStateOf(0L) }
+    
+    // 追踪今天已使用的标签
+    var todayUsedTag by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    
+    // 从数据库获取今天的打卡记录和使用的标签
+    LaunchedEffect(habit.id) {
+        val database = com.love.diary.data.database.LoveDatabase.getInstance(context)
+        val today = java.time.LocalDate.now().toString()
+        
+        // 从 UnifiedCheckIn 系统查询今天的打卡记录
+        val todayCheckIn = database.unifiedCheckInDao().getCheckInByDateAndName(today, habit.name)
+        todayUsedTag = todayCheckIn?.tag
+    }
 
     Card(
         modifier = Modifier
@@ -177,7 +192,7 @@ fun HabitItemCard(
                         LazyRow {
                             items(habit.tags.split(",").filter { it.isNotEmpty() }) { tag ->
                                 InputChip(
-                                    selected = false,
+                                    selected = tag == todayUsedTag,  // 根据今天使用的标签高亮显示
                                     onClick = {
                                         if (tag == "其它") {
                                             // 对于"其它"标签，显示输入对话框
@@ -185,6 +200,8 @@ fun HabitItemCard(
                                             currentHabitId.longValue = habit.id
                                         } else {
                                             onCheckIn(habit.id, tag) // 点击标签时打卡并记录标签
+                                            // 立即更新UI状态以反映选中
+                                            todayUsedTag = tag
                                         }
                                     },
                                     label = { Text(tag) }
@@ -217,6 +234,8 @@ fun HabitItemCard(
                     onClick = {
                         if (otherTagText.isNotBlank()) {
                             onCheckInWithText(currentHabitId.longValue, otherTagText)
+                            // 更新UI状态以反映选中
+                            todayUsedTag = otherTagText
                             otherTagText = ""
                         }
                         showOtherTagInputDialog = false
