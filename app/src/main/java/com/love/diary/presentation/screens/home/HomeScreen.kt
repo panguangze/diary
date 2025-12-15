@@ -90,6 +90,10 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
+import com.love.diary.presentation.components.AppCard
+import com.love.diary.presentation.components.Dimens
+import com.love.diary.presentation.components.SectionHeader
+import com.love.diary.presentation.components.ShapeTokens
 import com.love.diary.presentation.viewmodel.HistoryViewModel
 import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.presentation.viewmodel.StatisticsViewModel
@@ -100,11 +104,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
-private val PrimaryBlue = Color(0xFF4C8DFF)
-private val PrimaryPressed = Color(0xFF3B74D8)
-private val HighlightBlue = Color(0xFFE8F1FF)
 private val NeutralStroke = Color(0xFFE5E7EB)
-private val BackgroundSubtle = Color(0xFFF9FAFB)
 private val MoodGridMaxHeight = 240.dp
 private val StatsGridMinHeight = 160.dp
 private val StatsGridMaxHeight = 320.dp
@@ -135,8 +135,8 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = 80.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 12.dp)
+            verticalArrangement = Arrangement.spacedBy(Dimens.LargeSpacing),
+            contentPadding = PaddingValues(vertical = Dimens.SectionSpacing)
         ) {
             item {
                 RelationshipCard(uiState = uiState)
@@ -174,7 +174,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(max = 720.dp)
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = Dimens.ScreenPadding)
                 )
             }
 
@@ -311,18 +311,15 @@ fun HomeScreen(
 
 @Composable
 private fun RelationshipCard(uiState: com.love.diary.presentation.viewmodel.HomeUiState) {
-    Card(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-        )
+            .padding(horizontal = Dimens.ScreenPadding)
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
             Text(
                 text = "「${uiState.coupleName ?: "我们"}」已经在一起",
@@ -331,18 +328,12 @@ private fun RelationshipCard(uiState: com.love.diary.presentation.viewmodel.Home
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             Text(
                 text = "第 ${uiState.dayIndex} 天",
-                style = MaterialTheme.typography.displaySmall.copy(
-                    fontWeight = FontWeight.Bold
-                ),
+                style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center
             )
-
-            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = "= ${uiState.dayDisplay}",
@@ -352,13 +343,12 @@ private fun RelationshipCard(uiState: com.love.diary.presentation.viewmodel.Home
             )
 
             if (uiState.dayIndex % 100 == 0 && uiState.dayIndex > 0) {
-                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(ShapeTokens.Field)
                         .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(12.dp),
+                        .padding(Dimens.SectionSpacing),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -368,7 +358,7 @@ private fun RelationshipCard(uiState: com.love.diary.presentation.viewmodel.Home
                         tint = MaterialTheme.colorScheme.primary
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(Dimens.SectionSpacing))
 
                     Text(
                         text = "🎉 今天是我们在一起的第 ${uiState.dayIndex} 天！",
@@ -387,19 +377,21 @@ private fun MoodNoteViewer(
     note: String?,
     onEdit: () -> Unit
 ) {
-    Card(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BackgroundSubtle, RoundedCornerShape(12.dp))
+            .clip(ShapeTokens.Field)
             .clickable { onEdit() },
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = BackgroundSubtle)
+        shape = ShapeTokens.Field,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 0.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(Dimens.SectionSpacing),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
             Text(
                 text = "今天的心情描述",
@@ -428,17 +420,14 @@ private fun TodayOverviewBar(
     dateDisplay: String,
     streak: Int
 ) {
-    Surface(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(12.dp),
-        tonalElevation = 1.dp
+            .padding(horizontal = Dimens.ScreenPadding),
+        contentPadding = PaddingValues(horizontal = Dimens.CardPadding, vertical = Dimens.SectionSpacing)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -470,31 +459,19 @@ private fun MoodTimelineCard(
 ) {
     val noteText = uiState.otherMoodText.ifBlank { uiState.todayMoodText.orEmpty() }
 
-    Card(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-        )
+            .padding(horizontal = Dimens.ScreenPadding)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = "今天的心情",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "6 个图标单行等间距，点击即可切换心情",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            SectionHeader(
+                title = "今天的心情",
+                subtitle = "6 个图标单行等间距，点击即可切换心情"
+            )
 
             MoodSelectorRow(
                 selectedMood = uiState.todayMood,
@@ -617,51 +594,58 @@ private fun MoodNoteInput(
     errorMessage: String? = null,
     saveLabel: String = "保存记录"
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BackgroundSubtle, RoundedCornerShape(12.dp))
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = ShapeTokens.Field,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        tonalElevation = 0.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
-        Text(
-            text = "今天的心情描述（可选）",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        OutlinedTextField(
-            value = note,
-            onValueChange = onNoteChange,
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 96.dp),
-            placeholder = { Text("写下一句话，直接保存在今天的记录里") },
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        if (!errorMessage.isNullOrBlank()) {
-            Text(
-                text = errorMessage,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
+                .padding(Dimens.SectionSpacing),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            onCancel?.let {
-                TextButton(onClick = it) {
-                    Text("取消")
-                }
+            Text(
+                text = "今天的心情描述（可选）",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            OutlinedTextField(
+                value = note,
+                onValueChange = onNoteChange,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 96.dp),
+                placeholder = { Text("写下一句话，直接保存在今天的记录里") },
+                shape = ShapeTokens.Field
+            )
+
+            if (!errorMessage.isNullOrBlank()) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
             }
-            TextButton(
-                onClick = onSave,
-                enabled = isSaveEnabled
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                Text(saveLabel)
+                onCancel?.let {
+                    TextButton(onClick = it) {
+                        Text("取消")
+                    }
+                }
+                TextButton(
+                    onClick = onSave,
+                    enabled = isSaveEnabled
+                ) {
+                    Text(saveLabel)
+                }
             }
         }
     }
@@ -689,24 +673,16 @@ private fun RecentMoodsList(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
     ) {
-        Text(
-            text = "最近心情",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Medium
-        )
+        SectionHeader(title = "最近心情")
 
-        Card(
+        AppCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, NeutralStroke)
+            contentPadding = PaddingValues(horizontal = Dimens.SectionSpacing, vertical = Dimens.SectionSpacing)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 RecentMoodIconsRow(
@@ -715,7 +691,7 @@ private fun RecentMoodsList(
                     modifier = Modifier.weight(1f)
                 )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(Dimens.SectionSpacing))
 
                 MoreMoodsButton(
                     onClick = onMoreClick,
@@ -753,15 +729,15 @@ private fun RecentMoodIconsRow(
             horizontalArrangement = Arrangement.spacedBy(iconSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            moodsToShow.forEach { moodRecord ->
-                Box(
-                    modifier = Modifier
-                        .size(iconSize)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(HighlightBlue)
-                        .clickable { onMoodClick(moodRecord) },
-                    contentAlignment = Alignment.Center
-                ) {
+                    moodsToShow.forEach { moodRecord ->
+                        Box(
+                            modifier = Modifier
+                                .size(iconSize)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer)
+                                .clickable { onMoodClick(moodRecord) },
+                            contentAlignment = Alignment.Center
+                        ) {
                     Text(
                         text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
                         style = MaterialTheme.typography.titleMedium
@@ -806,7 +782,7 @@ private fun RecentMoodListItem(
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(HighlightBlue, RoundedCornerShape(12.dp)),
+                .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -829,24 +805,24 @@ private fun MoreMoodsButton(
         onClick = onClick,
         modifier = modifier
             .heightIn(min = 40.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, NeutralStroke),
+        shape = ShapeTokens.Field,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (isPressed) Color(0xFFF3F4F6) else Color.White,
-            contentColor = PrimaryBlue
+            containerColor = if (isPressed) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary
         ),
-        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+        contentPadding = PaddingValues(horizontal = Dimens.SectionSpacing, vertical = Dimens.SectionSpacing / 2),
         interactionSource = interactionSource
     ) {
         Text(
             text = "更多",
             style = MaterialTheme.typography.bodyMedium,
-            color = PrimaryBlue
+            color = MaterialTheme.colorScheme.primary
         )
         Icon(
             imageVector = Icons.Filled.ChevronRight,
             contentDescription = null,
-            tint = PrimaryBlue,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .padding(start = 4.dp)
                 .size(16.dp)
@@ -1661,11 +1637,11 @@ fun MoodButton(
         label = "mood_button_scale"
     )
 
-    Card(
-        modifier = modifier
-            .height(76.dp)
-            .graphicsLayer {
-                scaleX = scale
+        Card(
+            modifier = modifier
+                .height(76.dp)
+                .graphicsLayer {
+                    scaleX = scale
                 scaleY = scale
             }
             .semantics {
@@ -1675,13 +1651,13 @@ fun MoodButton(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = when {
-                isPressed -> PrimaryPressed.copy(alpha = 0.16f)
-                isSelected -> HighlightBlue
-                else -> Color.Transparent
+                isPressed -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                isSelected -> MaterialTheme.colorScheme.primaryContainer
+                else -> MaterialTheme.colorScheme.surfaceVariant
             }
         ),
-        border = if (isSelected) BorderStroke(1.dp, PrimaryBlue) else null,
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 8.dp else 0.dp),
+        border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         onClick = onClick,
         interactionSource = interactionSource
     ) {
