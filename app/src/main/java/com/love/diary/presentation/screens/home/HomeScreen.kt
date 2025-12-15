@@ -103,6 +103,9 @@ private val PrimaryPressed = Color(0xFF3B74D8)
 private val HighlightBlue = Color(0xFFE8F1FF)
 private val NeutralStroke = Color(0xFFE5E7EB)
 private val BackgroundSubtle = Color(0xFFF9FAFB)
+private val MoodGridMaxHeight = 240.dp
+private val StatsGridMinHeight = 160.dp
+private val StatsGridMaxHeight = 320.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -830,7 +833,7 @@ private fun TodayMoodSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
-                        .heightIn(max = 240.dp),
+                        .heightIn(max = MoodGridMaxHeight),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     userScrollEnabled = false
@@ -1044,7 +1047,7 @@ private fun MoodStatisticsPreviewSection(
             columns = GridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 160.dp, max = 320.dp),
+                .heightIn(min = StatsGridMinHeight, max = StatsGridMaxHeight),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             userScrollEnabled = false
