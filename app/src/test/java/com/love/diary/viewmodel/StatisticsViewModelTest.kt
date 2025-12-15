@@ -124,7 +124,9 @@ class StatisticsViewModelTest {
         assertEquals(1, state.moodStats[MoodType.SAD]) // 1 SAD mood
         assertEquals(MoodType.HAPPY, state.topMood) // Most frequent is HAPPY
         
-        // Average mood: (2*2 + 1*1 + 1*0 + 1*(-1)) / 5 = 4 / 5 = 0.8
+        // Average mood calculation (see MoodType.kt for score values):
+        // HAPPY=2, SATISFIED=1, NORMAL=0, SAD=-1, ANGRY=-2
+        // (2*2 + 1*1 + 1*0 + 1*(-1)) / 5 = (4 + 1 + 0 - 1) / 5 = 0.8
         assertEquals("0.8", state.averageMood)
     }
 

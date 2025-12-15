@@ -105,7 +105,7 @@ class StatisticsViewModel @Inject constructor(
             var totalScore = 0
 
             records.forEach { checkIn ->
-                // 使用 moodType 字段，如果为空则使用 tag 作为备用
+                // Use moodType field directly; fallback to tag for legacy data compatibility
                 val moodType = checkIn.moodType ?: MoodType.fromTag(checkIn.tag)
                 
                 moodStats[moodType] = moodStats.getOrDefault(moodType, 0) + 1
@@ -120,7 +120,7 @@ class StatisticsViewModel @Inject constructor(
             // 找到最多的心情
             val topMood = moodStats.maxByOrNull { it.value }?.key
 
-            // 获取心情趋势数据
+            // Get mood trend data
             val trendData = records.map { checkIn ->
                 val moodType = checkIn.moodType ?: MoodType.fromTag(checkIn.tag)
                 checkIn.date to moodType.score
