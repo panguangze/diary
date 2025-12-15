@@ -24,6 +24,7 @@ import com.love.diary.habit.HabitListScreen
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.net.Uri
+import com.love.diary.data.repository.AppRepository
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

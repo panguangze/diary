@@ -560,20 +560,23 @@ class AppRepository @Inject constructor(
     }
 
     // 日常任务打卡
+// 在 CheckInRepository.kt 中添加以下代码
+// 在 CheckInRepository.kt 中添加以下代码
     suspend fun checkInDailyTask(
         name: String,
+        taskType :CheckInType,
         note: String? = null,
         duration: Int? = null,
         isCompleted: Boolean = true
     ): Long {
-        return checkInRepository.checkInDailyTask(
+        return checkIn(
             name = name,
+            type = taskType, // ⚠️ 请确保 CheckInType 中定义了 DAILY_TASK
             note = note,
             duration = duration,
-            isCompleted = isCompleted
+            count = if (isCompleted) 1 else 0
         )
     }
-
     // 获取恋爱日记记录
     fun getLoveDiaryRecords(): Flow<List<UnifiedCheckIn>> {
         return checkInRepository.getLoveDiaryRecords()
