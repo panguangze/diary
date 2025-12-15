@@ -3,6 +3,7 @@ package com.love.diary.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.firstOrNull
+import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.data.model.EventType
 import com.love.diary.data.repository.AppRepository

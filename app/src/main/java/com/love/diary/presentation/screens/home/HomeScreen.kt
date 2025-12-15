@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -1417,7 +1416,7 @@ private fun MiniMonthGrid(
             val daysInMonth = firstDay.lengthOfMonth()
             val firstDayOfWeek = firstDay.dayOfWeek.value % 7
 
-            androidx.compose.foundation.layout.FlowRow(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
