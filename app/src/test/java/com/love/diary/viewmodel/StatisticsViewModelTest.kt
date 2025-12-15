@@ -124,9 +124,12 @@ class StatisticsViewModelTest {
         assertEquals(1, state.moodStats[MoodType.SAD]) // 1 SAD mood
         assertEquals(MoodType.HAPPY, state.topMood) // Most frequent is HAPPY
         
-        // Average mood is calculated as sum of all scores divided by total records
-        // Expected: (HAPPY.score*2 + SATISFIED.score + NORMAL.score + SAD.score) / 5
-        assertEquals("0.8", state.averageMood)
+        // Calculate expected average dynamically
+        val expectedAverage = (MoodType.HAPPY.score * 2 + 
+                              MoodType.SATISFIED.score + 
+                              MoodType.NORMAL.score + 
+                              MoodType.SAD.score).toFloat() / 5
+        assertEquals(String.format("%.1f", expectedAverage), state.averageMood)
     }
 
     @Test
