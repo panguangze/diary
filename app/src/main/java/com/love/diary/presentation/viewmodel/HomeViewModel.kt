@@ -32,7 +32,9 @@ data class HomeUiState(
     val todayDate: String = "",
     val currentStreak: Int = 0,
     val currentCheckInConfig: String = "异地恋日记", // 添加当前打卡配置名称
-    val recentTenMoods: List<DailyMoodEntity> = emptyList() // 最近10条心情记录
+    val recentTenMoods: List<DailyMoodEntity> = emptyList(), // 最近10条心情记录
+    val isDescriptionEditing: Boolean = false,
+    val descriptionError: String? = null
 )
 
 @HiltViewModel
@@ -63,14 +65,18 @@ class HomeViewModel @Inject constructor(
                     todayMood = moodType,
                     todayMoodText = todayMood.moodText,
                     todayMoodDate = todayMood.date,
-                    otherMoodText = todayMood.moodText ?: ""
+                    otherMoodText = todayMood.moodText ?: "",
+                    isDescriptionEditing = todayMood.moodText.isNullOrBlank(),
+                    descriptionError = null
                 )
             } else {
                 state.copy(
                     todayMood = null,
                     todayMoodText = null,
                     todayMoodDate = null,
-                    otherMoodText = ""
+                    otherMoodText = "",
+                    isDescriptionEditing = true,
+                    descriptionError = null
                 )
             }
         }
@@ -195,7 +201,9 @@ class HomeViewModel @Inject constructor(
                     todayMoodText = textToSave,
                     todayMoodDate = LocalDate.now().toString(),
                     otherMoodText = textToSave ?: "",
-                    showOtherMoodDialog = false
+                    showOtherMoodDialog = false,
+                    isDescriptionEditing = textToSave.isNullOrBlank(),
+                    descriptionError = null
                 )
             }
 
@@ -217,7 +225,9 @@ class HomeViewModel @Inject constructor(
                         todayMoodText = text,
                         showOtherMoodDialog = false,
                         otherMoodText = text,
-                        todayMoodDate = LocalDate.now().toString()
+                        todayMoodDate = LocalDate.now().toString(),
+                        isDescriptionEditing = false,
+                        descriptionError = null
                     )
                 }
                 
@@ -230,7 +240,52 @@ class HomeViewModel @Inject constructor(
     }
     
     fun updateOtherMoodText(text: String) {
-        _uiState.update { it.copy(otherMoodText = text) }
+        _uiState.update { it.copy(otherMoodText = text, descriptionError = null) }
+    }
+
+    fun enterDescriptionEditMode() {
+        _uiState.update { state ->
+            state.copy(
+                isDescriptionEditing = true,
+                otherMoodText = state.todayMoodText.orEmpty(),
+                descriptionError = null
+            )
+        }
+    }
+
+    fun cancelDescriptionEdit() {
+        _uiState.update { state ->
+            state.copy(
+                isDescriptionEditing = false,
+                otherMoodText = state.todayMoodText.orEmpty(),
+                descriptionError = null
+            )
+        }
+    }
+
+    fun saveDescription(text: String) {
+        viewModelScope.launch {
+            val currentMood = _uiState.value.todayMood ?: return@launch
+            runCatching {
+                repository.saveTodayMood(currentMood, text.ifBlank { null })
+            }.onSuccess {
+                _uiState.update { state ->
+                    state.copy(
+                        todayMoodText = text.ifBlank { null },
+                        otherMoodText = text,
+                        isDescriptionEditing = false,
+                        descriptionError = null
+                    )
+                }
+            }.onFailure {
+                _uiState.update { state ->
+                    state.copy(
+                        descriptionError = "保存失败，请重试",
+                        isDescriptionEditing = true
+                    )
+                }
+            }
+        }
     }
     
     fun showOtherMoodDialog() {
