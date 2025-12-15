@@ -3,6 +3,7 @@ package com.love.diary.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.firstOrNull
+import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.data.model.EventType
 import com.love.diary.data.repository.AppRepository
@@ -31,7 +32,8 @@ data class HomeUiState(
     val currentDateDisplay: String = "",
     val todayDate: String = "",
     val currentStreak: Int = 0,
-    val currentCheckInConfig: String = "异地恋日记" // 添加当前打卡配置名称
+    val currentCheckInConfig: String = "异地恋日记", // 添加当前打卡配置名称
+    val recentTenMoods: List<DailyMoodEntity> = emptyList() // 最近10条心情记录
 )
 
 @HiltViewModel
@@ -47,44 +49,37 @@ class HomeViewModel @Inject constructor(
         observeConfigChanges()
     }
     
-    // 从统一打卡系统获取最新的异地恋日记打卡数据
-    private suspend fun loadSpecialHabitData() {
-        // 获取当前的couple name，如果没有则使用默认的"异地恋日记"
-        val habitName = _uiState.value.coupleName ?: "异地恋日记"
+    // 从DailyMood数据库获取最新的心情数据
+    private suspend fun loadTodayMoodData() {
+        val today = LocalDate.now().toString()
         
-        // 从统一打卡系统获取对应名称的最新记录
-        val checkInRecords = repository.getRecentCheckInsByName(habitName, 1)
-        if (checkInRecords.isNotEmpty()) {
-            val latestRecord = checkInRecords.first()
-            val today = LocalDate.now().toString()
-            // 尝试将打卡标签映射到MoodType
-            val moodType = MoodType.fromTag(latestRecord.tag)
-            
-            // 更新UI状态
-            _uiState.update { state ->
-                if (latestRecord.date == today) {
-                    state.copy(
-                        todayMood = moodType,
-                        todayMoodText = if (moodType == MoodType.OTHER) latestRecord.tag else null,
-                        todayMoodDate = latestRecord.date
-                    )
-                } else {
-                    state.copy(
-                        todayMood = null,
-                        todayMoodText = null,
-                        todayMoodDate = null
-                    )
-                }
-            }
-        } else {
-            // 如果没有找到记录，则将心情设置为null
-            _uiState.update { state ->
+        // 从DailyMood数据库获取今天的心情记录
+        val todayMood = repository.getTodayMood()
+        
+        // 更新UI状态
+        _uiState.update { state ->
+            if (todayMood != null && todayMood.date == today) {
+                val moodType = MoodType.fromCode(todayMood.moodTypeCode)
+                state.copy(
+                    todayMood = moodType,
+                    todayMoodText = todayMood.moodText,
+                    todayMoodDate = todayMood.date
+                )
+            } else {
                 state.copy(
                     todayMood = null,
                     todayMoodText = null,
                     todayMoodDate = null
                 )
             }
+        }
+    }
+    
+    // 加载最近10条心情记录
+    private suspend fun loadRecentTenMoods() {
+        val recentMoods = repository.getRecentNMoods(10)
+        _uiState.update { state ->
+            state.copy(recentTenMoods = recentMoods)
         }
     }
     
@@ -102,8 +97,9 @@ class HomeViewModel @Inject constructor(
                 }
             }
             
-            // 从特殊打卡事项获取数据，而不是从心情数据库
-            loadSpecialHabitData()
+            // 从DailyMood数据库获取数据
+            loadTodayMoodData()
+            loadRecentTenMoods()
             
             val today = LocalDate.now()
             val todayStr = today.toString()
@@ -163,7 +159,7 @@ class HomeViewModel @Inject constructor(
     
     private suspend fun calculateCurrentStreak(): Int {
         // 获取最近的记录，计算连续记录天数
-        val recentMoods = repository.getRecentMoods(30).firstOrNull() ?: emptyList()
+        val recentMoods = repository.getRecentNMoods(30)
         if (recentMoods.isEmpty()) return 0
         
         var streak = 0
@@ -191,16 +187,10 @@ class HomeViewModel @Inject constructor(
             if (moodType == MoodType.OTHER) {
                 _uiState.update { it.copy(showOtherMoodDialog = true) }
             } else {
-                // 获取心情标签对应的文本
-                val moodTag = MoodType.toTag(moodType)
+                // Save to DailyMood database
+                repository.saveTodayMood(moodType, null)
                 
-                // 获取当前的couple name，如果没有则使用默认的"异地恋日记"
-                val habitName = _uiState.value.coupleName ?: "异地恋日记"
-                
-                // 对对应的打卡事项进行打卡
-                repository.checkInHabit(habitName, moodTag)
-                
-                // 更新UI状态
+                // Update UI state
                 _uiState.update {
                     it.copy(
                         todayMood = moodType,
@@ -208,6 +198,11 @@ class HomeViewModel @Inject constructor(
                         todayMoodDate = LocalDate.now().toString()
                     )
                 }
+                
+                // Reload recent moods and streak
+                loadRecentTenMoods()
+                val currentStreak = calculateCurrentStreak()
+                _uiState.update { it.copy(currentStreak = currentStreak) }
             }
         }
     }
@@ -215,11 +210,8 @@ class HomeViewModel @Inject constructor(
     fun saveOtherMood(text: String) {
         viewModelScope.launch {
             if (text.isNotBlank()) {
-                // 获取当前的couple name，如果没有则使用默认的"异地恋日记"
-                val habitName = _uiState.value.coupleName ?: "异地恋日记"
-                
-                // 对对应的打卡事项进行打卡
-                repository.checkInHabit(habitName, text)
+                // Save to DailyMood database
+                repository.saveTodayMood(MoodType.OTHER, text)
                 
                 _uiState.update { state ->
                     state.copy(
@@ -230,6 +222,11 @@ class HomeViewModel @Inject constructor(
                         todayMoodDate = LocalDate.now().toString()
                     )
                 }
+                
+                // Reload recent moods and streak
+                loadRecentTenMoods()
+                val currentStreak = calculateCurrentStreak()
+                _uiState.update { it.copy(currentStreak = currentStreak) }
             }
         }
     }
