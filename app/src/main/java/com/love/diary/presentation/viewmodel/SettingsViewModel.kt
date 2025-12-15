@@ -218,6 +218,8 @@ class SettingsViewModel @Inject constructor(
     fun updateCoupleName(name: String) {
         viewModelScope.launch {
             val config = repository.getAppConfig()
+            val oldCoupleName = config?.coupleName
+            
             val updated = if (config != null) {
                 config.copy(
                     coupleName = name,
@@ -238,6 +240,23 @@ class SettingsViewModel @Inject constructor(
                     updatedAt = System.currentTimeMillis()
                 )
             }
+            
+            // 更新默认打卡事项的名称
+            // 尝试按以下优先级查找：旧的couple name -> "异地恋日记" 
+            val defaultHabit = if (oldCoupleName != null) {
+                repository.getHabitByName(oldCoupleName) ?: repository.getHabitByName("异地恋日记")
+            } else {
+                repository.getHabitByName("异地恋日记")
+            }
+            
+            if (defaultHabit != null && name.isNotBlank()) {
+                val updatedHabit = defaultHabit.copy(
+                    name = name,
+                    updatedAt = System.currentTimeMillis()
+                )
+                repository.updateHabit(updatedHabit)
+            }
+            
             repository.updateAppConfig(updated)
             _uiState.update { state -> state.copy(coupleName = name) }
         }

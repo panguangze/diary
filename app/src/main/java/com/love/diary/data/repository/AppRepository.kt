@@ -262,6 +262,9 @@ class AppRepository @Inject constructor(
     // 根据ID获取打卡事项
     suspend fun getHabitById(id: Long) = habitDao.getHabitById(id)
     
+    // 根据名称获取打卡事项
+    suspend fun getHabitByName(name: String) = habitDao.getHabitByName(name)
+    
     // 创建新的打卡事项
     suspend fun createHabit(habit: Habit): Long {
         return habitDao.insertHabit(habit)

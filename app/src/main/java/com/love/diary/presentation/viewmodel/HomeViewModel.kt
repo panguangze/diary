@@ -49,8 +49,11 @@ class HomeViewModel @Inject constructor(
     
     // 从统一打卡系统获取最新的异地恋日记打卡数据
     private suspend fun loadSpecialHabitData() {
-        // 从统一打卡系统获取"异地恋日记"的最新记录
-        val checkInRecords = repository.getRecentCheckInsByName("异地恋日记", 1)
+        // 获取当前的couple name，如果没有则使用默认的"异地恋日记"
+        val habitName = _uiState.value.coupleName ?: "异地恋日记"
+        
+        // 从统一打卡系统获取对应名称的最新记录
+        val checkInRecords = repository.getRecentCheckInsByName(habitName, 1)
         if (checkInRecords.isNotEmpty()) {
             val latestRecord = checkInRecords.first()
             // 尝试将打卡标签映射到MoodType
@@ -178,8 +181,11 @@ class HomeViewModel @Inject constructor(
                 // 获取心情标签对应的文本
                 val moodTag = MoodType.toTag(moodType)
                 
-                // 对异地恋日记进行打卡 - 使用固定的打卡配置名称
-                repository.checkInHabit("异地恋日记", moodTag)
+                // 获取当前的couple name，如果没有则使用默认的"异地恋日记"
+                val habitName = _uiState.value.coupleName ?: "异地恋日记"
+                
+                // 对对应的打卡事项进行打卡
+                repository.checkInHabit(habitName, moodTag)
                 
                 // 更新UI状态
                 _uiState.update {
@@ -195,8 +201,11 @@ class HomeViewModel @Inject constructor(
     fun saveOtherMood(text: String) {
         viewModelScope.launch {
             if (text.isNotBlank()) {
-                // 对异地恋日记进行打卡 - 使用固定的打卡配置名称
-                repository.checkInHabit("异地恋日记", text)
+                // 获取当前的couple name，如果没有则使用默认的"异地恋日记"
+                val habitName = _uiState.value.coupleName ?: "异地恋日记"
+                
+                // 对对应的打卡事项进行打卡
+                repository.checkInHabit(habitName, text)
                 
                 _uiState.update { state ->
                     state.copy(
