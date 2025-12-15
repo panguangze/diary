@@ -503,11 +503,9 @@ private fun MoodTimelineCard(
 
             MoodPromptText(selectedMood = uiState.todayMood)
 
-            val isEditingDescription = uiState.isDescriptionEditing ||
-                uiState.todayMood == null ||
-                uiState.todayMoodText.isNullOrBlank()
+            val shouldShowEditor = shouldShowDescriptionEditor(uiState)
 
-            if (isEditingDescription) {
+            if (shouldShowEditor) {
                 MoodNoteInput(
                     note = noteText,
                     onNoteChange = onNoteChange,
@@ -530,6 +528,14 @@ private fun MoodTimelineCard(
             )
         }
     }
+}
+
+private fun shouldShowDescriptionEditor(
+    uiState: com.love.diary.presentation.viewmodel.HomeUiState
+): Boolean {
+    return uiState.isDescriptionEditing ||
+        uiState.todayMood == null ||
+        uiState.todayMoodText.isNullOrBlank()
 }
 
 @Composable

@@ -40,6 +40,7 @@ fun StatisticsScreen(
 
         StatisticsViewModel.ContentState.EMPTY -> {
             EmptyState(
+                days = uiState.selectedDays,
                 onRetry = viewModel::refresh,
                 modifier = modifier
             )
@@ -61,6 +62,7 @@ fun StatisticsScreen(
 
 @Composable
 private fun EmptyState(
+    days: Int,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -72,7 +74,7 @@ private fun EmptyState(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "最近7天还没有心情记录，去写一条吧",
+            text = "最近${days}天还没有心情记录，去写一条吧",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant

@@ -83,7 +83,8 @@ class StatisticsViewModelTest {
         assertFalse(state.isLoading)
         assertEquals(3, state.totalRecords) // unique days with records
         assertEquals(MoodType.HAPPY, state.topMood)
-        assertEquals("0.3", state.averageMood) // normalized trend scores: (-1 + 1 + 1) / 3
+        val expectedAverage = String.format("%.1f", (-1 + 1 + 1) / 3f)
+        assertEquals(expectedAverage, state.averageMood)
 
         // Trend should carry forward after the first data point
         val firstValue = state.moodTrend.first { it.first == today.minusDays(6).toString() }.second

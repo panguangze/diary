@@ -21,8 +21,12 @@ class StatisticsViewModel @Inject constructor(
     private val repository: AppRepository
 ) : ViewModel() {
 
+    companion object {
+        private const val RECENT_MOOD_FETCH_LIMIT = 120
+    }
+
     data class StatisticsUiState(
-        val selectedDays: Int = 7,
+        val selectedDays: Int = 7, // Default to 7 days per product requirements
         val totalRecords: Int = 0,
         val averageMood: String = "0.0",
         val topMood: MoodType? = null,
@@ -54,6 +58,12 @@ class StatisticsViewModel @Inject constructor(
 
     init {
         loadStatistics()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        moodTrendJob?.cancel()
+        moodTrendJob = null
     }
 
     fun refresh() {
@@ -108,8 +118,9 @@ class StatisticsViewModel @Inject constructor(
         moodTrendJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, contentState = ContentState.LOADING, errorMessage = null) }
             try {
-                repository.getRecentMoods(limit = 120).collect { moodRecords ->
-                    val days = _uiState.value.selectedDays
+                val days = _uiState.value.selectedDays
+                val fetchLimit = maxOf(RECENT_MOOD_FETCH_LIMIT, days * 2)
+                repository.getRecentMoods(limit = fetchLimit).collect { moodRecords ->
                     val endDate = LocalDate.now()
                     val startDate = endDate.minusDays(days.toLong() - 1)
 
@@ -122,8 +133,7 @@ class StatisticsViewModel @Inject constructor(
 
                     val latestPerDay = recordsInRange.groupBy { it.date }.mapValues { entry ->
                         entry.value.maxByOrNull { record ->
-                            val updated = record.updatedAt.takeIf { it > 0 } ?: 0L
-                            if (updated > 0) updated else record.createdAt
+                            if (record.updatedAt > 0) record.updatedAt else record.createdAt
                         } ?: entry.value.first()
                     }
 
@@ -134,17 +144,7 @@ class StatisticsViewModel @Inject constructor(
                         }
                     }
 
-                    val filledTrend = mutableListOf<Pair<String, Int>>()
-                    var lastFilled: Int? = null
-                    dates.zip(rawValues).forEach { (date, raw) ->
-                        val value = raw ?: lastFilled
-                        if (raw != null || lastFilled != null) {
-                            lastFilled = value
-                        }
-                        if (value != null) {
-                            filledTrend.add(date.toString() to value)
-                        }
-                    }
+                    val filledTrend = buildFilledTrend(dates, rawValues)
 
                     val totalRecords = rawValues.count { it != null }
                     val moodStats = latestPerDay.values
@@ -177,7 +177,7 @@ class StatisticsViewModel @Inject constructor(
                     it.copy(
                         isLoading = false,
                         contentState = ContentState.ERROR,
-                        errorMessage = e.message ?: "加载失败"
+                        errorMessage = e.message?.let { msg -> "加载失败：$msg" } ?: "加载失败：未知错误"
                     )
                 }
             }
@@ -228,8 +228,27 @@ class StatisticsViewModel @Inject constructor(
         }
     }
 
+    private fun buildFilledTrend(
+        dates: List<LocalDate>,
+        rawValues: List<Int?>
+    ): List<Pair<String, Int>> {
+        val filledTrend = mutableListOf<Pair<String, Int>>()
+        var lastFilled: Int? = null
+        // Skip leading null days; start plotting once the first real value appears, then carry forward.
+        dates.zip(rawValues).forEach { (date, raw) ->
+            if (raw != null) {
+                lastFilled = raw
+            }
+            val value = raw ?: lastFilled
+            if (value != null) {
+                filledTrend.add(date.toString() to value)
+            }
+        }
+        return filledTrend
+    }
+
     private fun moodScoreForTrend(moodType: MoodType): Int {
-        // Normalize to PRD-defined scoring for the trend chart (+1 / 0 / -1),
+        // Normalize to product requirement scoring for the trend chart (+1 / 0 / -1),
         // which differs from the raw MoodType.score values.
         return when (moodType) {
             MoodType.HAPPY, MoodType.SATISFIED -> 1
