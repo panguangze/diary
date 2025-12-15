@@ -229,6 +229,8 @@ class StatisticsViewModel @Inject constructor(
     }
 
     private fun moodScoreForTrend(moodType: MoodType): Int {
+        // Normalize to PRD-defined scoring for the trend chart (+1 / 0 / -1),
+        // which differs from the raw MoodType.score values.
         return when (moodType) {
             MoodType.HAPPY, MoodType.SATISFIED -> 1
             MoodType.NORMAL, MoodType.OTHER -> 0
