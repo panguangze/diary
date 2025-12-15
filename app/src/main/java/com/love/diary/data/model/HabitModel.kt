@@ -1,6 +1,7 @@
 package com.love.diary.data.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDate
 
@@ -11,7 +12,10 @@ enum class HabitType {
 }
 
 // 打卡事项实体
-@Entity(tableName = "habits")
+@Entity(
+    tableName = "habits",
+    indices = [Index(value = ["isActive"], name = "idx_habits_active")]
+)
 data class Habit(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
@@ -32,7 +36,10 @@ data class Habit(
 )
 
 // 打卡记录实体
-@Entity(tableName = "habit_records")
+@Entity(
+    tableName = "habit_records",
+    indices = [Index(value = ["habitId", "date"], name = "idx_habit_records_habit_date")]
+)
 data class HabitRecord(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
