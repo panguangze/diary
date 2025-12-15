@@ -137,7 +137,7 @@ class StatisticsViewModel @Inject constructor(
                         } ?: entry.value.first()
                     }
 
-                    val dates = (0 until days).map { startDate.plusDays(it) }
+                    val dates = (0 until days).map { startDate.plusDays(it.toLong()) }
                     val rawValues = dates.map { date ->
                         latestPerDay[date.toString()]?.let { record ->
                             moodScoreForTrend(MoodType.fromCode(record.moodTypeCode))
