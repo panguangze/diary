@@ -74,6 +74,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -93,6 +95,7 @@ import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader
 import com.love.diary.presentation.components.ShapeTokens
+import com.love.diary.presentation.components.StatusBadge
 import com.love.diary.presentation.viewmodel.HistoryViewModel
 import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.presentation.viewmodel.StatisticsViewModel
@@ -312,57 +315,73 @@ private fun RelationshipCard(uiState: com.love.diary.presentation.viewmodel.Home
     AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = Dimens.ScreenPadding)
+            .padding(horizontal = Dimens.ScreenPadding),
+        contentPadding = PaddingValues(0.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
-        ) {
-            Text(
-                text = "「${uiState.coupleName ?: "我们"}」已经在一起",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-
-            Text(
-                text = "第 ${uiState.dayIndex} 天",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
-            )
-
-            Text(
-                text = "= ${uiState.dayDisplay}",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
-            )
-
-            if (uiState.dayIndex % 100 == 0 && uiState.dayIndex > 0) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(ShapeTokens.Field)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(Dimens.SectionSpacing),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Celebration,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primaryContainer,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                        )
                     )
+                )
+        ) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.18f),
+                            1f to Color.Transparent
+                        )
+                    )
+            )
 
-                    Spacer(modifier = Modifier.width(Dimens.SectionSpacing))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.CardPadding, vertical = Dimens.LargeSpacing),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+            ) {
+                Text(
+                    text = "「${uiState.coupleName ?: "我们"}」已经在一起",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
+                )
+
+                Text(
+                    text = "第 ${uiState.dayIndex} 天",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (uiState.dayIndex % 100 == 0 && uiState.dayIndex > 0) {
+                        StatusBadge(
+                            text = "🎉 里程碑",
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
 
                     Text(
-                        text = "🎉 今天是我们在一起的第 ${uiState.dayIndex} 天！",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Medium
+                        text = uiState.dayDisplay,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f),
+                        textAlign = TextAlign.End
                     )
                 }
             }
@@ -434,10 +453,10 @@ private fun TodayOverviewBar(
                 style = MaterialTheme.typography.titleMedium
             )
 
-            Text(
-                text = "连续记录：${streak}天",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
+            StatusBadge(
+                text = "🔥 ${streak} 天",
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     }
@@ -467,8 +486,8 @@ private fun MoodTimelineCard(
             verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
             SectionHeader(
-                title = "今天的心情",
-                subtitle = "6 个图标单行等间距，点击即可切换心情"
+                title = "今天感觉如何？",
+                subtitle = "点击表情即可切换心情"
             )
 
             MoodSelectorRow(
@@ -679,22 +698,30 @@ private fun RecentMoodsList(
             modifier = Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = Dimens.SectionSpacing, vertical = Dimens.SectionSpacing)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                RecentMoodIconsRow(
-                    recentMoods = recentMoods,
-                    onMoodClick = onMoodClick,
-                    modifier = Modifier.weight(1f)
+            if (recentMoods.isEmpty()) {
+                Text(
+                    text = "还没有心情记录，去写下第一条吧",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    RecentMoodIconsRow(
+                        recentMoods = recentMoods,
+                        onMoodClick = onMoodClick,
+                        modifier = Modifier.weight(1f)
+                    )
 
-                Spacer(modifier = Modifier.width(Dimens.SectionSpacing))
+                    Spacer(modifier = Modifier.width(Dimens.SectionSpacing))
 
-                MoreMoodsButton(
-                    onClick = onMoreClick,
-                    modifier = Modifier.width(88.dp)
-                )
+                    MoreMoodsButton(
+                        onClick = onMoreClick,
+                        modifier = Modifier.width(88.dp)
+                    )
+                }
             }
         }
     }
@@ -1626,7 +1653,7 @@ fun MoodButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val targetScale = when {
         isPressed -> 0.98f
-        isSelected -> 1.12f
+        isSelected -> 1.2f
         else -> 1f
     }
     val scale by animateFloatAsState(
@@ -1646,15 +1673,18 @@ fun MoodButton(
                 contentDescription =
                     "心情-${mood.displayName}${if (isSelected) "，已选择" else ""}"
             },
-        shape = RoundedCornerShape(12.dp),
+        shape = CircleShape,
         colors = CardDefaults.cardColors(
             containerColor = when {
                 isPressed -> MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                 isSelected -> MaterialTheme.colorScheme.primaryContainer
-                else -> MaterialTheme.colorScheme.surfaceVariant
+                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
             }
         ),
-        border = BorderStroke(1.dp, if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant),
+        border = BorderStroke(
+            1.dp,
+            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         onClick = onClick,
         interactionSource = interactionSource
@@ -1666,7 +1696,10 @@ fun MoodButton(
         ) {
             Text(
                 text = mood.emoji,
-                fontSize = 28.sp
+                fontSize = 28.sp,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface.copy(
+                    alpha = 0.7f
+                )
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -1674,7 +1707,7 @@ fun MoodButton(
             Text(
                 text = mood.displayName,
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
