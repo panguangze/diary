@@ -25,7 +25,6 @@ import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.habit.HabitListScreen
 import com.love.diary.presentation.components.AppScaffold
 import com.love.diary.presentation.components.Dimens
-import com.love.diary.presentation.components.LoveDiaryBottomBar
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.net.Uri
@@ -189,8 +188,26 @@ fun BottomNavigationBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    LoveDiaryBottomBar(
-        selectedTab = selectedTab,
-        onTabSelected = onTabSelected
+    val items = listOf(
+        Screen.Home,
+        Screen.Habits,
+        Screen.Settings
     )
+
+    NavigationBar {
+        items.forEachIndexed { index, screen ->
+                NavigationBarItem(
+                selected = selectedTab == index,
+                onClick = { onTabSelected(index) },
+                icon = {
+                    if (selectedTab == index) {
+                        Icon(screen.selectedIcon, contentDescription = "${screen.title}，已选中")
+                    } else {
+                        Icon(screen.unselectedIcon, contentDescription = "${screen.title}，未选中")
+                    }
+                },
+                label = { Text(screen.title) }
+            )
+        }
+    }
 }
