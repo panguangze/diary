@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.model.CheckInType
 import com.love.diary.data.model.UnifiedCheckIn
 import com.love.diary.presentation.viewmodel.CheckInViewModel
