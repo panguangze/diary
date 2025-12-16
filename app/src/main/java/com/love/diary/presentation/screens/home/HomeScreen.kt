@@ -35,6 +35,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ChevronRight
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -127,7 +129,6 @@ private val BodyGray = Color(0xFF333333)
 
 private data class MoodOption(
     val label: String,
-    val emoji: String,
     val moodType: MoodType
 )
 
@@ -152,12 +153,12 @@ fun HomeScreen(
 
     val moodOptions = remember {
         listOf(
-            MoodOption("甜蜜", "💗", MoodType.SATISFIED),
-            MoodOption("开心", "😊", MoodType.HAPPY),
-            MoodOption("正常", "🙂", MoodType.NORMAL),
-            MoodOption("失落", "😔", MoodType.SAD),
-            MoodOption("愤怒", "😡", MoodType.ANGRY),
-            MoodOption("其他", "✏️", MoodType.OTHER)
+            MoodOption("甜蜜", MoodType.SATISFIED),
+            MoodOption("开心", MoodType.HAPPY),
+            MoodOption("正常", MoodType.NORMAL),
+            MoodOption("失落", MoodType.SAD),
+            MoodOption("愤怒", MoodType.ANGRY),
+            MoodOption("其他", MoodType.OTHER)
         )
     }
 
@@ -557,7 +558,11 @@ private fun MoodTag(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(text = option.emoji, fontSize = 16.sp)
+            Image(
+                painter = painterResource(id = option.moodType.getDrawableResourceId()),
+                contentDescription = option.label,
+                modifier = Modifier.size(16.dp)
+            )
             Text(
                 text = option.label,
                 fontSize = 14.sp,
@@ -766,9 +771,11 @@ private fun MoodIconRow(
                         .clickable { onMoodClick(mood) },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = MoodType.fromCode(mood.moodTypeCode).emoji,
-                        fontSize = 18.sp
+                    val moodType = MoodType.fromCode(mood.moodTypeCode)
+                    Image(
+                        painter = painterResource(id = moodType.getDrawableResourceId()),
+                        contentDescription = moodType.displayName,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
