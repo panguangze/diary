@@ -8,53 +8,53 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 /**
- * Light theme color scheme with romantic pink/red tones
+ * Light theme color scheme with modern minimalist design
  */
 private val LoveLightColorScheme = lightColorScheme(
-    primary = Color(0xFFE91E63),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFE0E9),
-    onPrimaryContainer = Color(0xFF5B0A2B),
-    secondary = Color(0xFFFF80AB),
-    onSecondary = Color.White,
-    tertiary = Color(0xFFF48FB1),
-    onTertiary = Color.White,
-    background = WarmLightBackground,
-    surface = WarmLightSurface,
-    surfaceVariant = WarmLightSurfaceVariant,
-    onBackground = WarmLightOnSurface,
-    onSurface = WarmLightOnSurface,
-    onSurfaceVariant = WarmLightOnSurfaceVariant,
-    outline = WarmLightOutline,
-    outlineVariant = WarmLightOutlineVariant,
-    error = Color(0xFFF44336),
+    primary = Color(0xFF6750A4),        // 主色调 - 紫色
+    onPrimary = Color.White,             // 主色调上的文字
+    primaryContainer = Color(0xFFEADDFF), // 主色调容器
+    onPrimaryContainer = Color(0xFF21005D), // 主色调容器上的文字
+    secondary = Color(0xFF625B71),       // 次要色调
+    onSecondary = Color.White,           // 次要色调上的文字
+    tertiary = Color(0xFF7D5260),        // 第三色调
+    onTertiary = Color.White,            // 第三色调上的文字
+    background = LightBackground,
+    surface = LightSurface,
+    surfaceVariant = LightSurfaceVariant,
+    onBackground = LightOnSurface,
+    onSurface = LightOnSurface,
+    onSurfaceVariant = LightOnSurfaceVariant,
+    outline = LightOutline,
+    outlineVariant = LightOutlineVariant,
+    error = Color(0xFFB3261E),
     onError = Color.White,
     errorContainer = LightErrorContainer,
     onErrorContainer = OnLightErrorContainer
 )
 
 /**
- * Dark theme color scheme with softer pink tones for night use
+ * Dark theme color scheme with modern minimalist design
  */
 private val LoveDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFF80AB),
-    onPrimary = Color(0xFF300015),
-    primaryContainer = Color(0xFF5B0A2B),
-    onPrimaryContainer = Color(0xFFFFD9E3),
-    secondary = Color(0xFFF48FB1),
-    onSecondary = Color(0xFF381320),
-    tertiary = Color(0xFFF06292),
-    onTertiary = Color(0xFF3C0C21),
-    background = WarmDarkBackground,
-    surface = WarmDarkSurface,
-    surfaceVariant = WarmDarkSurfaceVariant,
-    onBackground = WarmDarkOnSurface,
-    onSurface = WarmDarkOnSurface,
-    onSurfaceVariant = WarmDarkOnSurfaceVariant,
-    outline = WarmDarkOutline,
-    outlineVariant = WarmDarkOutlineVariant,
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF680003),
+    primary = Color(0xFFD0BCFF),         // 主色调 - 浅紫色
+    onPrimary = Color(0xFF381E72),       // 主色调上的文字
+    primaryContainer = Color(0xFF4F378B), // 主色调容器
+    onPrimaryContainer = Color(0xFFEADDFF), // 主色调容器上的文字
+    secondary = Color(0xFFCCC2DC),       // 次要色调
+    onSecondary = Color(0xFF332D41),     // 次要色调上的文字
+    tertiary = Color(0xFFEFB8C8),        // 第三色调
+    onTertiary = Color(0xFF492532),      // 第三色调上的文字
+    background = DarkBackground,
+    surface = DarkSurface,
+    surfaceVariant = DarkSurfaceVariant,
+    onBackground = DarkOnSurface,
+    onSurface = DarkOnSurface,
+    onSurfaceVariant = DarkOnSurfaceVariant,
+    outline = DarkOutline,
+    outlineVariant = DarkOutlineVariant,
+    error = Color(0xFFF2B8B5),
+    onError = Color(0xFF601410),
     errorContainer = DarkErrorContainer,
     onErrorContainer = OnDarkErrorContainer
 )
