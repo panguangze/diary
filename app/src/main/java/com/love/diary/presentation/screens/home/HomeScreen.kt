@@ -37,6 +37,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ChevronRight
@@ -74,11 +75,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -101,8 +105,6 @@ import com.love.diary.presentation.components.ShapeTokens
 import com.love.diary.presentation.components.StatusBadge
 import com.love.diary.presentation.viewmodel.HistoryViewModel
 import com.love.diary.presentation.viewmodel.HomeViewModel
-import com.love.diary.presentation.viewmodel.StatisticsViewModel
-import com.love.diary.presentation.screens.statistics.StatisticsScreen
 import com.love.diary.util.ShareHelper
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -113,6 +115,21 @@ private val MoodGridMaxHeight = 240.dp
 private val StatsGridMinHeight = 160.dp
 private val StatsGridMaxHeight = 320.dp
 private const val RecentMoodIconTargetCount = 10
+private val PrimaryPink = Color(0xFFFF557F)
+private val AccentYellow = Color(0xFFFFD33D)
+private val NeutralGray = Color(0xFF888888)
+private val AccentGreen = Color(0xFF34C759)
+private val AccentBlue = Color(0xFF007AFF)
+private val AccentRed = Color(0xFFFF3B30)
+private val BorderColor = Color(0xFFE5E7EB)
+private val SubtitleGray = Color(0xFF666666)
+private val BodyGray = Color(0xFF333333)
+
+private data class MoodOption(
+    val label: String,
+    val emoji: String,
+    val moodType: MoodType
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +139,6 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val historyViewModel: HistoryViewModel = hiltViewModel()
-    val statisticsViewModel: StatisticsViewModel = hiltViewModel()
     val historyRecords by historyViewModel.moodRecords.collectAsState()
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
@@ -134,73 +150,68 @@ fun HomeScreen(
 
     val todayString = uiState.todayDate.ifBlank { LocalDate.now().toString() }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        LazyColumn(
+    val moodOptions = remember {
+        listOf(
+            MoodOption("甜蜜", "💗", MoodType.SATISFIED),
+            MoodOption("开心", "😊", MoodType.HAPPY),
+            MoodOption("正常", "🙂", MoodType.NORMAL),
+            MoodOption("失落", "😔", MoodType.SAD),
+            MoodOption("愤怒", "😡", MoodType.ANGRY),
+            MoodOption("其他", "✏️", MoodType.OTHER)
+        )
+    }
+
+    val favoriteMood = historyRecords
+        .takeLast(30)
+        .groupBy { it.moodTypeCode }
+        .maxByOrNull { it.value.size }
+        ?.let { MoodType.fromCode(it.key) }
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 80.dp),
-            verticalArrangement = Arrangement.spacedBy(Dimens.LargeSpacing),
-            contentPadding = PaddingValues(vertical = Dimens.SectionSpacing)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = Dimens.ScreenPadding)
+                .padding(top = Dimens.SectionSpacing, bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            item {
-                HeroHeader(
-                    uiState = uiState,
-                    dateDisplay = uiState.currentDateDisplay.ifBlank { "今天：$todayString" }
-                )
-            }
+            TopInfoCardRedesigned(
+                title = "${uiState.coupleName ?: "小明 & 小红"}的第${if (uiState.dayIndex > 0) uiState.dayIndex else 16}天",
+                subtitle = "From ${uiState.startDate.ifBlank { "2025 - 01 - 01" }} to ${uiState.todayDate.ifBlank { todayString }}",
+                onAiClick = { viewModel.showOtherMoodDialog() }
+            )
 
-            item {
-                MoodTimelineCard(
-                    uiState = uiState,
-                    onMoodSelected = { mood ->
-                        val noteToSave = uiState.otherMoodText.ifBlank { null }
-                        if (mood != uiState.todayMood) viewModel.updateOtherMoodText("")
-                        viewModel.selectMood(mood, noteToSave)
-                    },
-                onRecentMoodClick = { selectedHistoryItem = it },
-                onExpandCalendar = { showCalendarSheet = true },
-                onNoteChange = viewModel::updateOtherMoodText,
-                onSaveNote = { text ->
-                    viewModel.saveDescription(text)
+            MoodRecordSection(
+                moodOptions = moodOptions,
+                selectedMood = uiState.todayMood,
+                inputText = uiState.otherMoodText,
+                onMoodSelected = { mood ->
+                    val noteToSave = uiState.otherMoodText.ifBlank { null }
+                    if (mood != uiState.todayMood) {
+                        viewModel.updateOtherMoodText("")
+                    }
+                    viewModel.selectMood(mood, noteToSave)
                 },
-                onEnterEdit = viewModel::enterDescriptionEditMode,
-                onCancelEdit = viewModel::cancelDescriptionEdit
+                onInputChange = viewModel::updateOtherMoodText,
+                onSave = { viewModel.saveDescription(uiState.otherMoodText) }
+            )
+
+            RecentMoodStatsSection(
+                recentMoods = uiState.recentTenMoods,
+                totalRecords = historyRecords.size,
+                streak = uiState.currentStreak,
+                favoriteMood = favoriteMood,
+                moodQuote = uiState.todayMood?.feedbackText
+                    ?: "无论今天心情如何，我都在你身边，爱你每一天。",
+                onMoreClick = { showCalendarSheet = true },
+                onMoodClick = { selectedHistoryItem = it }
             )
         }
-        
-            // Mood quote card
-            item {
-                MoodQuoteCard(
-                    selectedMood = uiState.todayMood
-                )
-            }
-            
-            // Stats row
-            item {
-                StatsRow(
-                    totalRecords = historyRecords.size,
-                    continuousRecords = uiState.currentStreak,
-                    favoriteMood = historyRecords
-                        .takeLast(30)
-                        .groupBy { it.moodTypeCode }
-                        .maxByOrNull { it.value.size }
-                        ?.let { MoodType.fromCode(it.key) }
-                )
-            }
-
-            item {
-                StatisticsScreen(
-                    viewModel = statisticsViewModel,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 720.dp)
-                        .padding(horizontal = Dimens.ScreenPadding)
-                )
-            }
-
-            item { Spacer(modifier = Modifier.height(24.dp)) }
-        }
-    }
 
     if (uiState.showAnniversaryPopup) {
         Dialog(onDismissRequest = { viewModel.dismissAnniversaryPopup() }) {
@@ -327,6 +338,455 @@ fun HomeScreen(
         }
     }
 
+    }
+
+}
+
+@Composable
+private fun TopInfoCardRedesigned(
+    title: String,
+    subtitle: String,
+    onAiClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = title,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 32.sp,
+                    color = PrimaryPink
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 20.sp,
+                    color = SubtitleGray
+                )
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = onAiClick,
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier.height(32.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = PrimaryPink
+                    ),
+                    border = BorderStroke(1.dp, PrimaryPink),
+                    contentPadding = PaddingValues(horizontal = 12.dp)
+                ) {
+                    Text(text = "AI生成", fontSize = 14.sp)
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(PrimaryPink.copy(alpha = 0.12f))
+                        .border(1.dp, BorderColor, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = null,
+                        tint = PrimaryPink
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MoodRecordSection(
+    moodOptions: List<MoodOption>,
+    selectedMood: MoodType?,
+    inputText: String,
+    onMoodSelected: (MoodType) -> Unit,
+    onInputChange: (String) -> Unit,
+    onSave: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 160.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "今天感觉如何?",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 24.sp,
+                    color = Color.Black
+                )
+
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    moodOptions.forEach { option ->
+                        MoodTag(
+                            option = option,
+                            selected = selectedMood == option.moodType,
+                            onClick = { onMoodSelected(option.moodType) }
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BasicTextField(
+                        value = inputText,
+                        onValueChange = onInputChange,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(32.dp)
+                            .border(1.dp, BorderColor, RoundedCornerShape(4.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                            color = Color.Black,
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp
+                        ),
+                        singleLine = true,
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.CenterStart
+                            ) {
+                                if (inputText.isBlank()) {
+                                    Text(
+                                        text = "记录下你的",
+                                        color = SubtitleGray,
+                                        fontSize = 14.sp,
+                                        lineHeight = 20.sp
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
+
+                    Button(
+                        onClick = onSave,
+                        enabled = selectedMood != null,
+                        modifier = Modifier
+                            .width(80.dp)
+                            .height(32.dp),
+                        shape = RoundedCornerShape(4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PrimaryPink,
+                            contentColor = Color.White,
+                            disabledContainerColor = PrimaryPink.copy(alpha = 0.4f),
+                            disabledContentColor = Color.White
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        Text(
+                            text = "保存",
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "选择图片",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 24.sp,
+                    color = Color.Black
+                )
+                DashedUploadBox()
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoodTag(
+    option: MoodOption,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .height(32.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(4.dp),
+        color = if (selected) PrimaryPink.copy(alpha = 0.12f) else Color.White,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        border = BorderStroke(1.dp, if (selected) PrimaryPink else BorderColor)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(text = option.emoji, fontSize = 16.sp)
+            Text(
+                text = option.label,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                lineHeight = 20.sp,
+                color = Color.Black
+            )
+        }
+    }
+}
+
+@Composable
+private fun DashedUploadBox() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(120.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .drawBehind {
+                drawRoundRect(
+                    color = BorderColor,
+                    cornerRadius = CornerRadius(4.dp.toPx()),
+                    style = Stroke(
+                        width = 2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f))
+                    )
+                )
+            }
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.AddPhotoAlternate,
+                contentDescription = null,
+                tint = NeutralGray,
+                modifier = Modifier.size(32.dp)
+            )
+            Text(
+                text = "点击上传图片",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+                lineHeight = 20.sp,
+                color = SubtitleGray
+            )
+        }
+    }
+}
+
+@Composable
+private fun RecentMoodStatsSection(
+    recentMoods: List<DailyMoodEntity>,
+    totalRecords: Int,
+    streak: Int,
+    favoriteMood: MoodType?,
+    moodQuote: String,
+    onMoreClick: () -> Unit,
+    onMoodClick: (DailyMoodEntity) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 240.dp),
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(1.dp, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "最近心情",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 24.sp,
+                    color = Color.Black
+                )
+                Text(
+                    text = "更多",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 20.sp,
+                    color = PrimaryPink,
+                    modifier = Modifier.clickable { onMoreClick() }
+                )
+            }
+
+            MoodIconRow(
+                recentMoods = recentMoods,
+                onMoodClick = onMoodClick
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                StatItem(title = "已经记录", value = totalRecords.toString(), unit = "天")
+                StatItem(title = "连续记录", value = streak.toString(), unit = "天")
+                StatItem(
+                    title = "最近30天常见心情",
+                    value = favoriteMood?.displayName ?: "-",
+                    unit = null
+                )
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "心情寄语",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 24.sp,
+                    color = Color.Black
+                )
+                Text(
+                    text = moodQuote,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 20.sp,
+                    color = BodyGray
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatItem(
+    title: String,
+    value: String,
+    unit: String?
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                text = value,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 28.sp,
+                color = PrimaryPink
+            )
+            unit?.let {
+                Text(
+                    text = it,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 20.sp,
+                    color = Color.Black
+                )
+            }
+        }
+        Text(
+            text = title,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 20.sp,
+            color = Color.Black
+        )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MoodIconRow(
+    recentMoods: List<DailyMoodEntity>,
+    onMoodClick: (DailyMoodEntity) -> Unit
+) {
+    if (recentMoods.isEmpty()) {
+        Text(
+            text = "还没有心情记录，去写下第一条吧",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 20.sp,
+            color = SubtitleGray
+        )
+    } else {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            recentMoods.take(10).forEach { mood ->
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(PrimaryPink.copy(alpha = 0.08f))
+                        .clickable { onMoodClick(mood) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = MoodType.fromCode(mood.moodTypeCode).emoji,
+                        fontSize = 18.sp
+                    )
+                }
+            }
+        }
+    }
 }
 
 @Composable

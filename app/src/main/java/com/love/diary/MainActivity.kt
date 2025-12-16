@@ -28,6 +28,8 @@ import com.love.diary.presentation.components.Dimens
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.love.diary.data.repository.AppRepository
 
 @AndroidEntryPoint
@@ -188,13 +190,17 @@ fun BottomNavigationBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val primaryPink = Color(0xFFFF557F)
     val items = listOf(
         Screen.Home,
         Screen.Habits,
         Screen.Settings
     )
 
-    NavigationBar {
+    NavigationBar(
+        containerColor = Color.White,
+        tonalElevation = 0.dp
+    ) {
         items.forEachIndexed { index, screen ->
                 NavigationBarItem(
                 selected = selectedTab == index,
@@ -206,7 +212,14 @@ fun BottomNavigationBar(
                         Icon(screen.unselectedIcon, contentDescription = "${screen.title}，未选中")
                     }
                 },
-                label = { Text(screen.title) }
+                label = { Text(screen.title) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = primaryPink,
+                    selectedTextColor = primaryPink,
+                    unselectedIconColor = Color.Black,
+                    unselectedTextColor = Color.Black,
+                    indicatorColor = Color.Transparent
+                )
             )
         }
     }
