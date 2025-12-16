@@ -31,7 +31,7 @@ sealed class Screen(
     
     data object Settings : Screen(
         route = "settings",
-        title = "我俩",
+        title = "我的",
         selectedIcon = Icons.Filled.Person,
         unselectedIcon = Icons.Outlined.Person
     )

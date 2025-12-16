@@ -650,16 +650,19 @@ private fun TodayMoodDisplay(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MoodSelectorRow(
     selectedMood: MoodType?,
     onMoodSelected: (MoodType) -> Unit
 ) {
-    Row(
+    // Use FlowRow to wrap moods on smaller screens
+    FlowRow(
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        maxItemsInEachRow = 3
     ) {
         MoodType.values().forEach { mood ->
             MoodButton(
