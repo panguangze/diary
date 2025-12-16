@@ -140,13 +140,9 @@ fun HomeScreen(
             contentPadding = PaddingValues(vertical = Dimens.SectionSpacing)
         ) {
             item {
-                RelationshipCard(uiState = uiState)
-            }
-
-            item {
-                TodayOverviewBar(
-                    dateDisplay = uiState.currentDateDisplay.ifBlank { "今天：$todayString" },
-                    streak = uiState.currentStreak
+                HeroHeader(
+                    uiState = uiState,
+                    dateDisplay = uiState.currentDateDisplay.ifBlank { "今天：$todayString" }
                 )
             }
 
@@ -311,77 +307,71 @@ fun HomeScreen(
 }
 
 @Composable
-private fun RelationshipCard(uiState: com.love.diary.presentation.viewmodel.HomeUiState) {
+private fun HeroHeader(
+    uiState: com.love.diary.presentation.viewmodel.HomeUiState,
+    dateDisplay: String
+) {
     AppCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = Dimens.ScreenPadding),
-        contentPadding = PaddingValues(0.dp)
+        contentPadding = PaddingValues(Dimens.CardPadding)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primaryContainer,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                        )
-                    )
-                )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(
-                        Brush.verticalGradient(
-                            0f to Color.Black.copy(alpha = 0.18f),
-                            1f to Color.Transparent
-                        )
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "Day ${uiState.dayIndex}",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Days Together",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (uiState.dayIndex % 100 == 0 && uiState.dayIndex > 0) {
+                    StatusBadge(
+                        text = "🎉 里程碑",
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
-            )
+                }
+            }
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Dimens.CardPadding, vertical = Dimens.LargeSpacing),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "「${uiState.coupleName ?: "我们"}」已经在一起",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                    textAlign = TextAlign.Center
-                )
-
-                Text(
-                    text = "第 ${uiState.dayIndex} 天",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    textAlign = TextAlign.Center
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    shape = ShapeTokens.Pill,
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
                 ) {
-                    if (uiState.dayIndex % 100 == 0 && uiState.dayIndex > 0) {
-                        StatusBadge(
-                            text = "🎉 里程碑",
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.width(4.dp))
-                    }
-
                     Text(
-                        text = uiState.dayDisplay,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.9f),
-                        textAlign = TextAlign.End
+                        text = dateDisplay,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                    )
+                }
+                Surface(
+                    shape = ShapeTokens.Pill,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Text(
+                        text = "With ${uiState.coupleName ?: "Partner"}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
                     )
                 }
             }
@@ -500,14 +490,19 @@ private fun MoodTimelineCard(
             val shouldShowEditor = shouldShowDescriptionEditor(uiState)
 
             if (shouldShowEditor) {
-                MoodNoteInput(
-                    note = noteText,
-                    onNoteChange = onNoteChange,
-                    onSave = { onSaveNote(noteText) },
-                    onCancel = if (!uiState.todayMoodText.isNullOrBlank()) onCancelEdit else null,
-                    isSaveEnabled = uiState.todayMood != null,
-                    errorMessage = uiState.descriptionError
-                )
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn() + expandVertically()
+                ) {
+                    MoodNoteInput(
+                        note = noteText,
+                        onNoteChange = onNoteChange,
+                        onSave = { onSaveNote(noteText) },
+                        onCancel = if (!uiState.todayMoodText.isNullOrBlank()) onCancelEdit else null,
+                        isSaveEnabled = uiState.todayMood != null,
+                        errorMessage = uiState.descriptionError
+                    )
+                }
             } else {
                 MoodNoteViewer(
                     note = uiState.todayMoodText,
@@ -528,8 +523,7 @@ private fun shouldShowDescriptionEditor(
     uiState: com.love.diary.presentation.viewmodel.HomeUiState
 ): Boolean {
     return uiState.isDescriptionEditing ||
-        uiState.todayMood == null ||
-        uiState.todayMoodText.isNullOrBlank()
+        (uiState.todayMood != null && uiState.todayMoodText.isNullOrBlank())
 }
 
 @Composable
