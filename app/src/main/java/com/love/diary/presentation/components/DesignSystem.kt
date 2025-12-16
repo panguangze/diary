@@ -40,15 +40,12 @@ object Dimens {
     val CardCorner = 16.dp
     val FieldCorner = 12.dp
     val TopBarHeight = 56.dp
-    val ButtonHeight = 48.dp
-    val IconSize = 24.dp
 }
 
 object ShapeTokens {
     val Card = RoundedCornerShape(Dimens.CardCorner)
     val Field = RoundedCornerShape(Dimens.FieldCorner)
-    val Pill = RoundedCornerShape(percent = 50) // 更圆润的pill形状
-    val Button = RoundedCornerShape(12.dp) // 按钮圆角
+    val Pill = CircleShape
 }
 
 @Composable
@@ -60,20 +57,17 @@ fun AppCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val border = if (bordered) BorderStroke(1.dp, MaterialTheme.colorScheme.outline) else null
-    val elevation = if (onClick != null) CardDefaults.cardElevation(defaultElevation = 2.dp) else CardDefaults.cardElevation(defaultElevation = 0.dp)
-    val colors = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surface,
-        contentColor = MaterialTheme.colorScheme.onSurface
-    )
+    val border = if (bordered) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
+    val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
 
     if (onClick != null) {
         Card(
-            modifier = modifier.clickable { onClick() },
+            modifier = modifier,
             shape = shape,
             border = border,
             colors = colors,
-            elevation = elevation
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            onClick = onClick
         ) {
             Column(modifier = Modifier.padding(contentPadding), content = content)
         }
@@ -83,7 +77,7 @@ fun AppCard(
             shape = shape,
             border = border,
             colors = colors,
-            elevation = elevation
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(modifier = Modifier.padding(contentPadding), content = content)
         }
@@ -113,6 +107,7 @@ fun AppScaffold(
                 actions = actions,
             )
         },
+        // ✅ always pass a non-null composable lambda to Scaffold
         floatingActionButton = { floatingActionButton?.invoke() },
         content = content
     )

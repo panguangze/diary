@@ -93,7 +93,6 @@ import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.Dimens
-import com.love.diary.presentation.components.MoodSelectorRow
 import com.love.diary.presentation.components.SectionHeader
 import com.love.diary.presentation.components.ShapeTokens
 import com.love.diary.presentation.components.StatusBadge
@@ -580,7 +579,27 @@ private fun TodayMoodDisplay(
     }
 }
 
-// MoodButton 现在在 MoodSelector.kt 中定义，使用新的简约设计
+@Composable
+private fun MoodSelectorRow(
+    selectedMood: MoodType?,
+    onMoodSelected: (MoodType) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 72.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        MoodType.values().forEach { mood ->
+            MoodButton(
+                mood = mood,
+                isSelected = selectedMood == mood,
+                onClick = { onMoodSelected(mood) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
 
 @Composable
 private fun MoodNoteInput(
