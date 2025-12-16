@@ -2,6 +2,7 @@ package com.love.diary.presentation.screens.statistics
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -49,7 +50,6 @@ import com.love.diary.presentation.components.SectionHeader
 import com.love.diary.presentation.components.LoadingState
 import com.love.diary.presentation.viewmodel.StatisticsViewModel
 import kotlin.math.roundToInt
-import androidx.compose.foundation.layout.Box
 
 @Composable
 fun StatisticsScreen(
