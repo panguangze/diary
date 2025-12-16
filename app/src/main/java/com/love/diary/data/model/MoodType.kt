@@ -1,5 +1,7 @@
 package com.love.diary.data.model
 
+import com.love.diary.R
+
 /**
  * Represents different mood types for daily entries
  * Each mood has an associated score, emoji, and feedback message
@@ -70,6 +72,21 @@ enum class MoodType(
         displayName = "其它",
         feedbackText = "我会好好读完你写的每一个字。"
     );
+
+    /**
+     * Get the corresponding drawable resource ID for the mood
+     */
+    fun getDrawableResourceId(): Int {
+        return when (this) {
+            HAPPY -> R.drawable.smile_yellow
+            SATISFIED -> R.drawable.heart_pink
+            NORMAL -> R.drawable.meh_gray
+            SAD -> R.drawable.frown_blue
+            ANGRY -> R.drawable.angry_red
+            OTHER -> R.drawable.cry_blue  // 根据要求，"其他"替换为cry_blue.xml
+        }
+    }
+    
     
     companion object {
         /**
