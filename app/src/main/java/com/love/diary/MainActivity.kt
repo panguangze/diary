@@ -5,7 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +23,8 @@ import com.love.diary.presentation.screens.settings.SettingsScreen
 import com.love.diary.presentation.screens.setup.FirstRunScreen
 import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.habit.HabitListScreen
+import com.love.diary.presentation.components.AppScaffold
+import com.love.diary.presentation.components.Dimens
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.net.Uri
@@ -146,21 +150,33 @@ fun MainAppContent(
                 modifier = Modifier.padding(paddingValues)
             ) {
                 composable(Screen.Home.route) {
-                    HomeScreen(
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    AppScaffold(title = "恋爱日记") { inner ->
+                        HomeScreen(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(inner)
+                        )
+                    }
                 }
 
                 composable(Screen.Habits.route) {
-                    HabitListScreen(
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    AppScaffold(title = "打卡") { inner ->
+                        HabitListScreen(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(inner)
+                        )
+                    }
                 }
 
                 composable(Screen.Settings.route) {
-                    SettingsScreen(
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    AppScaffold(title = "设置") { inner ->
+                        SettingsScreen(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(inner)
+                        )
+                    }
                 }
             }
         }

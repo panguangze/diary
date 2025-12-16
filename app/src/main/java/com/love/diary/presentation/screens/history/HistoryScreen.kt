@@ -5,23 +5,36 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
+import com.love.diary.presentation.components.AppCard
+import com.love.diary.presentation.components.AppScaffold
+import com.love.diary.presentation.components.Dimens
+import com.love.diary.presentation.components.EmptyState
+import com.love.diary.presentation.components.LoadingState
+import com.love.diary.presentation.components.SectionHeader
 import com.love.diary.presentation.viewmodel.HistoryViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -36,92 +49,37 @@ fun HistoryScreen(
     val moodRecords by viewModel.moodRecords.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    Column(modifier = modifier.fillMaxSize()) {
-        // 顶部栏
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "心情日记",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "共 ${moodRecords.size} 天记录",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                IconButton(onClick = { /* 筛选功能 */ }) {
-                    Icon(Icons.Default.FilterList, contentDescription = "筛选")
-                }
+    AppScaffold(
+        title = "心情日记",
+        actions = {
+            IconButton(onClick = { /* 筛选功能 */ }) {
+                Icon(Icons.Default.FilterList, contentDescription = "筛选")
             }
         }
-
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (moodRecords.isEmpty()) {
-            EmptyHistoryView()
-        } else {
-            MoodHistoryList(
-                moodRecords = moodRecords,
-                onItemClick = { date ->
-                    // TODO: 打开详情页
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun EmptyHistoryView() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    ) { padding ->
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = Dimens.ScreenPadding, vertical = Dimens.SectionSpacing),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            Icon(
-                imageVector = Icons.Default.History,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            SectionHeader(
+                title = "概览",
+                subtitle = "共 ${moodRecords.size} 天记录"
             )
 
-            Text(
-                text = "还没有记录",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = "去首页记录今天的心情吧",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            when {
+                isLoading -> LoadingState()
+                moodRecords.isEmpty() -> EmptyState(
+                    title = "还没有记录",
+                    subtitle = "去首页记录今天的心情吧"
+                )
+                else -> MoodHistoryList(
+                    moodRecords = moodRecords,
+                    onItemClick = { /* TODO */ }
+                )
+            }
         }
     }
 }
@@ -139,8 +97,8 @@ fun MoodHistoryList(
 
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
+        contentPadding = PaddingValues(vertical = Dimens.SectionSpacing)
     ) {
         itemsIndexed(moodRecords) { index, record ->
             AnimatedVisibility(
@@ -170,16 +128,14 @@ fun MoodHistoryItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
-        ),
-        onClick = onClick
+    AppCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -187,7 +143,6 @@ fun MoodHistoryItem(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column {
-                    // 日期和星期几
                     val date = LocalDate.parse(record.date)
                     val dayOfWeek = date.dayOfWeek.getDisplayName(weekFormatter, Locale.getDefault())
 
@@ -204,13 +159,10 @@ fun MoodHistoryItem(
                     )
                 }
 
-                // 心情标签
                 MoodTypeBadge(moodType = MoodType.fromCode(record.moodTypeCode))
             }
 
-            // 心情文字预览
             if (record.hasText && record.moodText != null) {
-                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = record.moodText!!,
                     style = MaterialTheme.typography.bodyMedium,
