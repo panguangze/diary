@@ -5,7 +5,7 @@ plugins {
     // KSP 插件
     id("com.google.devtools.ksp") version "2.0.21-1.0.25" apply false
     // Android Gradle Plugin - using 7.4.2 for better compatibility
-    id("com.android.application") version "7.4.2" apply false
+    id("com.android.application") version "8.13.2" apply false
 
-    id("com.google.dagger.hilt.android") version "2.52" apply false
+    id("com.google.dagger.hilt.android") version "2.57.2" apply false
 }

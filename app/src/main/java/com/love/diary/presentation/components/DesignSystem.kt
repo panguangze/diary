@@ -49,6 +49,7 @@ object ShapeTokens {
     val Pill = CircleShape
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppCard(
     modifier: Modifier = Modifier,
