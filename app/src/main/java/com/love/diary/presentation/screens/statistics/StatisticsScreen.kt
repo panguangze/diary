@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.model.MoodType
 import com.love.diary.presentation.components.AppCard
+import com.love.diary.presentation.components.AppSegmentedTabs
 import com.love.diary.presentation.components.AppScaffold
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.EmptyState
@@ -145,37 +145,29 @@ fun TimeRangeSelector(
     onDaysSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val timeRanges = listOf(7, 30, 90, 365)
+    val options = listOf("周", "月", "年")
+    val selectedIndex = when (selectedDays) {
+        7 -> 0
+        30 -> 1
+        else -> 2
+    }
 
     AppCard(
         modifier = modifier.fillMaxWidth(),
         contentPadding = PaddingValues(vertical = Dimens.SectionSpacing)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.SectionSpacing),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
-        ) {
-            timeRanges.forEach { days ->
-                FilterChip(
-                    selected = selectedDays == days,
-                    onClick = { onDaysSelected(days) },
-                    label = {
-                        Text(
-                            text = when (days) {
-                                7 -> "最近7天"
-                                30 -> "最近30天"
-                                90 -> "最近90天"
-                                365 -> "全年"
-                                else -> "$days 天"
-                            }
-                        )
-                    },
-                    modifier = Modifier.padding(horizontal = 4.dp)
-                )
+        AppSegmentedTabs(
+            options = options,
+            selectedIndex = selectedIndex,
+            onSelected = {
+                val days = when (it) {
+                    0 -> 7
+                    1 -> 30
+                    else -> 365
+                }
+                onDaysSelected(days)
             }
-        }
+        )
     }
 }
 
@@ -208,41 +200,57 @@ fun StatisticsOverviewCard(
                     StatItem(
                         title = "记录天数",
                         value = uiState.totalRecords.toString(),
-                        icon = Icons.Default.DateRange
+                        icon = Icons.Default.DateRange,
+                        insight = "记录越多，故事越完整"
                     )
 
                     StatItem(
                         title = "平均心情",
                         value = uiState.averageMood,
-                        icon = Icons.Default.TrendingUp
+                        icon = Icons.Default.TrendingUp,
+                        insight = "最常心情：${uiState.topMood?.displayName ?: "-"}"
                     )
 
                     StatItem(
                         title = "最常心情",
                         value = uiState.topMood?.emoji ?: "-",
-                        icon = Icons.Default.EmojiEmotions
+                        icon = Icons.Default.EmojiEmotions,
+                        insight = uiState.topMood?.displayName
                     )
                 } else {
                     // 打卡统计概览
                     StatItem(
                         title = "打卡次数",
                         value = uiState.totalRecords.toString(),
-                        icon = Icons.Default.CheckCircle
+                        icon = Icons.Default.CheckCircle,
+                        insight = "保持节奏"
                     )
 
                     StatItem(
                         title = "打卡天数",
                         value = uiState.checkInTrend.distinctBy { it.date }.size.toString(),
-                        icon = Icons.Default.DateRange
+                        icon = Icons.Default.DateRange,
+                        insight = "坚持是最好的习惯"
                     )
 
                     StatItem(
                         title = "最近打卡",
                         value = uiState.checkInTrend.lastOrNull()?.date?.substring(5)?.replace("-", "/") ?: "-",
-                        icon = Icons.Default.AccessTime
+                        icon = Icons.Default.AccessTime,
+                        insight = "保持今日也打卡"
                     )
                 }
             }
+
+            Text(
+                text = if (uiState.currentViewType == StatisticsViewModel.ViewType.MOOD) {
+                    "最常见的心情：${uiState.topMood?.displayName ?: "-"}"
+                } else {
+                    "最近的打卡记录让节奏更稳定"
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -252,6 +260,7 @@ fun StatItem(
     title: String,
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    insight: String? = null,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -270,7 +279,6 @@ fun StatItem(
         Text(
             text = value,
             style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
 
@@ -279,6 +287,16 @@ fun StatItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
         )
+
+        if (!insight.isNullOrBlank()) {
+            Text(
+                text = insight,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }
 
@@ -381,9 +399,12 @@ fun MoodDistributionItem(
             // 进度条
             LinearProgressIndicator(
                 progress = if (totalRecords > 0) count.toFloat() / totalRecords else 0f,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp),
                 color = getMoodColor(moodType),
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                strokeCap = StrokeCap.Round
             )
         }
     }

@@ -12,16 +12,25 @@ import androidx.compose.ui.graphics.Color
  */
 private val LoveLightColorScheme = lightColorScheme(
     primary = Color(0xFFE91E63),
-    secondary = Color(0xFFFF80AB),
-    tertiary = Color(0xFFF48FB1),
-    background = Color(0xFFFFF9F9),
-    surface = Color(0xFFFFFFFF),
     onPrimary = Color.White,
+    primaryContainer = Color(0xFFFFE0E9),
+    onPrimaryContainer = Color(0xFF5B0A2B),
+    secondary = Color(0xFFFF80AB),
     onSecondary = Color.White,
-    onBackground = Color(0xFF333333),
-    onSurface = Color(0xFF333333),
+    tertiary = Color(0xFFF48FB1),
+    onTertiary = Color.White,
+    background = WarmLightBackground,
+    surface = WarmLightSurface,
+    surfaceVariant = WarmLightSurfaceVariant,
+    onBackground = WarmLightOnSurface,
+    onSurface = WarmLightOnSurface,
+    onSurfaceVariant = WarmLightOnSurfaceVariant,
+    outline = WarmLightOutline,
+    outlineVariant = WarmLightOutlineVariant,
     error = Color(0xFFF44336),
-    primaryContainer = Color(0xFFFFE0E9)
+    onError = Color.White,
+    errorContainer = LightErrorContainer,
+    onErrorContainer = OnLightErrorContainer
 )
 
 /**
@@ -29,14 +38,25 @@ private val LoveLightColorScheme = lightColorScheme(
  */
 private val LoveDarkColorScheme = darkColorScheme(
     primary = Color(0xFFFF80AB),
+    onPrimary = Color(0xFF300015),
+    primaryContainer = Color(0xFF5B0A2B),
+    onPrimaryContainer = Color(0xFFFFD9E3),
     secondary = Color(0xFFF48FB1),
+    onSecondary = Color(0xFF381320),
     tertiary = Color(0xFFF06292),
-    background = Color(0xFF1A1A1A),
-    surface = Color(0xFF2D2D2D),
-    onPrimary = Color.Black,
-    onSecondary = Color.Black,
-    onBackground = Color(0xFFE0E0E0),
-    onSurface = Color(0xFFE0E0E0)
+    onTertiary = Color(0xFF3C0C21),
+    background = WarmDarkBackground,
+    surface = WarmDarkSurface,
+    surfaceVariant = WarmDarkSurfaceVariant,
+    onBackground = WarmDarkOnSurface,
+    onSurface = WarmDarkOnSurface,
+    onSurfaceVariant = WarmDarkOnSurfaceVariant,
+    outline = WarmDarkOutline,
+    outlineVariant = WarmDarkOutlineVariant,
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF680003),
+    errorContainer = DarkErrorContainer,
+    onErrorContainer = OnDarkErrorContainer
 )
 
 /**
@@ -55,7 +75,7 @@ fun LoveDiaryTheme(
     
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = MaterialTheme.typography,
+        typography = Typography,
         content = content
     )
 }
