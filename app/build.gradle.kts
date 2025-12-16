@@ -81,11 +81,11 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
 
     // ---------- 这里开始是 Hilt 相关 ----------
-    implementation("com.google.dagger:hilt-android:2.52")
-    ksp("com.google.dagger:hilt-android-compiler:2.52")
-    implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("com.google.dagger:hilt-android:2.57.2")
+    ksp("com.google.dagger:hilt-android-compiler:2.57.2")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     // 如果你不用 KSP，也可以改成：
-    // kapt("com.google.dagger:hilt-android-compiler:2.52")
+    // kapt("com.google.dagger:hilt-android-compiler:2.57.2")
     // 并在 plugins 里加 id("kotlin-kapt")
     // ----------------------------------------
 
