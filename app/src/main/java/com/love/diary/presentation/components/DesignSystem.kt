@@ -76,7 +76,8 @@ fun AppScaffold(
                 actions = actions,
             )
         },
-        floatingActionButton = floatingActionButton,
+        // ✅ always pass a non-null composable lambda to Scaffold
+        floatingActionButton = { floatingActionButton?.invoke() },
         content = content
     )
 }
