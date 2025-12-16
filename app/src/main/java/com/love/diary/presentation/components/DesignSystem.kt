@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,6 +26,7 @@ object Dimens {
     val LargeSpacing = 24.dp
     val CardCorner = 16.dp
     val FieldCorner = 12.dp
+    val TopBarHeight = 56.dp
 }
 
 object ShapeTokens {
@@ -45,6 +50,34 @@ fun AppCard(
     ) {
         Column(modifier = Modifier.padding(contentPadding), content = content)
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AppScaffold(
+    title: String,
+    modifier: Modifier = Modifier,
+    actions: @Composable () -> Unit = {},
+    floatingActionButton: @Composable (() -> Unit)? = null,
+    content: @Composable (PaddingValues) -> Unit
+) {
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                actions = actions,
+            )
+        },
+        floatingActionButton = floatingActionButton,
+        content = content
+    )
 }
 
 @Composable

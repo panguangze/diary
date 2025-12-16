@@ -1,6 +1,16 @@
 package com.love.diary.habit
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -8,15 +18,31 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.clickable
 import java.time.format.DateTimeFormatter
 import androidx.compose.ui.ExperimentalComposeUiApi
 import com.love.diary.data.model.Habit
@@ -32,6 +58,9 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerDefaults
+import com.love.diary.presentation.components.AppCard
+import com.love.diary.presentation.components.Dimens
+import com.love.diary.presentation.components.SectionHeader
 
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -46,53 +75,45 @@ fun HabitListScreen(
     // 添加习惯对话框状态
     var showAddHabitDialog by remember { mutableStateOf(false) }
     
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(Dimens.ScreenPadding)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            Text(
-                text = "打卡事项",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold
-            )
-            
-            FloatingActionButton(
-                onClick = { 
-                    showAddHabitDialog = true 
-                }
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "添加打卡")
+            item {
+                SectionHeader(
+                    title = "打卡事项",
+                    subtitle = "管理你的习惯与今日完成度"
+                )
             }
-        }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        LazyColumn {
             items(habits) { habit ->
                 HabitItemCard(
                     habit = habit,
                     onCheckIn = { habitId, tag ->
-                        // 使用HabitRepository的打卡功能，同时记录标签
                         coroutineScope.launch {
                             habitRepository.checkInHabit(habitId, tag)
                         }
                     },
                     onCheckInWithText = { habitId, text ->
-                        // 使用HabitRepository的打卡功能，带文本
                         coroutineScope.launch {
                             habitRepository.checkInHabit(habitId, text)
                         }
                     },
                     onClick = { /* 导航到详情页 */ }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
+        }
+
+        FloatingActionButton(
+            onClick = { showAddHabitDialog = true },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(Dimens.SectionSpacing)
+        ) {
+            Icon(Icons.Default.Add, contentDescription = "添加打卡")
         }
     }
     
@@ -137,78 +158,61 @@ fun HabitItemCard(
         todayUsedTag = todayCheckIn?.tag
     }
 
-    Card(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick(habit.id) },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .clickable { onClick(habit.id) }
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = habit.name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Text(
-                        text = when (habit.type) {
-                            HabitType.POSITIVE -> "已打卡 ${habit.currentCount} 次"
-                            HabitType.COUNTDOWN -> {
-                                val targetDate = habit.targetDate?.let { LocalDate.parse(it) }
-                                val today = LocalDate.now()
-                                val daysLeft = if (targetDate != null) {
-                                    ChronoUnit.DAYS.between(today, targetDate).toInt()
-                                } else 0
-                                "距离目标还有 $daysLeft 天"
-                            }
-                        },
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    Text(
-                        text = if (habit.isCompletedToday) "今日已完成" else "今日未完成",
-                        fontSize = 12.sp,
-                        color = if (habit.isCompletedToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                    )
-                    
-                    // 显示标签
-                    if (habit.tags.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyRow {
-                            items(habit.tags.split(",").filter { it.isNotEmpty() }) { tag ->
-                                InputChip(
-                                    selected = tag == todayUsedTag,  // 根据今天使用的标签高亮显示
-                                    onClick = {
-                                        if (tag == "其它") {
-                                            // 对于"其它"标签，显示输入对话框
-                                            showOtherTagInputDialog = true
-                                            currentHabitId.longValue = habit.id
-                                        } else {
-                                            onCheckIn(habit.id, tag) // 点击标签时打卡并记录标签
-                                            // 立即更新UI状态以反映选中
-                                            todayUsedTag = tag
-                                        }
-                                    },
-                                    label = { Text(tag) }
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                            }
-                        }
+            Text(
+                text = habit.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+
+            Text(
+                text = when (habit.type) {
+                    HabitType.POSITIVE -> "已打卡 ${habit.currentCount} 次"
+                    HabitType.COUNTDOWN -> {
+                        val targetDate = habit.targetDate?.let { LocalDate.parse(it) }
+                        val today = LocalDate.now()
+                        val daysLeft = if (targetDate != null) {
+                            ChronoUnit.DAYS.between(today, targetDate).toInt()
+                        } else 0
+                        "距离目标还有 $daysLeft 天"
+                    }
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = if (habit.isCompletedToday) "今日已完成" else "今日未完成",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (habit.isCompletedToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+            )
+
+            if (habit.tags.isNotEmpty()) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(habit.tags.split(",").filter { it.isNotEmpty() }) { tag ->
+                        InputChip(
+                            selected = tag == todayUsedTag,
+                            onClick = {
+                                if (tag == "其它") {
+                                    showOtherTagInputDialog = true
+                                    currentHabitId.longValue = habit.id
+                                } else {
+                                    onCheckIn(habit.id, tag)
+                                    todayUsedTag = tag
+                                }
+                            },
+                            label = { Text(tag) }
+                        )
                     }
                 }
             }

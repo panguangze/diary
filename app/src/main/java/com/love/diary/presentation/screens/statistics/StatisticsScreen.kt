@@ -1,13 +1,32 @@
 package com.love.diary.presentation.screens.statistics
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -18,6 +37,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.model.MoodType
+import com.love.diary.presentation.components.AppCard
+import com.love.diary.presentation.components.AppScaffold
+import com.love.diary.presentation.components.Dimens
+import com.love.diary.presentation.components.EmptyState
+import com.love.diary.presentation.components.ErrorState
+import com.love.diary.presentation.components.SectionHeader
+import com.love.diary.presentation.components.LoadingState
 import com.love.diary.presentation.viewmodel.StatisticsViewModel
 import kotlin.math.roundToInt
 
@@ -30,18 +56,13 @@ fun StatisticsScreen(
 
     when (uiState.contentState) {
         StatisticsViewModel.ContentState.LOADING -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
+            LoadingState()
         }
 
         StatisticsViewModel.ContentState.EMPTY -> {
             EmptyState(
-                days = uiState.selectedDays,
-                onRetry = viewModel::refresh,
+                title = "最近${uiState.selectedDays}天还没有心情记录",
+                subtitle = "去写一条吧",
                 modifier = modifier
             )
         }
@@ -49,65 +70,12 @@ fun StatisticsScreen(
         StatisticsViewModel.ContentState.ERROR -> {
             ErrorState(
                 message = uiState.errorMessage ?: "加载失败",
-                onRetry = viewModel::refresh,
                 modifier = modifier
             )
         }
 
         StatisticsViewModel.ContentState.CONTENT -> {
             StatisticsContent(uiState = uiState, viewModel = viewModel, modifier = modifier)
-        }
-    }
-}
-
-@Composable
-private fun EmptyState(
-    days: Int,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "最近${days}天还没有心情记录，去写一条吧",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRetry) {
-            Text("去记录")
-        }
-    }
-}
-
-@Composable
-private fun ErrorState(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.error
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRetry) {
-            Text("重试")
         }
     }
 }
@@ -120,31 +88,21 @@ private fun StatisticsContent(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(16.dp)
+        verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
+        contentPadding = PaddingValues(Dimens.ScreenPadding)
     ) {
-        // 标题
-        item {
-            Text(
-                text = "心情统计",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "最近 ${uiState.selectedDays} 天的记录",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
         // 时间范围选择
         item {
             TimeRangeSelector(
                 selectedDays = uiState.selectedDays,
                 onDaysSelected = viewModel::updateTimeRange
+            )
+        }
+
+        item {
+            SectionHeader(
+                title = "最近 ${uiState.selectedDays} 天",
+                subtitle = "数据概览与趋势"
             )
         }
 
@@ -185,15 +143,15 @@ fun TimeRangeSelector(
 ) {
     val timeRanges = listOf(7, 30, 90, 365)
 
-    Card(
+    AppCard(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
+        contentPadding = PaddingValues(vertical = Dimens.SectionSpacing)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .padding(horizontal = Dimens.SectionSpacing),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
             timeRanges.forEach { days ->
                 FilterChip(
@@ -222,24 +180,19 @@ fun StatisticsOverviewCard(
     uiState: StatisticsViewModel.StatisticsUiState,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+    AppCard(
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
             Text(
                 text = "统计概览",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.onSurface
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -331,20 +284,18 @@ fun MoodDistributionCard(
     modifier: Modifier = Modifier
 ) {
     if (uiState.currentViewType == StatisticsViewModel.ViewType.MOOD) {
-        Card(
-            modifier = modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
+        AppCard(
+            modifier = modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
             ) {
                 Text(
                     text = "心情分布",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium
                 )
-
-                Spacer(modifier = Modifier.height(12.dp))
 
                 MoodType.values().forEach { moodType ->
                     val count = uiState.moodStats[moodType] ?: 0
@@ -370,8 +321,7 @@ fun MoodDistributionCard(
                     Text(
                         text = "暂无记录",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 16.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -442,20 +392,18 @@ fun MoodTrendCard(
     currentViewType: StatisticsViewModel.ViewType = StatisticsViewModel.ViewType.MOOD,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
+    AppCard(
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
             Text(
                 text = if (currentViewType == StatisticsViewModel.ViewType.MOOD) "心情趋势" else "打卡趋势",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             if (currentViewType == StatisticsViewModel.ViewType.MOOD) {
                 if (moodTrendData.isNotEmpty()) {
@@ -592,29 +540,23 @@ fun StatisticsSummaryCard(
     uiState: StatisticsViewModel.StatisticsUiState,
     modifier: Modifier = Modifier
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
-        )
+    AppCard(
+        modifier = modifier.fillMaxWidth()
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
             Text(
                 text = "小总结",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = generateSummaryText(uiState),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
     }
