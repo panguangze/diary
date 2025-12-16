@@ -38,10 +38,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.FormatQuote
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -164,6 +167,26 @@ fun HomeScreen(
                 onCancelEdit = viewModel::cancelDescriptionEdit
             )
         }
+        
+            // Mood quote card
+            item {
+                MoodQuoteCard(
+                    selectedMood = uiState.todayMood
+                )
+            }
+            
+            // Stats row
+            item {
+                StatsRow(
+                    totalRecords = historyRecords.size,
+                    continuousRecords = uiState.currentStreak,
+                    favoriteMood = historyRecords
+                        .takeLast(30)
+                        .groupBy { it.moodTypeCode }
+                        .maxByOrNull { it.value.size }
+                        ?.let { MoodType.fromCode(it.key) }
+                )
+            }
 
             item {
                 StatisticsScreen(
@@ -317,65 +340,107 @@ private fun HeroHeader(
             .padding(horizontal = Dimens.ScreenPadding),
         contentPadding = PaddingValues(Dimens.CardPadding)
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    text = "Day ${uiState.dayIndex}",
-                    style = MaterialTheme.typography.displaySmall,
-                    color = MaterialTheme.colorScheme.onSurface
+            // Avatar row with couple names
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left avatar
+                AvatarPlaceholder(
+                    modifier = Modifier.semantics {
+                        contentDescription = "用户头像"
+                    }
                 )
-                Text(
-                    text = "Days Together",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (uiState.dayIndex % 100 == 0 && uiState.dayIndex > 0) {
-                    StatusBadge(
-                        text = "🎉 里程碑",
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                
+                // Center content
+                Column(
+                    modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Day ${uiState.dayIndex}",
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
                     )
+                    Text(
+                        text = uiState.coupleName?.let { "与 $it 的第 ${uiState.dayIndex} 天" } 
+                            ?: "Days Together",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    if (uiState.dayIndex % 100 == 0 && uiState.dayIndex > 0) {
+                        StatusBadge(
+                            text = "🎉 里程碑",
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 }
+                
+                // Right avatar
+                AvatarPlaceholder(
+                    modifier = Modifier.semantics {
+                        contentDescription = "伴侣头像"
+                    }
+                )
             }
-
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            
+            // Date display
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
             ) {
                 Surface(
                     shape = ShapeTokens.Pill,
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
                     tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                    shadowElevation = 0.dp
                 ) {
                     Text(
                         text = dateDisplay,
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-                    )
-                }
-                Surface(
-                    shape = ShapeTokens.Pill,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
-                ) {
-                    Text(
-                        text = "With ${uiState.coupleName ?: "Partner"}",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AvatarPlaceholder(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(60.dp)
+            .clip(CircleShape)
+            .background(
+                Brush.radialGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primaryContainer,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    )
+                )
+            )
+            .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Person,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(32.dp)
+        )
     }
 }
 
@@ -509,6 +574,18 @@ private fun MoodTimelineCard(
                     onEdit = onEnterEdit
                 )
             }
+            
+            // Photo upload placeholder
+            if (uiState.todayMood != null) {
+                PhotoUploadPlaceholder(
+                    modifier = Modifier.semantics {
+                        contentDescription = "上传今天的照片"
+                    },
+                    onClick = {
+                        // TODO: Implement photo picker
+                    }
+                )
+            }
 
             RecentMoodsList(
                 recentMoods = uiState.recentTenMoods,
@@ -573,16 +650,19 @@ private fun TodayMoodDisplay(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MoodSelectorRow(
     selectedMood: MoodType?,
     onMoodSelected: (MoodType) -> Unit
 ) {
-    Row(
+    // Use FlowRow to wrap moods on smaller screens
+    FlowRow(
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        maxItemsInEachRow = 3
     ) {
         MoodType.values().forEach { mood ->
             MoodButton(
@@ -1703,6 +1783,200 @@ fun MoodButton(
                 style = MaterialTheme.typography.labelLarge,
                 color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun PhotoUploadPlaceholder(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(160.dp)
+            .clip(ShapeTokens.Field)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                shape = ShapeTokens.Field
+            )
+            .clickable { onClick() }
+            .semantics {
+                contentDescription = "添加照片"
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier.padding(Dimens.SectionSpacing),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.AddPhotoAlternate,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "添加照片记录这一刻",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "点击上传",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MoodQuoteCard(
+    selectedMood: MoodType?,
+    modifier: Modifier = Modifier
+) {
+    if (selectedMood != null) {
+        AppCard(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.ScreenPadding),
+            contentPadding = PaddingValues(Dimens.CardPadding)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.FormatQuote,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(32.dp)
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "心情寄语",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = selectedMood.feedbackText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        lineHeight = 20.sp
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatsRow(
+    totalRecords: Int,
+    continuousRecords: Int,
+    favoriteMood: MoodType?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = Dimens.ScreenPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+    ) {
+        SectionHeader(
+            title = "记录统计",
+            subtitle = "你的心情变化"
+        )
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+        ) {
+            StatsCard(
+                title = "总记录",
+                value = "$totalRecords 天",
+                icon = "📊",
+                modifier = Modifier.weight(1f)
+            )
+            StatsCard(
+                title = "连续打卡",
+                value = "$continuousRecords 天",
+                icon = "🔥",
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+        ) {
+            StatsCard(
+                title = "最近30天",
+                value = favoriteMood?.displayName ?: "-",
+                icon = favoriteMood?.emoji ?: "💭",
+                subtitle = "最常心情",
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StatsCard(
+    title: String,
+    value: String,
+    icon: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null
+) {
+    ElevatedCard(
+        modifier = modifier,
+        shape = ShapeTokens.Card,
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.SectionSpacing),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = icon,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+            }
         }
     }
 }
