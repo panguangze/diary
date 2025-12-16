@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -33,7 +36,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -95,7 +100,6 @@ private fun StatisticsContent(
         verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
         contentPadding = PaddingValues(Dimens.ScreenPadding)
     ) {
-        // 时间范围选择
         item {
             TimeRangeSelector(
                 selectedDays = uiState.selectedDays,
@@ -104,34 +108,16 @@ private fun StatisticsContent(
         }
 
         item {
-            SectionHeader(
-                title = "最近 ${uiState.selectedDays} 天",
-                subtitle = "数据概览与趋势"
+            StatsBentoSection(
+                uiState = uiState,
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
-        // 统计概览卡片
         item {
-            StatisticsOverviewCard(uiState = uiState)
+            MoodDistributionCard(uiState = uiState)
         }
 
-        // 心情分布
-        item {
-            MoodDistributionCard(
-                uiState = uiState
-            )
-        }
-
-        // 心情趋势
-        item {
-            MoodTrendCard(
-                moodTrendData = uiState.moodTrend,
-                checkInTrendData = uiState.checkInTrend,
-                currentViewType = uiState.currentViewType
-            )
-        }
-
-        // 统计总结
         item {
             StatisticsSummaryCard(uiState = uiState)
         }
@@ -168,6 +154,93 @@ fun TimeRangeSelector(
                 onDaysSelected(days)
             }
         )
+    }
+}
+
+@Composable
+private fun StatsBentoSection(
+    uiState: StatisticsViewModel.StatisticsUiState,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+    ) {
+        SectionHeader(
+            title = "最近 ${uiState.selectedDays} 天",
+            subtitle = "一屏查看核心指标"
+        )
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 260.dp, max = 520.dp),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
+            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
+            userScrollEnabled = false
+        ) {
+            item {
+                MiniStatCard(
+                    title = "🔥 连续记录",
+                    value = "${uiState.totalRecords} 天",
+                    caption = "本阶段 streak"
+                )
+            }
+            item {
+                MiniStatCard(
+                    title = "平均心情",
+                    value = uiState.averageMood,
+                    caption = uiState.topMood?.displayName ?: "暂无常见心情"
+                )
+            }
+            item {
+                MiniStatCard(
+                    title = "最常心情",
+                    value = uiState.topMood?.emoji ?: "-",
+                    caption = uiState.topMood?.displayName ?: "等待记录"
+                )
+            }
+            item(span = { GridItemSpan(2) }) {
+                MoodTrendCard(
+                    moodTrendData = uiState.moodTrend,
+                    checkInTrendData = uiState.checkInTrend,
+                    currentViewType = uiState.currentViewType
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MiniStatCard(
+    title: String,
+    value: String,
+    caption: String
+) {
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(16.dp)
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = caption,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 
@@ -480,8 +553,6 @@ fun SimpleTrendChart(
     val minScore = trendData.minOfOrNull { it.second } ?: -2
     val scoreRange = maxScore - minScore
 
-    // 在 Canvas 外部获取颜色值
-    val gridColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
     val lineColor = MaterialTheme.colorScheme.primary
     val textColor = MaterialTheme.colorScheme.onSurfaceVariant
 
@@ -492,33 +563,6 @@ fun SimpleTrendChart(
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 1.dp.toPx()
-
-            // 水平网格线
-            for (i in 0..4) {
-                val y = size.height * i / 4f
-                drawLine(
-                    color = gridColor,
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
-                    strokeWidth = strokeWidth
-                )
-            }
-
-            // 垂直网格线（如果需要）
-            if (trendData.size > 1) {
-                for (i in trendData.indices) {
-                    val x = size.width * i / (trendData.size - 1).toFloat()
-                    drawLine(
-                        color = gridColor,
-                        start = Offset(x, 0f),
-                        end = Offset(x, size.height),
-                        strokeWidth = strokeWidth
-                    )
-                }
-            }
-
-            // 绘制趋势线
             if (trendData.size > 1 && scoreRange > 0) {
                 val points = trendData.mapIndexed { index, (_, score) ->
                     val x = size.width * index / (trendData.size - 1).toFloat()
@@ -526,7 +570,23 @@ fun SimpleTrendChart(
                     Offset(x, y)
                 }
 
-                // 绘制连接线
+                val fillPath = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(points.first().x, size.height)
+                    points.forEach { lineTo(it.x, it.y) }
+                    lineTo(points.last().x, size.height)
+                    close()
+                }
+
+                drawPath(
+                    path = fillPath,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            lineColor.copy(alpha = 0.35f),
+                            Color.Transparent
+                        )
+                    )
+                )
+
                 for (i in 0 until points.size - 1) {
                     drawLine(
                         color = lineColor,
@@ -537,7 +597,6 @@ fun SimpleTrendChart(
                     )
                 }
 
-                // 绘制点
                 points.forEach { point ->
                     drawCircle(
                         color = lineColor,

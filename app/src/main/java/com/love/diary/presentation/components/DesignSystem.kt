@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
@@ -57,8 +58,13 @@ fun AppCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    val border = if (bordered) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null
-    val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    val border = BorderStroke(
+        1.dp,
+        MaterialTheme.colorScheme.outline.copy(alpha = if (bordered) 0.7f else 0.35f)
+    )
+    val colors = CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
+    )
 
     if (onClick != null) {
         Card(
@@ -93,8 +99,14 @@ fun AppScaffold(
     floatingActionButton: @Composable (() -> Unit)? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        )
+    )
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.background(backgroundBrush),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -107,7 +119,6 @@ fun AppScaffold(
                 actions = actions,
             )
         },
-        // ✅ always pass a non-null composable lambda to Scaffold
         floatingActionButton = { floatingActionButton?.invoke() },
         content = content
     )

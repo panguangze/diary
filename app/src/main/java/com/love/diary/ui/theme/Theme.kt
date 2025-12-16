@@ -7,44 +7,38 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-/**
- * Light theme color scheme with romantic pink/red tones
- */
 private val LoveLightColorScheme = lightColorScheme(
-    primary = Color(0xFFE91E63),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFE0E9),
-    onPrimaryContainer = Color(0xFF5B0A2B),
-    secondary = Color(0xFFFF80AB),
+    primary = Color(0xFFB9806E), // rose-gold accent
+    onPrimary = Color(0xFF2B120B),
+    primaryContainer = Color(0xFFEFE2DA),
+    onPrimaryContainer = Color(0xFF3C241B),
+    secondary = Color(0xFF6D6A75), // slate accents
     onSecondary = Color.White,
-    tertiary = Color(0xFFF48FB1),
-    onTertiary = Color.White,
-    background = WarmLightBackground,
-    surface = WarmLightSurface,
-    surfaceVariant = WarmLightSurfaceVariant,
-    onBackground = WarmLightOnSurface,
-    onSurface = WarmLightOnSurface,
-    onSurfaceVariant = WarmLightOnSurfaceVariant,
-    outline = WarmLightOutline,
-    outlineVariant = WarmLightOutlineVariant,
-    error = Color(0xFFF44336),
+    tertiary = Color(0xFFC3A68A),
+    onTertiary = Color(0xFF2D1B0D),
+    background = Color(0xFFFAFAFA),
+    surface = Color(0xFFFFFFFF),
+    surfaceVariant = Color(0xFFF4F0EB),
+    onBackground = Color(0xFF1F1410),
+    onSurface = Color(0xFF1F1410),
+    onSurfaceVariant = Color(0xFF5C514A),
+    outline = Color(0xFFE0D6CE),
+    outlineVariant = Color(0xFFF1EAE4),
+    error = Color(0xFFE57373),
     onError = Color.White,
     errorContainer = LightErrorContainer,
     onErrorContainer = OnLightErrorContainer
 )
 
-/**
- * Dark theme color scheme with softer pink tones for night use
- */
 private val LoveDarkColorScheme = darkColorScheme(
-    primary = Color(0xFFFF80AB),
-    onPrimary = Color(0xFF300015),
-    primaryContainer = Color(0xFF5B0A2B),
-    onPrimaryContainer = Color(0xFFFFD9E3),
-    secondary = Color(0xFFF48FB1),
-    onSecondary = Color(0xFF381320),
-    tertiary = Color(0xFFF06292),
-    onTertiary = Color(0xFF3C0C21),
+    primary = Color(0xFFD8B8A5),
+    onPrimary = Color(0xFF2A150E),
+    primaryContainer = Color(0xFF4A3024),
+    onPrimaryContainer = Color(0xFFF4E6DC),
+    secondary = Color(0xFF8E8A96),
+    onSecondary = Color(0xFF1B181D),
+    tertiary = Color(0xFFBBA07F),
+    onTertiary = Color(0xFF201309),
     background = WarmDarkBackground,
     surface = WarmDarkSurface,
     surfaceVariant = WarmDarkSurfaceVariant,
