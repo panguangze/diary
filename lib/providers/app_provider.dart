@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/mood_entry.dart';
 import '../utils/database_helper.dart';
 
