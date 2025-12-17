@@ -5,10 +5,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +35,7 @@ import com.love.diary.presentation.components.Dimens
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.net.Uri
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.love.diary.data.repository.AppRepository
@@ -152,7 +160,13 @@ fun MainAppContent(
                 modifier = Modifier.padding(paddingValues)
             ) {
                 composable(Screen.Home.route) {
-                    AppScaffold(title = "恋爱日记") { inner ->
+                    AppScaffold(
+                        title = "恋爱日记",
+                        showTopBar = false,
+                        backgroundBrush = Brush.verticalGradient(
+                            colors = listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8))
+                        )
+                    ) { inner ->
                         HomeScreen(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -190,7 +204,8 @@ fun BottomNavigationBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    val primaryPink = Color(0xFFFF557F)
+    val unselectedColor = Color(0xFF999999)
+    val selectedBrush = Brush.horizontalGradient(listOf(Color(0xFFFF6B81), Color(0xFFFF476F)))
     val items = listOf(
         Screen.Home,
         Screen.Habits,
@@ -199,27 +214,67 @@ fun BottomNavigationBar(
 
     NavigationBar(
         containerColor = Color.White,
-        tonalElevation = 0.dp
+        tonalElevation = 0.dp,
+        modifier = Modifier.height(56.dp)
     ) {
         items.forEachIndexed { index, screen ->
-                NavigationBarItem(
+            val isSelected = selectedTab == index
+            NavigationBarItem(
                 selected = selectedTab == index,
                 onClick = { onTabSelected(index) },
                 icon = {
-                    if (selectedTab == index) {
-                        Icon(screen.selectedIcon, contentDescription = "${screen.title}，已选中")
+                    if (isSelected) {
+                        Row(
+                            modifier = Modifier
+                                .background(selectedBrush, RoundedCornerShape(24.dp))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                screen.selectedIcon,
+                                contentDescription = "${screen.title}，已选中",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = screen.title,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                lineHeight = 16.sp
+                            )
+                        }
                     } else {
-                        Icon(screen.unselectedIcon, contentDescription = "${screen.title}，未选中")
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                screen.unselectedIcon,
+                                contentDescription = "${screen.title}，未选中",
+                                tint = unselectedColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = screen.title,
+                                color = unselectedColor,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                lineHeight = 16.sp
+                            )
+                        }
                     }
                 },
-                label = { Text(screen.title) },
+                label = null,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = primaryPink,
-                    selectedTextColor = primaryPink,
-                    unselectedIconColor = Color.Black,
-                    unselectedTextColor = Color.Black,
+                    selectedIconColor = Color.White,
+                    selectedTextColor = Color.White,
+                    unselectedIconColor = unselectedColor,
+                    unselectedTextColor = unselectedColor,
                     indicatorColor = Color.Transparent
-                )
+                ),
+                alwaysShowLabel = false
             )
         }
     }

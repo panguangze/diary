@@ -75,6 +75,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -126,6 +127,16 @@ private val AccentRed = Color(0xFFFF3B30)
 private val BorderColor = Color(0xFFE5E7EB)
 private val SubtitleGray = Color(0xFF666666)
 private val BodyGray = Color(0xFF333333)
+private val HeaderTextColor = Color(0xFF2D2D33)
+private val SubTextColor = Color(0xFF999999)
+private val ControlTextColor = Color(0xFF4A4A52)
+private val LightSurfaceColor = Color(0xFFF2F2F5)
+private val UploadBorderColor = Color(0xFFE5E5EA)
+private val AccentPinkText = Color(0xFFFF7A90)
+private val AccentGradientStart = Color(0xFFFF6B81)
+private val AccentGradientEnd = Color(0xFFFF476F)
+private val MoodSelectedStart = Color(0xFFFFE6E8)
+private val MoodSelectedEnd = Color(0xFFFFC2C6)
 
 private data class MoodOption(
     val label: String,
@@ -168,24 +179,32 @@ fun HomeScreen(
         .maxByOrNull { it.value.size }
         ?.let { MoodType.fromCode(it.key) }
 
+    val pageBackground = Brush.verticalGradient(listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8)))
+
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(pageBackground)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = Dimens.ScreenPadding)
-                .padding(top = Dimens.SectionSpacing, bottom = 80.dp),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+                .padding(top = 24.dp, bottom = 80.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            TodayHeader()
+
+            Spacer(modifier = Modifier.height(20.dp))
+
             TopInfoCardRedesigned(
                 title = "${uiState.coupleName ?: "小明 & 小红"}的第${if (uiState.dayIndex > 0) uiState.dayIndex else 16}天",
                 subtitle = "From ${uiState.startDate.ifBlank { "2025 - 01 - 01" }} to ${uiState.todayDate.ifBlank { todayString }}",
                 onAiClick = { viewModel.showOtherMoodDialog() }
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             MoodRecordSection(
                 moodOptions = moodOptions,
@@ -201,6 +220,8 @@ fun HomeScreen(
                 onInputChange = viewModel::updateOtherMoodText,
                 onSave = { viewModel.saveDescription(uiState.otherMoodText) }
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             RecentMoodStatsSection(
                 recentMoods = uiState.recentTenMoods,
@@ -339,8 +360,28 @@ fun HomeScreen(
         }
     }
 
-    }
+}
 
+}
+
+@Composable
+private fun TodayHeader() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = "恋爱日记",
+            fontSize = 24.sp,
+            lineHeight = 32.sp,
+            fontWeight = FontWeight.Bold,
+            color = HeaderTextColor
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier
+                .width(80.dp)
+                .height(1.dp)
+                .background(AccentPinkText, shape = RoundedCornerShape(50))
+        )
+    }
 }
 
 @Composable
@@ -353,10 +394,9 @@ private fun TopInfoCardRedesigned(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, BorderColor),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(
             modifier = Modifier
@@ -371,17 +411,17 @@ private fun TopInfoCardRedesigned(
             ) {
                 Text(
                     text = title,
-                    fontSize = 24.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    lineHeight = 32.sp,
-                    color = PrimaryPink
+                    lineHeight = 24.sp,
+                    color = HeaderTextColor
                 )
                 Text(
                     text = subtitle,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 20.sp,
-                    color = SubtitleGray
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Light,
+                    lineHeight = 16.sp,
+                    color = SubTextColor
                 )
             }
 
@@ -393,14 +433,13 @@ private fun TopInfoCardRedesigned(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(PrimaryPink.copy(alpha = 0.12f))
-                        .border(1.dp, BorderColor, CircleShape),
+                        .background(AccentPinkText.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Person,
                         contentDescription = null,
-                        tint = PrimaryPink
+                        tint = AccentPinkText
                     )
                 }
             }
@@ -422,33 +461,34 @@ private fun MoodRecordSection(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 160.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, BorderColor),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 16.dp, vertical = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.Top
         ) {
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "今天感觉如何?",
+                    text = "今天感觉如何？",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 24.sp,
-                    color = Color.Black
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 22.sp,
+                    color = HeaderTextColor
                 )
 
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    maxItemsInEachRow = 2
                 ) {
                     moodOptions.forEach { option ->
                         MoodTag(
@@ -468,12 +508,13 @@ private fun MoodRecordSection(
                         value = inputText,
                         onValueChange = onInputChange,
                         modifier = Modifier
-                            .weight(1f)
-                            .height(32.dp)
-                            .border(1.dp, BorderColor, RoundedCornerShape(4.dp))
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                            .width(168.dp)
+                            .height(40.dp)
+                            .background(LightSurfaceColor, RoundedCornerShape(8.dp))
+                            .border(1.dp, UploadBorderColor, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color.Black,
+                            color = HeaderTextColor,
                             fontSize = 14.sp,
                             lineHeight = 20.sp
                         ),
@@ -485,8 +526,8 @@ private fun MoodRecordSection(
                             ) {
                                 if (inputText.isBlank()) {
                                     Text(
-                                        text = "记录下你的",
-                                        color = SubtitleGray,
+                                        text = "记录下你",
+                                        color = SubTextColor,
                                         fontSize = 14.sp,
                                         lineHeight = 20.sp
                                     )
@@ -496,17 +537,33 @@ private fun MoodRecordSection(
                         }
                     )
 
+                    Spacer(modifier = Modifier.weight(1f))
+
                     Button(
                         onClick = onSave,
                         enabled = selectedMood != null,
                         modifier = Modifier
-                            .width(80.dp)
-                            .height(32.dp),
-                        shape = RoundedCornerShape(4.dp),
+                            .width(120.dp)
+                            .height(40.dp)
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(AccentGradientStart, AccentGradientEnd)
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .drawBehind {
+                                drawLine(
+                                    color = Color.White.copy(alpha = 0.2f),
+                                    start = Offset(0f, 0f),
+                                    end = Offset(size.width, 0f),
+                                    strokeWidth = 1.dp.toPx()
+                                )
+                            },
+                        shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = PrimaryPink,
+                            containerColor = Color.Transparent,
                             contentColor = Color.White,
-                            disabledContainerColor = PrimaryPink.copy(alpha = 0.4f),
+                            disabledContainerColor = AccentGradientStart.copy(alpha = 0.4f),
                             disabledContentColor = Color.White
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp)
@@ -521,16 +578,9 @@ private fun MoodRecordSection(
             }
 
             Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.width(120.dp),
+                horizontalAlignment = Alignment.End
             ) {
-                Text(
-                    text = "选择图片",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 24.sp,
-                    color = Color.Black
-                )
                 DashedUploadBox()
             }
         }
@@ -545,31 +595,45 @@ private fun MoodTag(
 ) {
     Surface(
         modifier = Modifier
-            .height(32.dp)
+            .width(80.dp)
+            .height(40.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(4.dp),
-        color = if (selected) PrimaryPink.copy(alpha = 0.12f) else Color.White,
+        shape = RoundedCornerShape(8.dp),
+        color = Color.Transparent,
         tonalElevation = 0.dp,
         shadowElevation = 0.dp,
-        border = BorderStroke(1.dp, if (selected) PrimaryPink else BorderColor)
+        border = null
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = if (selected) {
+                        Brush.verticalGradient(listOf(MoodSelectedStart, MoodSelectedEnd))
+                    } else {
+                        Brush.verticalGradient(listOf(LightSurfaceColor, LightSurfaceColor))
+                    },
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Image(
-                painter = painterResource(id = option.moodType.getDrawableResourceId()),
-                contentDescription = option.label,
-                modifier = Modifier.size(16.dp)
-            )
-            Text(
-                text = option.label,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Normal,
-                lineHeight = 20.sp,
-                color = Color.Black
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = option.moodType.getDrawableResourceId()),
+                    contentDescription = option.label,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = option.label,
+                    fontSize = 14.sp,
+                    fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+                    lineHeight = 20.sp,
+                    color = if (selected) AccentPinkText else ControlTextColor
+                )
+            }
         }
     }
 }
@@ -578,20 +642,19 @@ private fun MoodTag(
 private fun DashedUploadBox() {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(120.dp)
-            .clip(RoundedCornerShape(4.dp))
+            .size(120.dp)
+            .clip(RoundedCornerShape(8.dp))
             .drawBehind {
                 drawRoundRect(
-                    color = BorderColor,
-                    cornerRadius = CornerRadius(4.dp.toPx()),
+                    color = UploadBorderColor,
+                    cornerRadius = CornerRadius(8.dp.toPx()),
                     style = Stroke(
                         width = 2.dp.toPx(),
                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f))
                     )
                 )
             }
-            .padding(24.dp),
+            .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -601,15 +664,15 @@ private fun DashedUploadBox() {
             Icon(
                 imageVector = Icons.Filled.AddPhotoAlternate,
                 contentDescription = null,
-                tint = NeutralGray,
+                tint = SubTextColor,
                 modifier = Modifier.size(32.dp)
             )
             Text(
                 text = "点击上传图片",
-                fontSize = 14.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
-                lineHeight = 20.sp,
-                color = SubtitleGray
+                lineHeight = 16.sp,
+                color = SubTextColor
             )
         }
     }
@@ -629,10 +692,9 @@ private fun RecentMoodStatsSection(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 240.dp),
-        shape = RoundedCornerShape(8.dp),
-        border = BorderStroke(1.dp, BorderColor),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(
             modifier = Modifier
@@ -648,16 +710,16 @@ private fun RecentMoodStatsSection(
                 Text(
                     text = "最近心情",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 24.sp,
-                    color = Color.Black
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 22.sp,
+                    color = HeaderTextColor
                 )
                 Text(
                     text = "更多",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 20.sp,
-                    color = PrimaryPink,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    lineHeight = 16.sp,
+                    color = AccentPinkText,
                     modifier = Modifier.clickable { onMoreClick() }
                 )
             }
@@ -669,33 +731,34 @@ private fun RecentMoodStatsSection(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 StatItem(title = "已经记录", value = totalRecords.toString(), unit = "天")
                 StatItem(title = "连续记录", value = streak.toString(), unit = "天")
                 StatItem(
                     title = "最近30天常见心情",
                     value = favoriteMood?.displayName ?: "-",
-                    unit = null
+                    unit = null,
+                    highlight = true
                 )
             }
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     text = "心情寄语",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 24.sp,
-                    color = Color.Black
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 22.sp,
+                    color = HeaderTextColor
                 )
                 Text(
                     text = moodQuote,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     lineHeight = 20.sp,
-                    color = BodyGray
+                    color = ControlTextColor
                 )
             }
         }
@@ -706,38 +769,30 @@ private fun RecentMoodStatsSection(
 private fun StatItem(
     title: String,
     value: String,
-    unit: String?
+    unit: String?,
+    highlight: Boolean = false
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                text = value,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 28.sp,
-                color = PrimaryPink
-            )
-            unit?.let {
-                Text(
-                    text = it,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 20.sp,
-                    color = Color.Black
-                )
-            }
-        }
+        val valueText = unit?.let { "$value$it" } ?: value
+        val valueColor = if (highlight) AccentPinkText else ControlTextColor
+        val valueSize = if (highlight) 18.sp else 16.sp
+        val valueWeight = if (highlight) FontWeight.Bold else FontWeight.Normal
+
+        Text(
+            text = valueText,
+            fontSize = valueSize,
+            fontWeight = valueWeight,
+            lineHeight = if (highlight) 24.sp else 22.sp,
+            color = valueColor
+        )
         Text(
             text = title,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Normal,
-            lineHeight = 20.sp,
-            color = Color.Black
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Light,
+            lineHeight = 16.sp,
+            color = SubTextColor
         )
     }
 }
@@ -767,7 +822,7 @@ private fun MoodIconRow(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(PrimaryPink.copy(alpha = 0.08f))
+                        .background(AccentPinkText.copy(alpha = 0.08f))
                         .clickable { onMoodClick(mood) },
                     contentAlignment = Alignment.Center
                 ) {
