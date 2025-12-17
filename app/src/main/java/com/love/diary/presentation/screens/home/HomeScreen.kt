@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -74,6 +75,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Alignment
@@ -98,6 +100,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.love.diary.R
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.presentation.components.AppCard
@@ -109,6 +112,7 @@ import com.love.diary.presentation.viewmodel.HistoryViewModel
 import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.presentation.viewmodel.StatisticsViewModel
 import com.love.diary.util.ShareHelper
+import com.love.diary.presentation.screens.statistics.SimpleTrendChart
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -137,11 +141,19 @@ private val AccentGradientStart = Color(0xFFFF6B81)
 private val AccentGradientEnd = Color(0xFFFF476F)
 private val MoodSelectedStart = Color(0xFFFFE6E8)
 private val MoodSelectedEnd = Color(0xFFFFC2C6)
+private val MoodTrendRangeOptions = StatisticsViewModel.DEFAULT_RANGE_OPTIONS.map { it to it.toRangeLabelRes() }
 
 private data class MoodOption(
     val label: String,
     val moodType: MoodType
 )
+
+private fun Int.toRangeLabelRes(): Int = when (this) {
+    StatisticsViewModel.RANGE_WEEK -> R.string.home_mood_trend_range_week
+    StatisticsViewModel.RANGE_MONTH -> R.string.home_mood_trend_range_month
+    StatisticsViewModel.RANGE_QUARTER -> R.string.home_mood_trend_range_quarter
+    else -> R.string.home_mood_trend_range_year
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -151,7 +163,9 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val historyViewModel: HistoryViewModel = hiltViewModel()
+    val statisticsViewModel: StatisticsViewModel = hiltViewModel()
     val historyRecords by historyViewModel.moodRecords.collectAsState()
+    val statisticsState by statisticsViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -232,6 +246,13 @@ fun HomeScreen(
                     ?: "无论今天心情如何，我都在你身边，爱你每一天。",
                 onMoreClick = { showCalendarSheet = true },
                 onMoodClick = { selectedHistoryItem = it }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            MoodTrendPreviewCard(
+                uiState = statisticsState,
+                onRangeChange = statisticsViewModel::updateTimeRange
             )
         }
 
@@ -760,6 +781,99 @@ private fun RecentMoodStatsSection(
                     lineHeight = 20.sp,
                     color = ControlTextColor
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoodTrendPreviewCard(
+    uiState: StatisticsViewModel.StatisticsUiState,
+    onRangeChange: (Int) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 220.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.home_mood_trend_title, uiState.selectedDays),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 22.sp,
+                    color = HeaderTextColor
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    MoodTrendRangeOptions.forEach { (days, labelRes) ->
+                        key(days) {
+                            FilterChip(
+                                selected = uiState.selectedDays == days,
+                                onClick = { onRangeChange(days) },
+                                label = { Text(stringResource(labelRes)) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            when (uiState.contentState) {
+                StatisticsViewModel.ContentState.LOADING -> {
+                    Text(
+                        text = stringResource(R.string.home_mood_trend_loading),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 20.sp,
+                        color = SubtitleGray
+                    )
+                }
+
+                StatisticsViewModel.ContentState.CONTENT -> {
+                    if (uiState.moodTrend.isNotEmpty()) {
+                        SimpleTrendChart(trendData = uiState.moodTrend)
+                    } else {
+                        Text(
+                            text = stringResource(R.string.home_mood_trend_no_data),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            lineHeight = 20.sp,
+                            color = SubtitleGray
+                        )
+                    }
+                }
+
+                StatisticsViewModel.ContentState.EMPTY -> {
+                    Text(
+                        text = stringResource(R.string.home_mood_trend_empty),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 20.sp,
+                        color = SubtitleGray
+                    )
+                }
+
+                StatisticsViewModel.ContentState.ERROR -> {
+                    Text(
+                        text = uiState.errorMessage ?: stringResource(R.string.home_mood_trend_error_default),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 20.sp,
+                        color = AccentRed
+                    )
+                }
             }
         }
     }
