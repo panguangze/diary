@@ -22,6 +22,21 @@ sealed class Screen(
         unselectedIcon = Icons.Outlined.Home
     )
     
+    data object Stats : Screen(
+        route = "stats",
+        title = "统计",
+        selectedIcon = Icons.Filled.CheckCircle,
+        unselectedIcon = Icons.Outlined.CheckCircle
+    )
+    
+    data object Profile : Screen(
+        route = "profile",
+        title = "我的",
+        selectedIcon = Icons.Filled.Person,
+        unselectedIcon = Icons.Outlined.Person
+    )
+    
+    // Keep legacy screens for backward compatibility
     data object Habits : Screen(
         route = "habits",
         title = "打卡",
@@ -31,7 +46,7 @@ sealed class Screen(
     
     data object Settings : Screen(
         route = "settings",
-        title = "我的",
+        title = "设置",
         selectedIcon = Icons.Filled.Person,
         unselectedIcon = Icons.Outlined.Person
     )
