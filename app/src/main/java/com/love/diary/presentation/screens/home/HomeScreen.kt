@@ -75,6 +75,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Alignment
@@ -140,17 +141,19 @@ private val AccentGradientStart = Color(0xFFFF6B81)
 private val AccentGradientEnd = Color(0xFFFF476F)
 private val MoodSelectedStart = Color(0xFFFFE6E8)
 private val MoodSelectedEnd = Color(0xFFFFC2C6)
-private val MoodTrendRangeOptions = listOf(
-    7 to R.string.home_mood_trend_range_week,
-    30 to R.string.home_mood_trend_range_month,
-    90 to R.string.home_mood_trend_range_quarter,
-    365 to R.string.home_mood_trend_range_year
-)
+private val MoodTrendRangeOptions = StatisticsViewModel.DEFAULT_RANGE_OPTIONS.map { it to it.toRangeLabelRes() }
 
 private data class MoodOption(
     val label: String,
     val moodType: MoodType
 )
+
+private fun Int.toRangeLabelRes(): Int = when (this) {
+    StatisticsViewModel.RANGE_WEEK -> R.string.home_mood_trend_range_week
+    StatisticsViewModel.RANGE_MONTH -> R.string.home_mood_trend_range_month
+    StatisticsViewModel.RANGE_QUARTER -> R.string.home_mood_trend_range_quarter
+    else -> R.string.home_mood_trend_range_year
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -793,7 +796,7 @@ private fun MoodTrendPreviewCard(
             .fillMaxWidth()
             .heightIn(min = 220.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(
@@ -816,11 +819,13 @@ private fun MoodTrendPreviewCard(
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     MoodTrendRangeOptions.forEach { (days, labelRes) ->
-                        FilterChip(
-                            selected = uiState.selectedDays == days,
-                            onClick = { onRangeChange(days) },
-                            label = { Text(stringResource(labelRes)) }
-                        )
+                        key(days) {
+                            FilterChip(
+                                selected = uiState.selectedDays == days,
+                                onClick = { onRangeChange(days) },
+                                label = { Text(stringResource(labelRes)) }
+                            )
+                        }
                     }
                 }
             }

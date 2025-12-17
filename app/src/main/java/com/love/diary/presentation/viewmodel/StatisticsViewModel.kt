@@ -23,10 +23,15 @@ class StatisticsViewModel @Inject constructor(
 
     companion object {
         private const val RECENT_MOOD_FETCH_LIMIT = 120
+        const val RANGE_WEEK = 7
+        const val RANGE_MONTH = 30
+        const val RANGE_QUARTER = 90
+        const val RANGE_YEAR = 365
+        val DEFAULT_RANGE_OPTIONS = listOf(RANGE_WEEK, RANGE_MONTH, RANGE_QUARTER, RANGE_YEAR)
     }
 
     data class StatisticsUiState(
-        val selectedDays: Int = 7, // Default to 7 days per product requirements
+        val selectedDays: Int = RANGE_WEEK, // Default to 7 days per product requirements
         val totalRecords: Int = 0,
         val averageMood: String = "0.0",
         val topMood: MoodType? = null,

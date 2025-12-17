@@ -44,6 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.res.stringResource
+import com.love.diary.R
 import com.love.diary.data.model.MoodType
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.AppSegmentedTabs
@@ -131,12 +133,14 @@ fun TimeRangeSelector(
     onDaysSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val options = listOf("周", "月", "年")
-    val selectedIndex = when (selectedDays) {
-        7 -> 0
-        30 -> 1
-        else -> 2
-    }
+    val rangeOptions = StatisticsViewModel.DEFAULT_RANGE_OPTIONS
+    val options = listOf(
+        stringResource(R.string.home_mood_trend_range_week),
+        stringResource(R.string.home_mood_trend_range_month),
+        stringResource(R.string.home_mood_trend_range_quarter),
+        stringResource(R.string.home_mood_trend_range_year)
+    )
+    val selectedIndex = rangeOptions.indexOf(selectedDays).takeIf { it >= 0 } ?: 0
 
     AppCard(
         modifier = modifier.fillMaxWidth(),
@@ -146,11 +150,7 @@ fun TimeRangeSelector(
             options = options,
             selectedIndex = selectedIndex,
             onSelected = {
-                val days = when (it) {
-                    0 -> 7
-                    1 -> 30
-                    else -> 365
-                }
+                val days = rangeOptions.getOrNull(it) ?: StatisticsViewModel.RANGE_WEEK
                 onDaysSelected(days)
             }
         )
