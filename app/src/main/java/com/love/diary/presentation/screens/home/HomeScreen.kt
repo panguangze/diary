@@ -109,6 +109,7 @@ import com.love.diary.presentation.viewmodel.HistoryViewModel
 import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.presentation.viewmodel.StatisticsViewModel
 import com.love.diary.util.ShareHelper
+import com.love.diary.presentation.screens.statistics.SimpleTrendChart
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -151,7 +152,9 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val historyViewModel: HistoryViewModel = hiltViewModel()
+    val statisticsViewModel: StatisticsViewModel = hiltViewModel()
     val historyRecords by historyViewModel.moodRecords.collectAsState()
+    val statisticsState by statisticsViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -232,6 +235,13 @@ fun HomeScreen(
                     ?: "无论今天心情如何，我都在你身边，爱你每一天。",
                 onMoreClick = { showCalendarSheet = true },
                 onMoodClick = { selectedHistoryItem = it }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            MoodTrendPreviewCard(
+                uiState = statisticsState,
+                onRangeChange = statisticsViewModel::updateTimeRange
             )
         }
 
@@ -760,6 +770,97 @@ private fun RecentMoodStatsSection(
                     lineHeight = 20.sp,
                     color = ControlTextColor
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoodTrendPreviewCard(
+    uiState: StatisticsViewModel.StatisticsUiState,
+    onRangeChange: (Int) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 220.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "最近${uiState.selectedDays}天",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 22.sp,
+                    color = HeaderTextColor
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(7 to "周", 30 to "月", 365 to "年").forEach { (days, label) ->
+                        FilterChip(
+                            selected = uiState.selectedDays == days,
+                            onClick = { onRangeChange(days) },
+                            label = { Text(label) }
+                        )
+                    }
+                }
+            }
+
+            when (uiState.contentState) {
+                StatisticsViewModel.ContentState.LOADING -> {
+                    Text(
+                        text = "加载中...",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 20.sp,
+                        color = SubtitleGray
+                    )
+                }
+
+                StatisticsViewModel.ContentState.CONTENT -> {
+                    if (uiState.moodTrend.isNotEmpty()) {
+                        SimpleTrendChart(trendData = uiState.moodTrend)
+                    } else {
+                        Text(
+                            text = "暂无心情趋势数据",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            lineHeight = 20.sp,
+                            color = SubtitleGray
+                        )
+                    }
+                }
+
+                StatisticsViewModel.ContentState.EMPTY -> {
+                    Text(
+                        text = "还没有足够的数据绘制趋势",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 20.sp,
+                        color = SubtitleGray
+                    )
+                }
+
+                StatisticsViewModel.ContentState.ERROR -> {
+                    Text(
+                        text = uiState.errorMessage ?: "加载失败，请稍后重试",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 20.sp,
+                        color = AccentRed
+                    )
+                }
             }
         }
     }
