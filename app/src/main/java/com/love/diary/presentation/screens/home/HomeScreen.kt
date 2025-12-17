@@ -46,6 +46,7 @@ import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -98,6 +99,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.love.diary.R
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.presentation.components.AppCard
@@ -138,6 +140,12 @@ private val AccentGradientStart = Color(0xFFFF6B81)
 private val AccentGradientEnd = Color(0xFFFF476F)
 private val MoodSelectedStart = Color(0xFFFFE6E8)
 private val MoodSelectedEnd = Color(0xFFFFC2C6)
+private val MoodTrendRangeOptions = listOf(
+    7 to R.string.home_mood_trend_range_week,
+    30 to R.string.home_mood_trend_range_month,
+    90 to R.string.home_mood_trend_range_quarter,
+    365 to R.string.home_mood_trend_range_year
+)
 
 private data class MoodOption(
     val label: String,
@@ -800,18 +808,18 @@ private fun MoodTrendPreviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "最近${uiState.selectedDays}天",
+                    text = stringResource(R.string.home_mood_trend_title, uiState.selectedDays),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 22.sp,
                     color = HeaderTextColor
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf(7 to "周", 30 to "月", 365 to "年").forEach { (days, label) ->
+                    MoodTrendRangeOptions.forEach { (days, labelRes) ->
                         FilterChip(
                             selected = uiState.selectedDays == days,
                             onClick = { onRangeChange(days) },
-                            label = { Text(label) }
+                            label = { Text(stringResource(labelRes)) }
                         )
                     }
                 }
@@ -820,7 +828,7 @@ private fun MoodTrendPreviewCard(
             when (uiState.contentState) {
                 StatisticsViewModel.ContentState.LOADING -> {
                     Text(
-                        text = "加载中...",
+                        text = stringResource(R.string.home_mood_trend_loading),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
                         lineHeight = 20.sp,
@@ -833,7 +841,7 @@ private fun MoodTrendPreviewCard(
                         SimpleTrendChart(trendData = uiState.moodTrend)
                     } else {
                         Text(
-                            text = "暂无心情趋势数据",
+                            text = stringResource(R.string.home_mood_trend_no_data),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Normal,
                             lineHeight = 20.sp,
@@ -844,7 +852,7 @@ private fun MoodTrendPreviewCard(
 
                 StatisticsViewModel.ContentState.EMPTY -> {
                     Text(
-                        text = "还没有足够的数据绘制趋势",
+                        text = stringResource(R.string.home_mood_trend_empty),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
                         lineHeight = 20.sp,
@@ -854,7 +862,7 @@ private fun MoodTrendPreviewCard(
 
                 StatisticsViewModel.ContentState.ERROR -> {
                     Text(
-                        text = uiState.errorMessage ?: "加载失败，请稍后重试",
+                        text = uiState.errorMessage ?: stringResource(R.string.home_mood_trend_error_default),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
                         lineHeight = 20.sp,
