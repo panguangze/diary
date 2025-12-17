@@ -19,58 +19,58 @@ enum class MoodType(
     val displayName: String,
     val feedbackText: String
 ) {
-    /** Happy/Joyful mood (highest positive score) */
-    HAPPY(
-        code = "HAPPY",
-        score = 2,
-        emoji = "😊",
-        displayName = "开心",
-        feedbackText = "开心收到啦，我也在屏幕这头偷偷笑～"
+    /** Sweet/Romantic mood (highest positive score) */
+    SWEET(
+        code = "SWEET",
+        score = 5,
+        emoji = "🥰",
+        displayName = "甜蜜",
+        feedbackText = "甜蜜的日子，因为有你而更加珍贵。"
     ),
     
-    /** Satisfied/Content mood */
-    SATISFIED(
-        code = "SATISFIED",
-        score = 1,
-        emoji = "💗",
-        displayName = "满足",
-        feedbackText = "能让你觉得满足，是我最大的幸运。"
+    /** Happy/Joyful mood */
+    HAPPY(
+        code = "HAPPY",
+        score = 4,
+        emoji = "😊",
+        displayName = "开心",
+        feedbackText = "看到你开心，我也感到无比幸福。"
     ),
     
     /** Normal/Neutral mood */
-    NORMAL(
-        code = "NORMAL",
-        score = 0,
-        emoji = "🙂",
-        displayName = "正常",
-        feedbackText = "平平淡淡的日子，就是细水长流的爱。"
+    NEUTRAL(
+        code = "NEUTRAL",
+        score = 3,
+        emoji = "😐",
+        displayName = "平淡",
+        feedbackText = "平凡的日子里，有你的陪伴就是最大的温暖。"
     ),
     
     /** Sad/Down mood */
     SAD(
         code = "SAD",
-        score = -1,
+        score = 2,
         emoji = "😔",
-        displayName = "失落",
-        feedbackText = "失落的时候，更想抱抱你。等我回到你身边，好吗？"
+        displayName = "难过",
+        feedbackText = "别难过，我会一直陪着你，一切都会好起来的。"
     ),
     
-    /** Angry/Frustrated mood (lowest negative score) */
+    /** Angry/Frustrated mood */
     ANGRY(
         code = "ANGRY",
-        score = -2,
+        score = 1,
         emoji = "😡",
         displayName = "生气",
-        feedbackText = "生气也没关系，你所有的情绪我都愿意听。"
+        feedbackText = "我知道你现在很生气，让我来哄哄你吧。"
     ),
     
     /** Custom/Other mood with user-provided text */
     OTHER(
         code = "OTHER",
-        score = 0,
+        score = 3,
         emoji = "✏️",
         displayName = "其它",
-        feedbackText = "我会好好读完你写的每一个字。"
+        feedbackText = "无论怎样，我都爱你。"
     );
 
     /**
@@ -78,12 +78,12 @@ enum class MoodType(
      */
     fun getDrawableResourceId(): Int {
         return when (this) {
+            SWEET -> R.drawable.heart_pink
             HAPPY -> R.drawable.smile_yellow
-            SATISFIED -> R.drawable.heart_pink
-            NORMAL -> R.drawable.meh_gray
+            NEUTRAL -> R.drawable.meh_gray
             SAD -> R.drawable.frown_blue
             ANGRY -> R.drawable.angry_red
-            OTHER -> R.drawable.cry_blue  // 根据要求，"其他"替换为cry_blue.xml
+            OTHER -> R.drawable.cry_blue
         }
     }
     
@@ -100,15 +100,15 @@ enum class MoodType(
         
         /**
          * Get MoodType from Chinese display name tag
-         * @param tag The Chinese display name (e.g., "开心", "满足", etc.)
+         * @param tag The Chinese display name (e.g., "甜蜜", "开心", etc.)
          * @return Matching MoodType or OTHER if not found
          */
         fun fromTag(tag: String?): MoodType {
             return when (tag) {
+                "甜蜜" -> SWEET
                 "开心" -> HAPPY
-                "满足" -> SATISFIED
-                "正常" -> NORMAL
-                "失落" -> SAD
+                "平淡" -> NEUTRAL
+                "难过" -> SAD
                 "生气" -> ANGRY
                 else -> OTHER
             }
@@ -121,10 +121,10 @@ enum class MoodType(
          */
         fun toTag(moodType: MoodType): String {
             return when (moodType) {
+                SWEET -> "甜蜜"
                 HAPPY -> "开心"
-                SATISFIED -> "满足"
-                NORMAL -> "正常"
-                SAD -> "失落"
+                NEUTRAL -> "平淡"
+                SAD -> "难过"
                 ANGRY -> "生气"
                 OTHER -> "其它"
             }
