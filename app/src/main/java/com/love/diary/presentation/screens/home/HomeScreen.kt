@@ -75,6 +75,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -553,8 +554,8 @@ private fun MoodRecordSection(
                             .drawBehind {
                                 drawLine(
                                     color = Color.White.copy(alpha = 0.2f),
-                                    start = androidx.compose.ui.geometry.Offset(0f, 0f),
-                                    end = androidx.compose.ui.geometry.Offset(size.width, 0f),
+                                    start = Offset(0f, 0f),
+                                    end = Offset(size.width, 0f),
                                     strokeWidth = 1.dp.toPx()
                                 )
                             },
