@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/mood_entry.dart';
@@ -14,16 +18,106 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   DateTime selectedDate = DateTime.now();
   MoodType? selectedMood;
-  String note = '';
+  late final TextEditingController _noteController;
+  Timer? _noteDebounce;
+  String? _lastSyncedSignature;
+  static const Duration _noteDebounceDuration = Duration(milliseconds: 300);
+  String get _selectedDateString => selectedDate.toIso8601String().split('T')[0];
+
+  @override
+  void initState() {
+    super.initState();
+    _noteController = TextEditingController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appProvider = Provider.of<AppProvider>(context);
+    final todayEntry = _getTodayEntry(appProvider);
+    final signature = jsonEncode({
+      'id': todayEntry.id,
+      'mood': todayEntry.mood.index,
+      'note': todayEntry.note,
+    });
+    if (_lastSyncedSignature == signature) return;
+    _lastSyncedSignature = signature;
+    if (_needsSync(todayEntry)) {
+      _syncEntryState(todayEntry);
+    }
+  }
+
+  bool _needsSync(MoodEntry todayEntry) {
+    final entryNote = todayEntry.note ?? '';
+    return _shouldUpdateMood(todayEntry) || _noteController.text != entryNote;
+  }
+
+  @override
+  void dispose() {
+    _noteDebounce?.cancel();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  MoodEntry _getTodayEntry(AppProvider appProvider) {
+    return appProvider.moodEntries.firstWhere(
+      (element) => element.date == _selectedDateString,
+      orElse: () => MoodEntry(
+        date: _selectedDateString,
+        mood: MoodType.normal,
+      ),
+    );
+  }
+
+  bool _shouldUpdateMood(MoodEntry todayEntry) {
+    return (todayEntry.id != null && selectedMood != todayEntry.mood) ||
+        (todayEntry.id == null && selectedMood != null);
+  }
+
+  void _syncEntryState(MoodEntry todayEntry) {
+    final entryNote = todayEntry.note ?? '';
+
+    if (_shouldUpdateMood(todayEntry)) {
+      setState(() {
+        selectedMood = todayEntry.id != null ? todayEntry.mood : null;
+      });
+    }
+
+    if (_noteController.text != entryNote) {
+      _noteController.text = entryNote;
+    }
+  }
+
+  MoodEntry _buildMoodEntry(MoodType mood, {int? id, String? note}) {
+    final trimmedNote = note?.trim() ?? '';
+    return MoodEntry(
+      id: id,
+      date: _selectedDateString,
+      mood: mood,
+      note: trimmedNote.isNotEmpty ? trimmedNote : null,
+    );
+  }
+
+  void _scheduleNoteUpdate(String value, MoodEntry todayEntry, AppProvider appProvider) {
+    _noteDebounce?.cancel();
+    _noteDebounce = Timer(_noteDebounceDuration, () {
+      if (selectedMood != null) {
+        final currentEntry = _getTodayEntry(appProvider);
+        appProvider.addMoodEntry(
+          _buildMoodEntry(
+            selectedMood!,
+            id: currentEntry.id,
+            note: value,
+          ),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final appProvider = Provider.of<AppProvider>(context);
-    final todayEntry = appProvider.moodEntries
-        .firstWhere((element) => element.date == selectedDate.toIso8601String().split('T')[0],
-            orElse: () => MoodEntry(date: selectedDate.toIso8601String().split('T')[0], mood: MoodType.normal));
-
-    selectedMood = todayEntry.id != null ? todayEntry.mood : selectedMood;
+    final todayEntry = _getTodayEntry(appProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -33,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {
-              Navigator.pushNamed(context, '/settings');
+              context.go('/settings');
             },
           ),
         ],
@@ -103,14 +197,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         selectedMood = mood;
                       });
                       
-                      // Save mood entry
-                      final moodEntry = MoodEntry(
-                        date: selectedDate.toIso8601String().split('T')[0],
-                        mood: mood,
-                        note: note.isNotEmpty ? note : null,
+                      appProvider.addMoodEntry(
+                        _buildMoodEntry(
+                          mood,
+                          note: _noteController.text,
+                        ),
                       );
-                      
-                      appProvider.addMoodEntry(moodEntry);
                     },
                     child: AnimatedContainer(
                       duration: Duration(milliseconds: 200),
@@ -152,7 +244,8 @@ class _HomeScreenState extends State<HomeScreen> {
               SizedBox(height: 20),
               
               // Note Input
-              TextField(
+              TextFormField(
+                controller: _noteController,
                 decoration: InputDecoration(
                   labelText: 'Add a note (optional)',
                   border: OutlineInputBorder(
@@ -162,21 +255,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 maxLines: 3,
                 onChanged: (value) {
-                  note = value;
-                  
-                  // Update existing entry if mood is already selected
-                  if (selectedMood != null) {
-                    final moodEntry = MoodEntry(
-                      id: todayEntry.id,
-                      date: selectedDate.toIso8601String().split('T')[0],
-                      mood: selectedMood!,
-                      note: value.isNotEmpty ? value : null,
-                    );
-                    
-                    appProvider.addMoodEntry(moodEntry);
-                  }
+                  _scheduleNoteUpdate(value, todayEntry, appProvider);
                 },
-                initialValue: todayEntry.note ?? '',
               ),
               
               SizedBox(height: 20),
