@@ -98,17 +98,19 @@ fun AppScaffold(
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {},
     floatingActionButton: @Composable (() -> Unit)? = null,
+    showTopBar: Boolean = true,
+    backgroundBrush: Brush? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
-    val backgroundBrush = Brush.verticalGradient(
+    val appliedBrush = backgroundBrush ?: Brush.verticalGradient(
         colors = listOf(
             MaterialTheme.colorScheme.background,
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
         )
     )
     Scaffold(
-        modifier = modifier.background(backgroundBrush),
-        topBar = {
+        modifier = modifier.background(appliedBrush),
+        topBar = if (showTopBar) {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
@@ -119,7 +121,7 @@ fun AppScaffold(
                 },
                 actions = actions,
             )
-        },
+        } else null,
         floatingActionButton = { floatingActionButton?.invoke() },
         content = content
     )
