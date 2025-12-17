@@ -1,36 +1,49 @@
 ```
-# Compiled and build artifacts
-*.class
-*.dex
-*.so
-*.aar
-*.apk
-*.jar
-obj/
-bin/
-gen/
-
-# Dependencies
-.gradle/
+# Android
 build/
-.externalNativeBuild/
-.cxx/
+.gradle/
+local.properties
+captures/
 
-# IDE files
+# Kotlin
+*.kotlin_metadata
+
+# Gradle
+.gradle/
+**/build/
+!src/**/build/
+
+# IntelliJ IDEA
 .idea/
 *.iml
 *.iws
-.vscode/
-*.swp
-*.swo
+*.ipr
 
-# System files
-.DS_Store
-Thumbs.db
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
 
 # Logs
 *.log
 
-# Local configuration
-local.properties
+# Environment variables
+.env
+.env.local
+*.env.*
+
+# Coverage reports
+coverage/
+*.lcov
+*.profdata
+
+# Test reports
+**/test-results/
+**/surefire-reports/
+
+# OS generated files
+.DS_Store
+Thumbs.db
 ```

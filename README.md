@@ -1,234 +1,105 @@
-# Love Diary - 异地恋日记 📱❤️
+# Love Diary - Flutter重构版 ❤️
 
-An Android diary application designed for long-distance relationships, allowing couples to track their daily moods, milestones, and memories.
+一个专为异地恋情侣设计的Flutter日记应用，帮助情侣们记录日常心情、重要里程碑和美好回忆。
 
-## 📋 Features
+## 📋 功能特性
 
-### Core Functionality
-- **Daily Mood Tracking**: Record daily feelings with 6 emotion types (Happy, Satisfied, Normal, Sad, Angry, Other)
-- **Relationship Timeline**: Automatic day counter from relationship start date
-- **Anniversary Reminders**: Special notifications for 100-day milestones and other significant dates
-- **Habit Tracking**: Track and monitor daily habits and check-ins
-- **Statistics Dashboard**: Visualize mood trends and patterns over time
-- **History View**: Browse all past mood entries with search and filter
+### 核心功能
+- **每日心情追踪**: 记录6种情绪类型（开心、满足、平常、悲伤、愤怒、其他）
+- **恋爱天数**: 自动计算恋爱开始至今的天数
+- **纪念日提醒**: 重要日期的特殊提醒
+- **心情统计**: 可视化心情趋势和模式
+- **历史记录**: 浏览所有过往心情记录
 
-### User Experience Features
-- **Dark Mode**: Full dark theme support with system-follow option
-- **Smooth Animations**: Beautiful transitions and micro-interactions
-- **Accessibility**: Content descriptions for screen readers
-- **Personalization**: Customizable couple name and nicknames
+### 用户体验功能
+- **深色模式**: 支持深色主题和系统跟随选项
+- **流畅动画**: 美丽的过渡和微交互
+- **个性化**: 可自定义情侣名称和昵称
 
-### Data Management
-- **Backup & Restore**: Export/import all data as JSON
-- **Data Security**: Local SQLite database with Room
-- **Privacy First**: All data stored locally on device
+### 数据管理
+- **本地存储**: 使用SQLite数据库本地存储所有数据
+- **隐私优先**: 所有数据仅存储在本地设备
 
-### Sharing & Notifications
-- **Content Sharing**: Share mood cards as text or beautiful images
-- **Daily Reminders**: Optional notification reminders for mood tracking
-- **Anniversary Alerts**: Automatic notifications for special milestones
+## 🏗️ 技术架构
 
-## 🏗️ Architecture
+### 技术栈
+- **编程语言**: Dart
+- **UI框架**: Flutter with Material 3
+- **状态管理**: Provider
+- **数据库**: SQFlite
+- **路由管理**: GoRouter
+- **国际化**: Intl
 
-### Tech Stack
-- **Language**: Kotlin (99.4%)
-- **UI Framework**: Jetpack Compose with Material 3
-- **Architecture**: MVVM (Model-View-ViewModel)
-- **Dependency Injection**: Hilt/Dagger
-- **Database**: Room with SQLite (Version 8)
-- **Async Operations**: Kotlin Coroutines & Flow
-- **Navigation**: Jetpack Navigation Compose
-- **Image Loading**: Coil
-- **Charts**: Vico Charts
-
-### Project Structure
+### 项目结构
 ```
-app/
-├── data/
-│   ├── backup/          # Backup/restore managers
-│   ├── database/        # Room database, DAOs, entities
-│   ├── model/           # Data models
-│   └── repository/      # Repository layer
-├── di/                  # Dependency injection modules
-├── docs/                # Architecture documentation
-├── presentation/
-│   ├── components/      # Reusable UI components
-│   ├── screens/         # Screen composables
-│   └── viewmodel/       # ViewModels
-├── ui/
-│   └── theme/           # Theme configuration
-└── util/                # Utility classes (Notification, Share)
+lib/
+├── models/          # 数据模型
+│   └── mood_entry.dart
+├── providers/       # 状态管理
+│   └── app_provider.dart
+├── screens/         # 页面组件
+│   ├── home_screen.dart
+│   ├── history_screen.dart
+│   ├── statistics_screen.dart
+│   └── settings_screen.dart
+├── utils/           # 工具类
+│   └── database_helper.dart
+└── widgets/         # 自定义组件 (预留)
 ```
 
-### Documentation
+## 🚀 快速开始
 
-Comprehensive documentation available in the `docs/` directory:
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - Complete architecture guide
-- **[DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** - Database design and schema
-- **[REFACTORING_PLAN.md](docs/REFACTORING_PLAN.md)** - Refactoring strategy and roadmap
+### 环境要求
+- Flutter 3.0.0+
+- Dart 3.0.0+
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Android Studio Hedgehog or later
-- Android SDK 26+ (Android 8.0 Oreo)
-- Kotlin 2.0.21
-
-### Building the Project
-1. Clone the repository:
+### 安装步骤
+1. 克隆项目：
    ```bash
-   git clone https://github.com/panguangze/diary.git
-   cd diary
+   git clone <repository-url>
+   cd love-diary-flutter
    ```
 
-2. Open the project in Android Studio
-
-3. Sync Gradle dependencies
-
-4. Build and run on emulator or device:
+2. 安装依赖：
    ```bash
-   ./gradlew assembleDebug
+   flutter pub get
    ```
 
-### Running Tests
+3. 运行项目：
+   ```bash
+   flutter run
+   ```
+
+### 构建应用
 ```bash
-# Run unit tests
-./gradlew test
+# 构建Android应用
+flutter build apk
 
-# Run instrumented tests
-./gradlew connectedAndroidTest
+# 构建iOS应用
+flutter build ios
 ```
 
-## 📖 Key Components
+## 📱 应用截图
 
-### ViewModels
-- **HomeViewModel**: Manages home screen state and mood selection
-- **HistoryViewModel**: Handles mood history loading and filtering
-- **StatisticsViewModel**: Computes and presents mood statistics
-- **SettingsViewModel**: Manages app configuration and preferences
+(预留应用截图位置)
 
-### Repositories
-- **AppRepository**: Main repository for app configuration and mood data
-- **CheckInRepository**: Manages habit check-in data
-- **HabitRepository**: Handles habit CRUD operations
+## 🤝 贡献
 
-### Utilities
-- **NotificationHelper**: Manages local notifications and reminders
-- **ShareHelper**: Handles content sharing (text and images)
-- **DataBackupManager**: Implements backup/restore functionality
+欢迎贡献！请：
+1. Fork 仓库
+2. 创建功能分支
+3. 提交更改
+4. 发起 Pull Request
 
-## 🎨 UI/UX Improvements
+## 📄 许可证
 
-### Accessibility
-- Semantic content descriptions for all interactive elements
-- Support for screen readers
-- High contrast color schemes
-- Proper touch target sizes
+本项目采用 MIT 许可证 - 详情请见 LICENSE 文件。
 
-### Animations
-- Scale animations on mood button selection
-- Fade-in transitions for feedback cards
-- Staggered list item animations in history
-- Smooth screen transitions
+## 👥 作者
 
-### Dark Mode
-- Complete dark theme implementation
-- System-follow option
-- Manual light/dark toggle
-- Optimized colors for night use
-
-## 🔒 Security & Privacy
-
-### Data Protection
-- All data stored locally (no cloud sync by default)
-- Encrypted database support ready
-- Secure file sharing with FileProvider
-- No analytics or tracking
-
-### Permissions
-- `POST_NOTIFICATIONS`: For reminder notifications (Android 13+)
-- `INTERNET`: For future cloud sync (optional)
-- File access only through SAF (Storage Access Framework)
-
-## 📝 Documentation
-
-### KDoc Coverage
-- All public APIs documented
-- Repository methods with error handling docs
-- ViewModel state classes documented
-- Utility classes with usage examples
-
-### Code Quality
-- Consistent error handling with try-catch
-- Comprehensive logging in critical paths
-- Null safety throughout
-- Unit tests for ViewModels and Repositories
-
-## 🛠️ Development
-
-### Recent Improvements (v8)
-
-**Database Optimization**:
-- Added indexes for improved query performance on frequently accessed columns
-- Optimized check-in history and statistics queries
-- Better support for date range filtering
-
-**Architecture Enhancements**:
-- Comprehensive documentation added (Architecture, Database Schema, Refactoring Plan)
-- Bridge pattern implementation for gradual system migration
-- Improved code maintainability and scalability
-- Better separation of concerns between legacy and unified systems
-
-**Data Consistency**:
-- Dual-write strategy for backward compatibility
-- UnifiedCheckIn system as primary data store
-- Legacy Habit system maintained during transition
-- Seamless migration path for future improvements
-
-### Code Style
-- Follow Kotlin coding conventions
-- Use meaningful variable names
-- Keep functions small and focused
-- Add KDoc for public APIs
-
-### Testing Strategy
-- Unit tests for business logic
-- ViewModel tests with coroutine testing
-- Repository tests with test doubles
-- UI tests for critical user flows (future)
-
-### Git Workflow
-- Feature branches for new work
-- Pull requests for code review
-- Semantic commit messages
-- Linear history preferred
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes with tests
-4. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 👥 Authors
-
-- **panguangze** - Initial work and maintenance
-
-## 🙏 Acknowledgments
-
-- Material Design 3 guidelines
-- Jetpack Compose community
-- Open source contributors
-
-## 📮 Contact
-
-For questions or support, please open an issue on GitHub.
+- **Original Android version**: panguangze
+- **Flutter重构**: AI Assistant
 
 ---
 
-Made with ❤️ for long-distance couples
+用 ❤️ 为异地恋情侣制作
