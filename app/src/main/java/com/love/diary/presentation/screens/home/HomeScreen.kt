@@ -535,14 +535,14 @@ private fun MoodRecordSection(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 20.dp)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.Top
+            // 使用Box替代Row，以便更好地控制布局
+            Box(
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopStart),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
@@ -578,7 +578,7 @@ private fun MoodRecordSection(
                             onValueChange = onInputChange,
                             modifier = Modifier
                                 .weight(1f)
-                                .defaultMinSize(minWidth = 168.dp)
+                                .fillMaxWidth()
                                 .height(40.dp)
                                 .background(LightSurfaceColor, RoundedCornerShape(8.dp))
                                 .border(1.dp, UploadBorderColor, RoundedCornerShape(8.dp))
@@ -643,19 +643,17 @@ private fun MoodRecordSection(
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.width(120.dp))
+                
+                // 图片上传框放在与心情选择区域右侧对齐的位置，调整大小以匹配整体高度
+                DashedUploadBox(
+                    imageUri = selectedImageUri,
+                    onClick = onPickImage,
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(136.dp) // 大致等于标题(22dp) + 间距(12dp) + 心情标签区域高度(约40dp) + 间距(12dp) + 输入框高度(40dp) + 间距(10dp)
+                        .align(Alignment.TopEnd)
+                )
             }
-            
-            // 图片上传框放在与心情选择区域底部对齐的位置
-            DashedUploadBox(
-                imageUri = selectedImageUri,
-                onClick = onPickImage,
-                modifier = Modifier
-                    .width(120.dp)
-                    .align(Alignment.TopEnd)
-                    .padding(top = 56.dp) // 标题高度(约22dp) + 间距(12dp) + 心情标签高度(约40dp，一行) - 一些调整值
-            )
         }
     }
 }
@@ -719,7 +717,6 @@ private fun DashedUploadBox(
 ) {
     Box(
         modifier = modifier
-            .size(120.dp)
             .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() }
             .drawBehind {
