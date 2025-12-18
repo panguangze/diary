@@ -21,12 +21,15 @@ data class HomeUiState(
     val todayMood: MoodType? = null,
     val todayMoodText: String? = null,
     val todayMoodDate: String? = null,
+    val selectedImageUri: String? = null,
     val showAnniversaryPopup: Boolean = false,
     val anniversaryMessage: String = "",
     val showOtherMoodDialog: Boolean = false,
     val otherMoodText: String = "",
     val isLoading: Boolean = true,
     val coupleName: String? = null,
+    val avatarUri: String? = null,
+    val partnerAvatarUri: String? = null,
     val startDate: String = "",
     val currentDateDisplay: String = "",
     val todayDate: String = "",
@@ -65,6 +68,7 @@ class HomeViewModel @Inject constructor(
                     todayMood = moodType,
                     todayMoodText = todayMood.moodText,
                     todayMoodDate = todayMood.date,
+                    selectedImageUri = todayMood.singleImageUri,
                     otherMoodText = todayMood.moodText ?: "",
                     isDescriptionEditing = todayMood.moodText.isNullOrBlank(),
                     descriptionError = null
@@ -74,6 +78,7 @@ class HomeViewModel @Inject constructor(
                     todayMood = null,
                     todayMoodText = null,
                     todayMoodDate = null,
+                    selectedImageUri = null,
                     otherMoodText = "",
                     isDescriptionEditing = true,
                     descriptionError = null
@@ -99,6 +104,8 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { state ->
                     state.copy(
                         coupleName = it.coupleName,
+                        avatarUri = it.reservedText1,
+                        partnerAvatarUri = it.reservedText2,
                         startDate = it.startDate
                     )
                 }
@@ -149,13 +156,15 @@ class HomeViewModel @Inject constructor(
                     
                     _uiState.update { state ->
                         state.copy(
-                            coupleName = it.coupleName,
-                            startDate = it.startDate,
-                            dayIndex = dayIndex,
-                            dayDisplay = dayDisplay,
-                            todayDate = todayStr,
-                            currentStreak = currentStreak
-                        )
+                        coupleName = it.coupleName,
+                        startDate = it.startDate,
+                        avatarUri = it.reservedText1,
+                        partnerAvatarUri = it.reservedText2,
+                        dayIndex = dayIndex,
+                        dayDisplay = dayDisplay,
+                        todayDate = todayStr,
+                        currentStreak = currentStreak
+                    )
                     }
                     
                     checkAnniversary(dayIndex)
@@ -192,8 +201,9 @@ class HomeViewModel @Inject constructor(
     fun selectMood(moodType: MoodType, moodText: String? = null) {
         viewModelScope.launch {
             val textToSave = moodText?.takeIf { it.isNotBlank() }
+            val imageUri = _uiState.value.selectedImageUri
 
-            repository.saveTodayMood(moodType, textToSave)
+            repository.saveTodayMood(moodType, textToSave, imageUri)
 
             _uiState.update {
                 it.copy(
@@ -201,6 +211,7 @@ class HomeViewModel @Inject constructor(
                     todayMoodText = textToSave,
                     todayMoodDate = LocalDate.now().toString(),
                     otherMoodText = textToSave ?: "",
+                    selectedImageUri = imageUri,
                     showOtherMoodDialog = false,
                     isDescriptionEditing = textToSave.isNullOrBlank(),
                     descriptionError = null
@@ -216,13 +227,15 @@ class HomeViewModel @Inject constructor(
     fun saveOtherMood(text: String) {
         viewModelScope.launch {
             if (text.isNotBlank()) {
+                val imageUri = _uiState.value.selectedImageUri
                 // Save to DailyMood database
-                repository.saveTodayMood(MoodType.OTHER, text)
+                repository.saveTodayMood(MoodType.OTHER, text, imageUri)
                 
                 _uiState.update { state ->
                     state.copy(
                         todayMood = MoodType.OTHER,
                         todayMoodText = text,
+                        selectedImageUri = imageUri,
                         showOtherMoodDialog = false,
                         otherMoodText = text,
                         todayMoodDate = LocalDate.now().toString(),
@@ -241,6 +254,28 @@ class HomeViewModel @Inject constructor(
     
     fun updateOtherMoodText(text: String) {
         _uiState.update { it.copy(otherMoodText = text, descriptionError = null) }
+    }
+
+    fun updateSelectedImage(uri: String?) {
+        _uiState.update { it.copy(selectedImageUri = uri) }
+    }
+
+    fun updateAvatar(isPartner: Boolean = false, uri: String) {
+        viewModelScope.launch {
+            val config = repository.getAppConfig() ?: return@launch
+            val updatedConfig = config.copy(
+                reservedText1 = if (isPartner) config.reservedText1 else uri,
+                reservedText2 = if (isPartner) uri else config.reservedText2,
+                updatedAt = System.currentTimeMillis()
+            )
+            repository.saveAppConfig(updatedConfig)
+            _uiState.update {
+                it.copy(
+                    avatarUri = updatedConfig.reservedText1,
+                    partnerAvatarUri = updatedConfig.reservedText2
+                )
+            }
+        }
     }
 
     fun enterDescriptionEditMode() {
@@ -263,16 +298,28 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun saveDescription(text: String) {
+    /**
+     * Save today's mood description with optional default text supplied by the UI layer.
+     * @param text user input text
+     * @param defaultText text to use when the user input is blank (typically from localized resources)
+     */
+    fun saveDescription(text: String, defaultText: String? = null) {
         viewModelScope.launch {
             val currentMood = _uiState.value.todayMood ?: return@launch
+            val imageUri = _uiState.value.selectedImageUri
+            val finalText = when {
+                text.isNotBlank() -> text
+                defaultText != null -> defaultText
+                else -> null
+            }
             runCatching {
-                repository.saveTodayMood(currentMood, text.ifBlank { null })
+                repository.saveTodayMood(currentMood, finalText, imageUri)
             }.onSuccess {
                 _uiState.update { state ->
                     state.copy(
-                        todayMoodText = text.ifBlank { null },
-                        otherMoodText = text,
+                        todayMoodText = finalText,
+                        otherMoodText = finalText ?: "",
+                        selectedImageUri = imageUri,
                         isDescriptionEditing = false,
                         descriptionError = null
                     )

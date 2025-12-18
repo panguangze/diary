@@ -1,15 +1,19 @@
 package com.love.diary.presentation.screens.home
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.clickable
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -19,6 +23,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,20 +38,17 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -88,9 +90,12 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -100,6 +105,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.love.diary.R
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
@@ -168,6 +175,16 @@ fun HomeScreen(
     val statisticsState by statisticsViewModel.uiState.collectAsState()
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val avatarPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let { viewModel.updateAvatar(isPartner = false, uri = it.toString()) }
+    }
+    val moodImagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        viewModel.updateSelectedImage(uri?.toString())
+    }
 
     var showCalendarSheet by remember { mutableStateOf(false) }
     var selectedHistoryItem by remember { mutableStateOf<DailyMoodEntity?>(null) }
@@ -194,6 +211,7 @@ fun HomeScreen(
         ?.let { MoodType.fromCode(it.key) }
 
     val pageBackground = Brush.verticalGradient(listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8)))
+    val defaultMoodText = stringResource(id = R.string.home_default_mood_text)
 
     Box(
         modifier = modifier
@@ -215,6 +233,8 @@ fun HomeScreen(
             TopInfoCardRedesigned(
                 title = "${uiState.coupleName ?: "小明 & 小红"}的第${if (uiState.dayIndex > 0) uiState.dayIndex else 16}天",
                 subtitle = "From ${uiState.startDate.ifBlank { "2025 - 01 - 01" }} to ${uiState.todayDate.ifBlank { todayString }}",
+                avatarUri = uiState.avatarUri,
+                onAvatarClick = { avatarPicker.launch("image/*") },
                 onAiClick = { viewModel.showOtherMoodDialog() }
             )
 
@@ -224,6 +244,7 @@ fun HomeScreen(
                 moodOptions = moodOptions,
                 selectedMood = uiState.todayMood,
                 inputText = uiState.otherMoodText,
+                selectedImageUri = uiState.selectedImageUri,
                 onMoodSelected = { mood ->
                     val noteToSave = uiState.otherMoodText.ifBlank { null }
                     if (mood != uiState.todayMood) {
@@ -232,7 +253,8 @@ fun HomeScreen(
                     viewModel.selectMood(mood, noteToSave)
                 },
                 onInputChange = viewModel::updateOtherMoodText,
-                onSave = { viewModel.saveDescription(uiState.otherMoodText) }
+                onPickImage = { moodImagePicker.launch("image/*") },
+                onSave = { text -> viewModel.saveDescription(text, defaultMoodText) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -409,6 +431,8 @@ private fun TodayHeader() {
 private fun TopInfoCardRedesigned(
     title: String,
     subtitle: String,
+    avatarUri: String?,
+    onAvatarClick: () -> Unit,
     onAiClick: () -> Unit
 ) {
     Card(
@@ -454,14 +478,27 @@ private fun TopInfoCardRedesigned(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(AccentPinkText.copy(alpha = 0.12f)),
+                        .background(AccentPinkText.copy(alpha = 0.12f))
+                        .clickable { onAvatarClick() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Person,
-                        contentDescription = null,
-                        tint = AccentPinkText
-                    )
+                    if (avatarUri != null) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(avatarUri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = stringResource(id = R.string.home_avatar_desc),
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = null,
+                            tint = AccentPinkText
+                        )
+                    }
                 }
             }
         }
@@ -474,9 +511,11 @@ private fun MoodRecordSection(
     moodOptions: List<MoodOption>,
     selectedMood: MoodType?,
     inputText: String,
+    selectedImageUri: String?,
     onMoodSelected: (MoodType) -> Unit,
     onInputChange: (String) -> Unit,
-    onSave: () -> Unit
+    onPickImage: () -> Unit,
+    onSave: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -529,7 +568,8 @@ private fun MoodRecordSection(
                         value = inputText,
                         onValueChange = onInputChange,
                         modifier = Modifier
-                            .width(168.dp)
+                            .weight(1f)
+                            .defaultMinSize(minWidth = 168.dp)
                             .height(40.dp)
                             .background(LightSurfaceColor, RoundedCornerShape(8.dp))
                             .border(1.dp, UploadBorderColor, RoundedCornerShape(8.dp))
@@ -558,13 +598,10 @@ private fun MoodRecordSection(
                         }
                     )
 
-                    Spacer(modifier = Modifier.weight(1f))
-
                     Button(
-                        onClick = onSave,
+                        onClick = { onSave(inputText) },
                         enabled = selectedMood != null,
                         modifier = Modifier
-                            .width(120.dp)
                             .height(40.dp)
                             .background(
                                 brush = Brush.verticalGradient(
@@ -602,7 +639,10 @@ private fun MoodRecordSection(
                 modifier = Modifier.width(120.dp),
                 horizontalAlignment = Alignment.End
             ) {
-                DashedUploadBox()
+                DashedUploadBox(
+                    imageUri = selectedImageUri,
+                    onClick = onPickImage
+                )
             }
         }
     }
@@ -660,11 +700,15 @@ private fun MoodTag(
 }
 
 @Composable
-private fun DashedUploadBox() {
+private fun DashedUploadBox(
+    imageUri: String?,
+    onClick: () -> Unit
+) {
     Box(
         modifier = Modifier
             .size(120.dp)
             .clip(RoundedCornerShape(8.dp))
+            .clickable { onClick() }
             .drawBehind {
                 drawRoundRect(
                     color = UploadBorderColor,
@@ -678,23 +722,35 @@ private fun DashedUploadBox() {
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.AddPhotoAlternate,
-                contentDescription = null,
-                tint = SubTextColor,
-                modifier = Modifier.size(32.dp)
+        if (imageUri != null) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(imageUri)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = stringResource(id = R.string.home_upload_image_preview),
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
-            Text(
-                text = "点击上传图片",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Normal,
-                lineHeight = 16.sp,
-                color = SubTextColor
-            )
+        } else {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.AddPhotoAlternate,
+                    contentDescription = null,
+                    tint = SubTextColor,
+                    modifier = Modifier.size(32.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.home_upload_image_hint),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 16.sp,
+                    color = SubTextColor
+                )
+            }
         }
     }
 }
