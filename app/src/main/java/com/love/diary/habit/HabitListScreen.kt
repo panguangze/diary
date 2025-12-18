@@ -48,11 +48,11 @@ import java.time.format.DateTimeFormatter
 import androidx.compose.ui.ExperimentalComposeUiApi
 import com.love.diary.data.model.Habit
 import com.love.diary.data.model.HabitType
+import com.love.diary.data.model.PositiveDisplayType
 import java.time.LocalDate
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
 import androidx.compose.material3.DatePicker
@@ -62,6 +62,8 @@ import androidx.compose.material3.DatePickerDefaults
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader
+import com.love.diary.habit.HabitDisplayView
+import com.love.diary.habit.HabitStatsView
 
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -196,6 +198,12 @@ fun HabitItemCard(
                 color = if (habit.isCompletedToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
             )
 
+            // 显示打卡统计信息
+            HabitStatsView(habit = habit)
+
+            // 显示打卡展示视图
+            HabitDisplayView(habit = habit)
+
             if (habit.tags.isNotEmpty()) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -272,6 +280,7 @@ fun AddHabitDialog(
 ) {
     var habitName by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(HabitType.POSITIVE) }
+    var selectedDisplayType by remember { mutableStateOf(PositiveDisplayType.WEEKLY) } // 正向打卡展示类型
     var targetDate by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var tagText by remember { mutableStateOf("") }
@@ -282,7 +291,7 @@ fun AddHabitDialog(
         return try {
             LocalDate.parse(dateString)
             true
-        } catch (e: DateTimeParseException) {
+        } catch (e: java.time.format.DateTimeParseException) {
             false
         }
     }
@@ -327,6 +336,38 @@ fun AddHabitDialog(
                         text = "正向打卡",
                         modifier = Modifier.clickable { selectedType = HabitType.POSITIVE }
                     )
+                    
+                    // 如果是正向打卡，显示展示类型选择
+                    if (selectedType == HabitType.POSITIVE) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Text("展示方式", style = MaterialTheme.typography.bodyMedium)
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 24.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedDisplayType == PositiveDisplayType.WEEKLY,
+                                onClick = { selectedDisplayType = PositiveDisplayType.WEEKLY }
+                            )
+                            Text(
+                                text = "周展示",
+                                modifier = Modifier.clickable { selectedDisplayType = PositiveDisplayType.WEEKLY }
+                            )
+                            
+                            RadioButton(
+                                selected = selectedDisplayType == PositiveDisplayType.MONTHLY,
+                                onClick = { selectedDisplayType = PositiveDisplayType.MONTHLY }
+                            )
+                            Text(
+                                text = "月展示",
+                                modifier = Modifier.clickable { selectedDisplayType = PositiveDisplayType.MONTHLY }
+                            )
+                        }
+                    }
                     
                     RadioButton(
                         selected = selectedType == HabitType.COUNTDOWN,
@@ -424,6 +465,7 @@ fun AddHabitDialog(
                         val habit = Habit(
                             name = habitName,
                             type = selectedType,
+                            displayType = selectedDisplayType, // 设置展示类型
                             targetDate = if (selectedType == HabitType.COUNTDOWN && targetDate.isNotBlank() && isValidDate(targetDate)) targetDate else null,
                             tags = finalTags.joinToString(",")
                         )

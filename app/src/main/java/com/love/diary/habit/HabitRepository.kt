@@ -2,6 +2,7 @@ package com.love.diary.habit
 
 import android.content.Context
 import com.google.gson.Gson
+import com.love.diary.data.database.Converters
 import com.love.diary.data.database.LoveDatabase
 import com.love.diary.data.model.CheckInType
 import com.love.diary.data.model.Habit
@@ -201,6 +202,22 @@ class DefaultHabitRepository(private val database: LoveDatabase) : HabitReposito
                 }
             }
             
+            // 计算打卡统计数据
+            val todayDate = LocalDate.now()
+            val yesterdayDate = todayDate.minusDays(1)
+            val yesterdayString = yesterdayDate.toString()
+            
+            // 检查昨天是否打卡
+            val yesterdayRecord = database.habitDao().getTodaysRecord(habitId, yesterdayString)
+            val newCurrentStreak = if (yesterdayRecord != null || it.currentStreak == 0) {
+                it.currentStreak + 1
+            } else {
+                1 // 重置连续天数
+            }
+            
+            val newLongestStreak = if (newCurrentStreak > it.longestStreak) newCurrentStreak else it.longestStreak
+            val newTotalCheckIns = it.totalCheckIns + 1
+            
             // DUAL WRITE: Write to BOTH systems
             
             // 1. Write to UnifiedCheckIn (new unified system)
@@ -230,10 +247,13 @@ class DefaultHabitRepository(private val database: LoveDatabase) : HabitReposito
             )
             val recordId = database.habitDao().insertHabitRecord(record)
             
-            // 3. Update habit state
+            // 3. Update habit state with new statistics
             val updatedHabit = it.copy(
                 currentCount = newCount,
                 isCompletedToday = true,
+                currentStreak = newCurrentStreak,
+                longestStreak = newLongestStreak,
+                totalCheckIns = newTotalCheckIns,
                 updatedAt = System.currentTimeMillis()
             )
             database.habitDao().updateHabit(updatedHabit)
