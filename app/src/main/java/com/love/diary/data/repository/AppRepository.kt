@@ -148,12 +148,14 @@ class AppRepository @Inject constructor(
      * Save today's mood entry
      * @param moodType The mood type selected
      * @param moodText Optional text note for the mood
+     * @param imageUri Optional image uri for the mood
      * @return ID of the inserted mood record
      * @throws IllegalStateException if save fails
      */
     suspend fun saveTodayMood(
         moodType: MoodType,
-        moodText: String? = null
+        moodText: String? = null,
+        imageUri: String? = null
     ): Long {
         val today = getTodayDateString()
 
@@ -166,6 +168,7 @@ class AppRepository @Inject constructor(
                 moodScore = moodType.score,
                 moodText = moodText,
                 hasText = moodText?.isNotBlank() ?: false,
+                singleImageUri = imageUri,
                 updatedAt = now
             )
             dailyMoodDao.updateMood(updated)
@@ -185,6 +188,7 @@ class AppRepository @Inject constructor(
                 moodScore = moodType.score,
                 moodText = moodText,
                 hasText = moodText?.isNotBlank() ?: false,
+                singleImageUri = imageUri,
                 isAnniversary = anniversaryInfo.isAnniversary,
                 anniversaryType = anniversaryInfo.type,
                 createdAt = now,
