@@ -4,6 +4,7 @@ import androidx.room.*
 import com.love.diary.data.model.UnifiedCheckIn
 import com.love.diary.data.model.UnifiedCheckInConfig
 import com.love.diary.data.model.CheckInTrend
+import com.love.diary.data.model.MoodAggregation
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -95,4 +96,63 @@ interface UnifiedCheckInDao {
     // 批量更新打卡记录的名称（用于同步名称变更）
     @Query("UPDATE unified_checkins SET name = :newName WHERE name = :oldName")
     suspend fun updateCheckInRecordsName(oldName: String, newName: String): Int
+    
+    // ============== Stats Queries for Today Screen ==============
+    
+    /**
+     * Get total count of recorded days (distinct dates)
+     */
+    @Query("SELECT COUNT(DISTINCT date) FROM unified_checkins WHERE type = 'LOVE_DIARY'")
+    suspend fun getTotalRecordedDays(): Int
+    
+    /**
+     * Get check-ins for last N days ordered by date
+     */
+    @Query("SELECT * FROM unified_checkins WHERE type = 'LOVE_DIARY' ORDER BY date DESC LIMIT :limit")
+    suspend fun getLastNDaysCheckIns(limit: Int): List<UnifiedCheckIn>
+    
+    /**
+     * Get most common mood in last N days
+     * Returns the mood code that appears most frequently
+     */
+    @Query("""
+        SELECT moodType, COUNT(*) as count 
+        FROM unified_checkins 
+        WHERE type = 'LOVE_DIARY' 
+        AND moodType IS NOT NULL 
+        AND date >= date('now', '-' || :days || ' days')
+        GROUP BY moodType 
+        ORDER BY count DESC 
+        LIMIT 1
+    """)
+    suspend fun getMostCommonMoodInLastDays(days: Int): String?
+    
+    /**
+     * Get aggregated mood data for a date range (for charts)
+     * Returns average mood score per day
+     */
+    @Query("""
+        SELECT date, AVG(CASE 
+            WHEN moodType = 'SWEET' THEN 5
+            WHEN moodType = 'HAPPY' THEN 4
+            WHEN moodType = 'NEUTRAL' THEN 3
+            WHEN moodType = 'SAD' THEN 2
+            WHEN moodType = 'ANGRY' THEN 1
+            WHEN moodType = 'OTHER' THEN 3
+            ELSE 3
+        END) as avgScore
+        FROM unified_checkins 
+        WHERE type = 'LOVE_DIARY'
+        AND date BETWEEN :startDate AND :endDate
+        AND moodType IS NOT NULL
+        GROUP BY date
+        ORDER BY date ASC
+    """)
+    suspend fun getMoodAggregationByDateRange(startDate: String, endDate: String): List<MoodAggregation>
+    
+    /**
+     * Get today's check-in record
+     */
+    @Query("SELECT * FROM unified_checkins WHERE type = 'LOVE_DIARY' AND date = :date LIMIT 1")
+    suspend fun getTodayCheckIn(date: String): UnifiedCheckIn?
 }

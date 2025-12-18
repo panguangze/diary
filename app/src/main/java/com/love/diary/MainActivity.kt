@@ -38,6 +38,9 @@ import android.net.Uri
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import com.love.diary.data.repository.AppRepository
 
 @AndroidEntryPoint
@@ -104,11 +107,11 @@ fun MainApp() {
                         launchSingleTop = true
                         restoreState = true
                     }
-                    1 -> navController.navigate(Screen.Habits.route) {
+                    1 -> navController.navigate(Screen.Stats.route) {
                         launchSingleTop = true
                         restoreState = true
                     }
-                    2 -> navController.navigate(Screen.Settings.route) {
+                    2 -> navController.navigate(Screen.Profile.route) {
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -161,13 +164,13 @@ fun MainAppContent(
             ) {
                 composable(Screen.Home.route) {
                     AppScaffold(
-                        title = "恋爱日记",
+                        title = "今天",
                         showTopBar = false,
                         backgroundBrush = Brush.verticalGradient(
                             colors = listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8))
                         )
                     ) { inner ->
-                        HomeScreen(
+                        com.love.diary.presentation.screens.today.TodayScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(inner)
@@ -175,6 +178,27 @@ fun MainAppContent(
                     }
                 }
 
+                composable(Screen.Stats.route) {
+                    AppScaffold(title = "统计") { inner ->
+                        com.love.diary.presentation.screens.stats.StatsScreen(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(inner)
+                        )
+                    }
+                }
+
+                composable(Screen.Profile.route) {
+                    AppScaffold(title = "我的") { inner ->
+                        SettingsScreen(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(inner)
+                        )
+                    }
+                }
+                
+                // Keep legacy routes for backward compatibility
                 composable(Screen.Habits.route) {
                     AppScaffold(title = "打卡") { inner ->
                         HabitListScreen(
@@ -208,8 +232,8 @@ fun BottomNavigationBar(
     val selectedBrush = Brush.horizontalGradient(listOf(Color(0xFFFF6B81), Color(0xFFFF476F)))
     val items = listOf(
         Screen.Home,
-        Screen.Habits,
-        Screen.Settings
+        Screen.Stats,
+        Screen.Profile
     )
 
     NavigationBar(

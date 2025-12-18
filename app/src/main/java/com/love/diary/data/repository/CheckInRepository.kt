@@ -405,4 +405,93 @@ class CheckInRepository @Inject constructor(
     suspend fun updateCheckInRecordsName(oldName: String, newName: String): Int {
         return unifiedCheckInDao.updateCheckInRecordsName(oldName, newName)
     }
+    
+    // ============== Stats Methods for Today Screen ==============
+    
+    /**
+     * Get total count of recorded days (distinct dates)
+     */
+    suspend fun getTotalRecordedDays(): Int {
+        return unifiedCheckInDao.getTotalRecordedDays()
+    }
+    
+    /**
+     * Calculate consecutive streak up to today
+     * Returns the number of consecutive days with records leading up to today (or most recent day)
+     */
+    suspend fun calculateConsecutiveStreak(): Int {
+        val records = unifiedCheckInDao.getLastNDaysCheckIns(365) // Get up to 365 days
+        if (records.isEmpty()) return 0
+        
+        val dates = records.map { it.date }.distinct().sortedDescending()
+        if (dates.isEmpty()) return 0
+        
+        // Start from the most recent date
+        var streak = 1
+        var previousDate = java.time.LocalDate.parse(dates[0])
+        
+        for (i in 1 until dates.size) {
+            val currentDate = java.time.LocalDate.parse(dates[i])
+            val daysDiff = java.time.temporal.ChronoUnit.DAYS.between(currentDate, previousDate)
+            
+            if (daysDiff == 1L) {
+                streak++
+                previousDate = currentDate
+            } else {
+                break
+            }
+        }
+        
+        return streak
+    }
+    
+    /**
+     * Get most common mood in last N days
+     */
+    suspend fun getMostCommonMoodInLastDays(days: Int = 30): com.love.diary.data.model.MoodType? {
+        val moodCode = unifiedCheckInDao.getMostCommonMoodInLastDays(days)
+        return moodCode?.let { com.love.diary.data.model.MoodType.fromCode(it) }
+    }
+    
+    /**
+     * Get last N days' check-ins for recent moods display
+     */
+    suspend fun getLastNDaysCheckIns(limit: Int = 30): List<UnifiedCheckIn> {
+        return unifiedCheckInDao.getLastNDaysCheckIns(limit)
+    }
+    
+    /**
+     * Get today's check-in record
+     */
+    suspend fun getTodayCheckIn(): UnifiedCheckIn? {
+        val today = java.time.LocalDate.now().toString()
+        return unifiedCheckInDao.getTodayCheckIn(today)
+    }
+    
+    /**
+     * Get mood aggregation for chart data
+     * @param period "week" (7 days), "month" (30 days), or "year" (12 months aggregated)
+     */
+    suspend fun getMoodAggregationForPeriod(period: String): List<com.love.diary.data.model.MoodAggregation> {
+        val today = java.time.LocalDate.now()
+        
+        return when (period.lowercase()) {
+            "week" -> {
+                val startDate = today.minusDays(6).toString()
+                val endDate = today.toString()
+                unifiedCheckInDao.getMoodAggregationByDateRange(startDate, endDate)
+            }
+            "month" -> {
+                val startDate = today.minusDays(29).toString()
+                val endDate = today.toString()
+                unifiedCheckInDao.getMoodAggregationByDateRange(startDate, endDate)
+            }
+            "year" -> {
+                val startDate = today.minusMonths(11).withDayOfMonth(1).toString()
+                val endDate = today.toString()
+                unifiedCheckInDao.getMoodAggregationByDateRange(startDate, endDate)
+            }
+            else -> emptyList()
+        }
+    }
 }
