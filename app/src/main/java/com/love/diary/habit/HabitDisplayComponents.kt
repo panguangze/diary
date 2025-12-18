@@ -117,7 +117,7 @@ fun WeeklyDisplayView(
     val weekStart = today.minusDays(today.dayOfWeek.value.toLong() - 1) // 从周一算起
     
     val weekDays = (0..6).map { day ->
-        weekStart.plusDays(day)
+        weekStart.plusDays(day.toLong())
     }
 
     Row(
