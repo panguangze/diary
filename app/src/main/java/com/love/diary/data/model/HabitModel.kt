@@ -11,6 +11,12 @@ enum class HabitType {
     COUNTDOWN    // 倒计时（减少天数）
 }
 
+// 正向打卡展示类型枚举
+enum class PositiveDisplayType {
+    WEEKLY,    // 周展示
+    MONTHLY    // 月展示
+}
+
 // 打卡事项实体
 @Entity(
     tableName = "habits",
@@ -23,9 +29,13 @@ data class Habit(
     val description: String? = null,
     val buttonLabel: String = "打卡",
     val type: HabitType = HabitType.POSITIVE,
+    val displayType: PositiveDisplayType = PositiveDisplayType.WEEKLY, // 展示类型，默认为周展示
     val targetDate: String? = null, // 用于倒计时类型的截止日期
     val startDate: String = LocalDate.now().toString(),
     val currentCount: Int = 0,
+    val longestStreak: Int = 0,      // 最长连续天数
+    val currentStreak: Int = 0,      // 当前连续天数
+    val totalCheckIns: Int = 0,      // 累计打卡次数
     val isCompletedToday: Boolean = false,
     val isActive: Boolean = true,
     val color: String = "#6200EE", // 默认主题色

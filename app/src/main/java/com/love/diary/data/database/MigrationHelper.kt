@@ -226,4 +226,23 @@ object MigrationHelper {
             addColumnIfNotExists(database, "app_config", "updatedAt", "INTEGER NOT NULL DEFAULT 0")
         }
     }
+
+    /**
+     * Migration from version 9 to 10 - Add new columns to habits table for habit statistics and display type
+     *
+     * This migration adds the required columns to habits table to support:
+     * - displayType: Enum to specify whether to show weekly or monthly view
+     * - longestStreak: Longest consecutive days of check-ins
+     * - currentStreak: Current consecutive days of check-ins
+     * - totalCheckIns: Total number of check-ins for this habit
+     */
+    val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add new columns to habits table
+            addColumnIfNotExists(database, "habits", "displayType", "TEXT NOT NULL DEFAULT 'WEEKLY'")
+            addColumnIfNotExists(database, "habits", "longestStreak", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(database, "habits", "currentStreak", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(database, "habits", "totalCheckIns", "INTEGER NOT NULL DEFAULT 0")
+        }
+    }
 }
