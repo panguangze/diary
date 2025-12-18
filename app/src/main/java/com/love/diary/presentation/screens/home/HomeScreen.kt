@@ -819,12 +819,13 @@ private fun RecentMoodStatsSection(
             ) {
                 StatItem(title = "已经记录", value = totalRecords.toString(), unit = "天")
                 StatItem(title = "连续记录", value = streak.toString(), unit = "天")
-                StatItem(
-                    title = "最近30天常见心情",
-                    value = favoriteMood?.displayName ?: "-",
-                    unit = null,
-                    highlight = true
-                )
+                // 隐藏最近x天的卡片
+//                StatItem(
+//                    title = "最近30天常见心情",
+//                    value = favoriteMood?.displayName ?: "-",
+//                    unit = null,
+//                    highlight = true
+//                )
             }
 
             Column(
@@ -1019,22 +1020,34 @@ private fun MoodIconRow(
                 }
             }
             
-            // 如果今天有心情，则显示在最右边
-            todayMood?.let { mood ->
+            // 确保今天的心情始终显示在最右边，无论是否已设置
+            if (todayMood != null) {
+                // 如果今天有心情，则显示具体的心情
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .background(AccentPinkText.copy(alpha = 0.08f))
-                        .clickable { onMoodClick(mood) },
+                        .clickable { onMoodClick(todayMood) },
                     contentAlignment = Alignment.Center
                 ) {
-                    val moodType = MoodType.fromCode(mood.moodTypeCode)
+                    val moodType = MoodType.fromCode(todayMood.moodTypeCode)
                     Image(
                         painter = painterResource(id = moodType.getDrawableResourceId()),
                         contentDescription = moodType.displayName,
                         modifier = Modifier.size(24.dp)
                     )
+                }
+            } else {
+                // 如果今天没有心情，则显示一个空的占位框
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(BorderStroke(1.dp, AccentPinkText.copy(alpha = 0.12f)), RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // 空白，无内容
                 }
             }
         }
