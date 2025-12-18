@@ -786,6 +786,7 @@ private fun RecentMoodStatsSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoodTrendPreviewCard(
     uiState: StatisticsViewModel.StatisticsUiState,

@@ -37,7 +37,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import android.net.Uri
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.love.diary.data.repository.AppRepository
 
 @AndroidEntryPoint
