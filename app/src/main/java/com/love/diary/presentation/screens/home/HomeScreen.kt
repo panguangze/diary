@@ -259,8 +259,13 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // 获取今天的心情记录
+            val todayDateString = LocalDate.now().toString()
+            val todayMoodRecord = historyRecords.find { it.date == todayDateString }
+
             RecentMoodStatsSection(
                 recentMoods = uiState.recentTenMoods,
+                todayMood = todayMoodRecord,
                 totalRecords = historyRecords.size,
                 streak = uiState.currentStreak,
                 favoriteMood = favoriteMood,
@@ -758,6 +763,7 @@ private fun DashedUploadBox(
 @Composable
 private fun RecentMoodStatsSection(
     recentMoods: List<DailyMoodEntity>,
+    todayMood: DailyMoodEntity?, // 新增参数：今天的心情
     totalRecords: Int,
     streak: Int,
     favoriteMood: MoodType?,
@@ -803,6 +809,7 @@ private fun RecentMoodStatsSection(
 
             MoodIconRow(
                 recentMoods = recentMoods,
+                todayMood = todayMood,
                 onMoodClick = onMoodClick
             )
 
@@ -972,9 +979,10 @@ private fun StatItem(
 @Composable
 private fun MoodIconRow(
     recentMoods: List<DailyMoodEntity>,
+    todayMood: DailyMoodEntity?, // 新增参数：今天的心情
     onMoodClick: (DailyMoodEntity) -> Unit
 ) {
-    if (recentMoods.isEmpty()) {
+    if (recentMoods.isEmpty() && todayMood == null) {
         Text(
             text = "还没有心情记录，去写下第一条吧",
             fontSize = 14.sp,
@@ -983,12 +991,36 @@ private fun MoodIconRow(
             color = SubtitleGray
         )
     } else {
-        FlowRow(
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            recentMoods.take(10).forEach { mood ->
+            // 计算可用空间和每个图标所需空间，以确定最多能显示多少个图标
+            // 每个图标36dp + 4dp间距，减去今天图标的额外空间
+            val hasTodayMood = todayMood != null
+            val maxIcons = if (hasTodayMood) 9 else 10 // 如果有今天的心情，最多显示9个历史心情
+            val recentMoodsToShow = recentMoods.take(maxIcons)
+            
+            recentMoodsToShow.forEach { mood ->
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(AccentPinkText.copy(alpha = 0.08f))
+                        .clickable { onMoodClick(mood) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    val moodType = MoodType.fromCode(mood.moodTypeCode)
+                    Image(
+                        painter = painterResource(id = moodType.getDrawableResourceId()),
+                        contentDescription = moodType.displayName,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+            
+            // 如果今天有心情，则显示在最右边
+            todayMood?.let { mood ->
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -2599,13 +2631,14 @@ private fun StatsRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            StatsCard(
-                title = "最近30天",
-                value = favoriteMood?.displayName ?: "-",
-                icon = favoriteMood?.emoji ?: "💭",
-                subtitle = "最常心情",
-                modifier = Modifier.weight(1f)
-            )
+            // 隐藏最近x天的卡片
+            // StatsCard(
+            //     title = "最近30天",
+            //     value = favoriteMood?.displayName ?: "-",
+            //     icon = favoriteMood?.emoji ?: "💭",
+            //     subtitle = "最常心情",
+            //     modifier = Modifier.weight(1f)
+            // )
         }
     }
 }
