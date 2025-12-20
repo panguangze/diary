@@ -735,14 +735,7 @@ private fun CheckInDayCell(
     onClick: () -> Unit
 ) {
     // Get tag color from first check-in if available
-    val tagColorStr = checkInsForDate?.firstOrNull()?.tagColor
-    val tagColor = tagColorStr?.let { 
-        try {
-            androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(it))
-        } catch (e: Exception) {
-            null
-        }
-    }
+    val tagColor = com.love.diary.util.ColorUtil.parseColor(checkInsForDate?.firstOrNull()?.tagColor)
     
     val backgroundColor = when {
         isToday -> MaterialTheme.colorScheme.primaryContainer
@@ -855,14 +848,7 @@ private fun CheckInMiniMonthGrid(
                     val checkInsForDate = checkInMap[dateStr]
                     
                     // Get tag color from first check-in if available
-                    val tagColorStr = checkInsForDate?.firstOrNull()?.tagColor
-                    val tagColor = tagColorStr?.let { 
-                        try {
-                            androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(it))
-                        } catch (e: Exception) {
-                            null
-                        }
-                    }
+                    val tagColor = com.love.diary.util.ColorUtil.parseColor(checkInsForDate?.firstOrNull()?.tagColor)
 
                     Box(
                         modifier = Modifier.size(12.dp),

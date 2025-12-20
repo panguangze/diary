@@ -157,11 +157,8 @@ fun CountdownCard(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             config.tag?.let { tagText ->
-                                val tagColor = try {
-                                    androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(config.color))
-                                } catch (e: Exception) {
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                }
+                                val tagColor = com.love.diary.util.ColorUtil.parseColor(config.color)
+                                    ?: MaterialTheme.colorScheme.secondaryContainer
                                 
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
