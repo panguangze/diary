@@ -360,26 +360,62 @@ private fun CollapsedCheckInContent(
         }
         
         // Right side - Check-in button or progress
+        // Check if today's check-in exists
+        val today = LocalDate.now().toString()
+        val hasCheckedInToday = checkInRecords.any { it.date == today }
+        
         when (config.checkInCategory) {
             com.love.diary.data.model.CheckInCategory.POSITIVE -> {
-                // Check-in button
-                IconButton(onClick = onCheckIn) {
+                // Check-in button - larger size (56dp) with visual state difference
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = if (hasCheckedInToday) 
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            else 
+                                MaterialTheme.colorScheme.surfaceVariant,
+                            shape = CircleShape
+                        )
+                        .clickable(onClick = onCheckIn),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
-                        contentDescription = "打卡",
-                        tint = MaterialTheme.colorScheme.primary
+                        contentDescription = if (hasCheckedInToday) "已打卡" else "打卡",
+                        tint = if (hasCheckedInToday) 
+                            MaterialTheme.colorScheme.primary
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
             com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
                 when (config.countdownMode) {
                     CountdownMode.CHECKIN_COUNTDOWN -> {
-                        // Check-in button for check-in countdown
-                        IconButton(onClick = onCheckIn) {
+                        // Check-in button for check-in countdown - larger size with visual state
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(
+                                    color = if (hasCheckedInToday) 
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                    else 
+                                        MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = CircleShape
+                                )
+                                .clickable(onClick = onCheckIn),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(
                                 imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
-                                contentDescription = "打卡",
-                                tint = MaterialTheme.colorScheme.primary
+                                contentDescription = if (hasCheckedInToday) "已打卡" else "打卡",
+                                tint = if (hasCheckedInToday) 
+                                    MaterialTheme.colorScheme.primary
+                                else 
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(32.dp)
                             )
                         }
                     }
@@ -578,8 +614,7 @@ private fun MonthlyCheckInView(
                         .background(
                             color = when {
                                 isToday -> MaterialTheme.colorScheme.primaryContainer
-                                hasCheckIn -> com.love.diary.util.ColorUtil.parseColor(config.color)?.copy(alpha = 0.6f)
-                                    ?: MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                hasCheckIn -> MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
                                 else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
                             },
                             shape = RoundedCornerShape(8.dp)
@@ -684,8 +719,7 @@ private fun MiniMonthView(
                             .size(8.dp)
                             .background(
                                 color = if (hasCheckIn)
-                                    com.love.diary.util.ColorUtil.parseColor(config.color)
-                                        ?: MaterialTheme.colorScheme.primary
+                                    MaterialTheme.colorScheme.primary
                                 else
                                     MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
                                 shape = CircleShape
@@ -736,8 +770,7 @@ private fun CheckInCountdownExpandedView(
                         .size(24.dp)
                         .background(
                             color = if (hasCheckIn)
-                                com.love.diary.util.ColorUtil.parseColor(config.color)?.copy(alpha = 0.8f)
-                                    ?: MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                             else
                                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
                             shape = CircleShape

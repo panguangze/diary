@@ -170,13 +170,6 @@ fun SettingsScreen(
         // 显示设置
         item {
             SettingsCard(title = "显示设置") {
-                ThemeSettingsItem(
-                    currentDarkMode = uiState.darkMode,
-                    onDarkModeChange = viewModel::setDarkMode
-                )
-                
-                Divider(modifier = Modifier.padding(horizontal = 16.dp))
-                
                 SwitchSettingsItem(
                     title = "心情小提示",
                     subtitle = "在首页显示心情反馈文案",

@@ -61,12 +61,13 @@ fun AppCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    // Unified card styling: white background, subtle border, no elevation
     val border = BorderStroke(
         1.dp,
-        MaterialTheme.colorScheme.outline.copy(alpha = if (bordered) 0.7f else 0.35f)
+        Color(0xFFE5E7EB) // BorderColor from HomeScreen
     )
     val colors = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.78f)
+        containerColor = Color.White // CardBackgroundColor from HomeScreen
     )
 
     if (onClick != null) {
