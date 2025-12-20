@@ -2,6 +2,7 @@ package com.love.diary.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -70,6 +71,10 @@ import com.love.diary.presentation.components.StatusBadge
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+// Constants
+private const val DAYS_IN_WEEK = 7
+private const val MONTHS_PER_ROW = 3
+private const val CHECKMARK_FONT_SIZE_SP = 10
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -201,139 +206,164 @@ private fun CheckInConfigCard(
     config: UnifiedCheckInConfig,
     viewModel: CheckInViewModel
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
+    
+    // Get check-in records for this config from allCheckInRecords
+    val checkInRecords = remember(uiState.allCheckInRecords, config.name) {
+        uiState.allCheckInRecords.filter { it.name == config.name }
+    }
+    
     AppCard(
         modifier = Modifier.fillMaxWidth(),
-        onClick = {
-            // Handle check-in action based on config type
-            when (config.checkInCategory) {
-                com.love.diary.data.model.CheckInCategory.POSITIVE -> {
-                    // Positive check-in - perform check-in
-                    viewModel.checkInPositive(config.id)
-                }
-                com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
-                    when (config.countdownMode) {
-                        CountdownMode.CHECKIN_COUNTDOWN -> {
-                            // Check-in countdown - perform check-in
-                            viewModel.checkInCountdown(config.id)
-                        }
-                        CountdownMode.DAY_COUNTDOWN -> {
-                            // Day countdown - just show info (no check-in needed)
-                        }
-                        null -> {}
-                    }
-                }
-                null -> {}
-            }
-        }
+        onClick = null // Remove click from card itself
     ) {
-        Row(
+        Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(Dimens.SmallSpacing)
         ) {
-            // Left side - Icon and info
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(Dimens.MediumSpacing),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                // Icon with background
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = com.love.diary.util.ColorUtil.parseColor(config.color)?.copy(alpha = 0.2f)
-                                ?: MaterialTheme.colorScheme.primaryContainer,
-                            shape = RoundedCornerShape(12.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = config.icon,
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                }
-                
-                // Name and description
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = config.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    
-                    // Show category-specific info
+            // Collapsed state (always visible)
+            CollapsedCheckInContent(
+                config = config,
+                viewModel = viewModel,
+                isExpanded = isExpanded,
+                onExpandToggle = { 
+                    // Don't expand for day countdown
+                    if (config.countdownMode != CountdownMode.DAY_COUNTDOWN) {
+                        isExpanded = !isExpanded
+                    }
+                },
+                onCheckIn = {
+                    // Handle check-in action based on config type
                     when (config.checkInCategory) {
                         com.love.diary.data.model.CheckInCategory.POSITIVE -> {
-                            val recurrenceText = when (config.recurrenceType) {
-                                com.love.diary.data.model.RecurrenceType.WEEKLY -> "周打卡"
-                                com.love.diary.data.model.RecurrenceType.MONTHLY -> "月度打卡"
-                                null -> "正向打卡"
-                            }
-                            Text(
-                                text = recurrenceText,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            viewModel.checkInPositive(config.id)
                         }
                         com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
                             when (config.countdownMode) {
-                                CountdownMode.DAY_COUNTDOWN -> {
-                                    val daysRemaining = config.targetDate?.let {
-                                        viewModel.calculateDaysRemaining(it)
-                                    } ?: 0
-                                    Text(
-                                        text = "剩余 $daysRemaining 天",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
                                 CountdownMode.CHECKIN_COUNTDOWN -> {
-                                    val remaining = viewModel.getCheckInCountdownRemaining(config)
-                                    Text(
-                                        text = "剩余 $remaining 次打卡",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    viewModel.checkInCountdown(config.id)
                                 }
-                                null -> {}
+                                else -> {}
                             }
                         }
-                        null -> {
-                            config.description?.let {
-                                Text(
-                                    text = it,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
+                        else -> {}
                     }
-                }
+                },
+                checkInRecords = checkInRecords
+            )
+            
+            // Expanded state (conditionally visible)
+            if (isExpanded) {
+                androidx.compose.material3.Divider(
+                    modifier = Modifier.padding(vertical = Dimens.SmallSpacing),
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+                
+                ExpandedCheckInContent(
+                    config = config,
+                    viewModel = viewModel,
+                    checkInRecords = checkInRecords
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CollapsedCheckInContent(
+    config: UnifiedCheckInConfig,
+    viewModel: CheckInViewModel,
+    isExpanded: Boolean,
+    onExpandToggle: () -> Unit,
+    onCheckIn: () -> Unit,
+    checkInRecords: List<UnifiedCheckIn>
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left side - Icon and info
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(Dimens.MediumSpacing),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onExpandToggle)
+        ) {
+            // Icon with background
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = com.love.diary.util.ColorUtil.parseColor(config.color)?.copy(alpha = 0.2f)
+                            ?: MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = config.icon,
+                    style = MaterialTheme.typography.headlineMedium
+                )
             }
             
-            // Right side - Action indicator or progress
-            when (config.checkInCategory) {
-                com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
-                    val progress = viewModel.getCountdownProgress(config)
-                    Column(
-                        horizontalAlignment = Alignment.End,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "${progress.toInt()}%",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        androidx.compose.material3.LinearProgressIndicator(
-                            progress = progress / 100f,
-                            modifier = Modifier.widthIn(max = 60.dp),
-                        )
-                    }
+            // Name and description
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = config.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                // Always show description if available
+                config.description?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                else -> {
+                
+                // Show category-specific info
+                when (config.checkInCategory) {
+                    com.love.diary.data.model.CheckInCategory.POSITIVE -> {
+                        // Show last 7 days check-in status
+                        WeeklyCheckInStatus(checkInRecords)
+                    }
+                    com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+                        when (config.countdownMode) {
+                            CountdownMode.DAY_COUNTDOWN -> {
+                                val daysRemaining = config.targetDate?.let {
+                                    viewModel.calculateDaysRemaining(it)
+                                } ?: 0
+                                // Progress bar with percentage
+                                val progress = viewModel.getCountdownProgress(config)
+                                CountdownProgressBar(daysRemaining, progress)
+                            }
+                            CountdownMode.CHECKIN_COUNTDOWN -> {
+                                val remaining = viewModel.getCheckInCountdownRemaining(config)
+                                val progress = viewModel.getCountdownProgress(config)
+                                // Progress bar with percentage
+                                CountdownProgressBar(remaining, progress, unit = "次打卡")
+                            }
+                            null -> {}
+                        }
+                    }
+                    null -> {}
+                }
+            }
+        }
+        
+        // Right side - Check-in button or progress
+        when (config.checkInCategory) {
+            com.love.diary.data.model.CheckInCategory.POSITIVE -> {
+                // Check-in button
+                IconButton(onClick = onCheckIn) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
                         contentDescription = "打卡",
@@ -341,6 +371,411 @@ private fun CheckInConfigCard(
                     )
                 }
             }
+            com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+                when (config.countdownMode) {
+                    CountdownMode.CHECKIN_COUNTDOWN -> {
+                        // Check-in button for check-in countdown
+                        IconButton(onClick = onCheckIn) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
+                                contentDescription = "打卡",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    CountdownMode.DAY_COUNTDOWN -> {
+                        // Just show expand/collapse icon (no check-in needed)
+                        // But day countdown doesn't expand, so show nothing
+                    }
+                    null -> {}
+                }
+            }
+            null -> {}
+        }
+    }
+}
+
+@Composable
+private fun WeeklyCheckInStatus(checkInRecords: List<UnifiedCheckIn>) {
+    val today = LocalDate.now()
+    val last7Days = (DAYS_IN_WEEK - 1 downTo 0).map { today.minusDays(it.toLong()) }
+    val checkInMap = checkInRecords.associate { it.date to it }
+    
+    Row(
+        modifier = Modifier.padding(top = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        last7Days.forEach { date ->
+            val dateStr = date.toString()
+            val hasCheckIn = checkInMap.containsKey(dateStr)
+            
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .background(
+                        color = if (hasCheckIn) 
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                        shape = CircleShape
+                    )
+            )
+        }
+    }
+}
+
+@Composable
+private fun CountdownProgressBar(remaining: Int, progress: Float, unit: String = "天") {
+    Row(
+        modifier = Modifier.padding(top = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        androidx.compose.material3.LinearProgressIndicator(
+            progress = progress / 100f,
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f)
+        )
+        Text(
+            text = "${progress.toInt()}%",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+    }
+    Text(
+        text = "剩余 $remaining $unit",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 2.dp)
+    )
+}
+
+@Composable
+private fun ExpandedCheckInContent(
+    config: UnifiedCheckInConfig,
+    viewModel: CheckInViewModel,
+    checkInRecords: List<UnifiedCheckIn>
+) {
+    when (config.checkInCategory) {
+        com.love.diary.data.model.CheckInCategory.POSITIVE -> {
+            // Show monthly/yearly view for positive check-ins
+            PositiveCheckInExpandedView(config, checkInRecords)
+        }
+        com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+            when (config.countdownMode) {
+                CountdownMode.CHECKIN_COUNTDOWN -> {
+                    // Show historical check-in data for check-in countdown
+                    CheckInCountdownExpandedView(config, checkInRecords)
+                }
+                else -> {
+                    // Day countdown doesn't have expanded view
+                }
+            }
+        }
+        else -> {}
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PositiveCheckInExpandedView(
+    config: UnifiedCheckInConfig,
+    checkInRecords: List<UnifiedCheckIn>
+) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabs = listOf("本月", "本年")
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.MediumSpacing)
+    ) {
+        // Tabs
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                FilterChip(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    label = { Text(tab) }
+                )
+            }
+        }
+        
+        // Content based on selected tab
+        when (selectedTab) {
+            0 -> MonthlyCheckInView(config, checkInRecords)
+            1 -> YearlyCheckInView(config, checkInRecords)
+        }
+    }
+}
+
+@Composable
+private fun MonthlyCheckInView(
+    config: UnifiedCheckInConfig,
+    checkInRecords: List<UnifiedCheckIn>
+) {
+    val today = LocalDate.now()
+    val currentMonth = today.withDayOfMonth(1)
+    val daysInMonth = currentMonth.lengthOfMonth()
+    val firstDayOfWeek = currentMonth.dayOfWeek.value % 7 // Sunday = 0
+    
+    val checkInMap = checkInRecords.associate { it.date to it }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "${today.year}年${today.monthValue}月",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        // Day of week headers
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            listOf("日", "一", "二", "三", "四", "五", "六").forEach { day ->
+                Text(
+                    text = day,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        
+        // Calendar grid
+        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(DAYS_IN_WEEK),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 300.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Empty cells before first day
+            items(firstDayOfWeek) {
+                Box(modifier = Modifier.size(40.dp))
+            }
+            
+            // Days of the month
+            items(daysInMonth) { dayIndex ->
+                val day = dayIndex + 1
+                val date = currentMonth.withDayOfMonth(day)
+                val dateStr = date.toString()
+                val hasCheckIn = checkInMap.containsKey(dateStr)
+                val isToday = date == today
+                
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = when {
+                                isToday -> MaterialTheme.colorScheme.primaryContainer
+                                hasCheckIn -> com.love.diary.util.ColorUtil.parseColor(config.color)?.copy(alpha = 0.6f)
+                                    ?: MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = day.toString(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = when {
+                            hasCheckIn -> MaterialTheme.colorScheme.onPrimary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun YearlyCheckInView(
+    config: UnifiedCheckInConfig,
+    checkInRecords: List<UnifiedCheckIn>
+) {
+    val today = LocalDate.now()
+    val checkInMap = checkInRecords.associate { it.date to it }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "${today.year}年",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(MONTHS_PER_ROW),
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 400.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(12) { monthIndex ->
+                val month = monthIndex + 1
+                MiniMonthView(today.year, month, checkInMap, config)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun MiniMonthView(
+    year: Int,
+    month: Int,
+    checkInMap: Map<String, UnifiedCheckIn>,
+    config: UnifiedCheckInConfig
+) {
+    val monthDate = LocalDate.of(year, month, 1)
+    val daysInMonth = monthDate.lengthOfMonth()
+    val firstDayOfWeek = monthDate.dayOfWeek.value % 7
+    
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = "${month}月",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                // Empty cells
+                repeat(firstDayOfWeek) {
+                    Box(modifier = Modifier.size(8.dp))
+                }
+                
+                // Days
+                repeat(daysInMonth) { dayIndex ->
+                    val day = dayIndex + 1
+                    val date = LocalDate.of(year, month, day)
+                    val dateStr = date.toString()
+                    val hasCheckIn = checkInMap.containsKey(dateStr)
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(
+                                color = if (hasCheckIn)
+                                    com.love.diary.util.ColorUtil.parseColor(config.color)
+                                        ?: MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                                shape = CircleShape
+                            )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CheckInCountdownExpandedView(
+    config: UnifiedCheckInConfig,
+    checkInRecords: List<UnifiedCheckIn>
+) {
+    // Show check-in history from start date to now
+    val startDate = LocalDate.parse(config.startDate)
+    val today = LocalDate.now()
+    val checkInMap = checkInRecords.associate { it.date to it }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Dimens.MediumSpacing)
+    ) {
+        Text(
+            text = "打卡历史（从创建开始）",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        
+        // Show a simplified calendar from start date to today
+        val totalDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, today).toInt() + 1
+        
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            repeat(totalDays) { dayIndex ->
+                val date = startDate.plusDays(dayIndex.toLong())
+                val dateStr = date.toString()
+                val hasCheckIn = checkInMap.containsKey(dateStr)
+                
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(
+                            color = if (hasCheckIn)
+                                com.love.diary.util.ColorUtil.parseColor(config.color)?.copy(alpha = 0.8f)
+                                    ?: MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (hasCheckIn) {
+                        Text(
+                            text = "✓",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontSize = CHECKMARK_FONT_SIZE_SP.sp
+                        )
+                    }
+                }
+            }
+        }
+        
+        // Show statistics
+        val totalCheckIns = checkInRecords.size
+        val checkInRate = if (totalDays > 0) (totalCheckIns.toFloat() / totalDays * 100).toInt() else 0
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "已打卡: $totalCheckIns 天",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "打卡率: $checkInRate%",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

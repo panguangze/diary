@@ -16,9 +16,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val DASHBOARD_HISTORY_DAYS = 90L
+
 data class CheckInUiState(
     val currentCheckInConfig: UnifiedCheckInConfig? = null,
     val checkInRecords: List<UnifiedCheckIn> = emptyList(),
+    val allCheckInRecords: List<UnifiedCheckIn> = emptyList(), // All check-in records for dashboard
     val allCheckInConfigs: List<UnifiedCheckInConfig> = emptyList(),
     val checkInTypes: List<CheckInType> = emptyList(),
     val isLoading: Boolean = false
@@ -35,6 +38,7 @@ class CheckInViewModel @Inject constructor(
     init {
         loadAllCheckInConfigs()
         loadCheckInTypes()
+        loadAllCheckInRecords()
     }
     
     private fun loadAllCheckInConfigs() {
@@ -49,6 +53,19 @@ class CheckInViewModel @Inject constructor(
                 // 如果当前没有选中的打卡配置，且存在配置，则默认选择第一个
                 if (_uiState.value.currentCheckInConfig == null && configs.isNotEmpty()) {
                     selectCheckInConfig(configs.first())
+                }
+            }
+        }
+    }
+    
+    private fun loadAllCheckInRecords() {
+        viewModelScope.launch {
+            // Load check-ins from the last DASHBOARD_HISTORY_DAYS for dashboard
+            val endDate = java.time.LocalDate.now().toString()
+            val startDate = java.time.LocalDate.now().minusDays(DASHBOARD_HISTORY_DAYS).toString()
+            checkInRepository.getCheckInsBetweenDates(startDate, endDate).collect { records ->
+                _uiState.update { state ->
+                    state.copy(allCheckInRecords = records)
                 }
             }
         }
