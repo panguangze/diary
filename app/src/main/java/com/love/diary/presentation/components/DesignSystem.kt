@@ -40,9 +40,11 @@ object Dimens {
     val LargeSpacing = 24.dp
     val MediumSpacing = 16.dp
     val SmallSpacing = 8.dp
-    val CardCorner = 16.dp
-    val FieldCorner = 12.dp
+    val CardCorner = 20.dp              // 16 → 20dp，更柔和的圆角
+    val FieldCorner = 14.dp             // 12 → 14dp
     val TopBarHeight = 56.dp
+    val CardElevation = 2.dp            // 新增：统一的卡片阴影高度
+    val CardBorderWidth = 0.5.dp        // 新增：更精致的边框宽度
 }
 
 object ShapeTokens {
@@ -61,13 +63,16 @@ fun AppCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    // Unified card styling: white background, subtle border, no elevation
-    val border = BorderStroke(
-        1.dp,
-        Color(0xFFE5E7EB) // BorderColor from HomeScreen
-    )
+    // 优化的卡片样式：纯白背景，精致边框，subtle阴影
+    val border = if (bordered) {
+        BorderStroke(
+            Dimens.CardBorderWidth,
+            MaterialTheme.colorScheme.outlineVariant  // 使用主题色，更统一
+        )
+    } else null
+    
     val colors = CardDefaults.cardColors(
-        containerColor = Color.White // CardBackgroundColor from HomeScreen
+        containerColor = MaterialTheme.colorScheme.surface  // 使用主题表面色
     )
 
     if (onClick != null) {
@@ -76,7 +81,11 @@ fun AppCard(
             shape = shape,
             border = border,
             colors = colors,
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = Dimens.CardElevation,
+                pressedElevation = 4.dp,
+                hoveredElevation = 3.dp
+            ),
             onClick = onClick
         ) {
             Column(modifier = Modifier.padding(contentPadding), content = content)
@@ -87,7 +96,9 @@ fun AppCard(
             shape = shape,
             border = border,
             colors = colors,
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = Dimens.CardElevation
+            )
         ) {
             Column(modifier = Modifier.padding(contentPadding), content = content)
         }
@@ -105,11 +116,15 @@ fun AppScaffold(
     backgroundBrush: Brush? = null,
     content: @Composable (PaddingValues) -> Unit
 ) {
+    // 优化的背景渐变：更精致的色彩过渡
     val appliedBrush = backgroundBrush ?: Brush.verticalGradient(
         colors = listOf(
             MaterialTheme.colorScheme.background,
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-        )
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),  // 0.6 → 0.4f，更柔和
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)  // 添加第三级，更自然
+        ),
+        startY = 0f,
+        endY = 1500f  // 控制渐变范围，更自然
     )
     Scaffold(
         modifier = modifier.background(appliedBrush),
@@ -164,7 +179,7 @@ fun StatusBadge(
     Box(
         modifier = modifier
             .background(containerColor, ShapeTokens.Pill)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 14.dp, vertical = 7.dp),  // 12dp, 6dp → 14dp, 7dp，更舒适的内边距
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -185,12 +200,15 @@ fun AppSegmentedTabs(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant, ShapeTokens.Pill)
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),  // 更subtle的背景
+                ShapeTokens.Pill
+            )
             .padding(4.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)  // 4dp → 6dp，更宽松
         ) {
             options.forEachIndexed { index, label ->
                 val selected = index == selectedIndex
@@ -206,7 +224,7 @@ fun AppSegmentedTabs(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(48.dp)
+                        .height(44.dp)  // 48 → 44dp，更精致的比例
                         .background(background, ShapeTokens.Pill)
                         .clickable { onSelected(index) },
                     contentAlignment = Alignment.Center

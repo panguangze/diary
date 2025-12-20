@@ -7,83 +7,83 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// ===================== 浪漫日记风格配色（iOS 17 轻盈质感+粉调浪漫） =====================
+// ===================== 浪漫日记风格配色（优化版 - 更精致的色彩层次） =====================
 private val RomanticLightColorScheme = lightColorScheme(
-    // 主色：低饱和玫瑰粉（浪漫核心，不刺眼），替代原冷蓝
-    primary = Color(0xFFE86E94),
+    // 主色：优雅玫瑰粉（更饱和但不刺眼）
+    primary = Color(0xFFE5718E),
     onPrimary = Color(0xFFFFFFFF),        // 纯白文字，对比清晰
-    // 主容器：极浅的粉调白，通透柔和（日记卡片/按钮背景）
-    primaryContainer = Color(0xFFFFEEF2),
-    onPrimaryContainer = Color(0xFF832845), // 深豆沙色文字，和浅粉容器对比适中
+    // 主容器：极浅粉白，更通透柔和
+    primaryContainer = Color(0xFFFFF0F4),
+    onPrimaryContainer = Color(0xFF8B2D4F), // 更深的豆沙色，增强对比
 
-    // 次要色：奶油杏色（暖调，替代原冷灰，增加温馨感）
-    secondary = Color(0xFFF0B888),
+    // 次要色：温暖杏色（提升温馨感）
+    secondary = Color(0xFFEEB07A),
     onSecondary = Color(0xFFFFFFFF),      // 纯白文字
-    // 次要容器：浅奶油白（标签/次要按钮背景）
-    secondaryContainer = Color(0xFFFFF5EB),
-    onSecondaryContainer = Color(0xFF7A4F28), // 浅棕文字，暖调和谐
+    // 次要容器：浅奶油白
+    secondaryContainer = Color(0xFFFFF7ED),
+    onSecondaryContainer = Color(0xFF6D4528), // 更深的棕色，更好的对比
 
-    // 三阶色：暖调浅灰（分割线/次要图标，避免冷硬）
-    tertiary = Color(0xFF9D8E84),
+    // 三阶色：精致灰调（更平衡的中性色）
+    tertiary = Color(0xFF9A8A80),
     onTertiary = Color(0xFFFFFFFF),
-    // 三阶容器：极浅的暖白（输入框/卡片边框内背景）
-    tertiaryContainer = Color(0xFFFAF6F2),
-    onTertiaryContainer = Color(0xFF4A3F38),
+    // 三阶容器：极浅暖白
+    tertiaryContainer = Color(0xFFFBF8F5),
+    onTertiaryContainer = Color(0xFF3D3530),
 
-    // 背景：纸质感暖白（日记本纸张的感觉，比纯白更温柔）
-    background = Color(0xFFFCFAF8),
-    // 表面：纯白（核心卡片/内容区，和背景形成微弱层级）
+    // 背景：高级象牙白（更纯净但保留温度）
+    background = Color(0xFFFDFBFA),
+    // 表面：纯白（卡片/内容区）
     surface = Color(0xFFFFFFFF),
-    // 表面变体：极浅的暖灰（工具栏/侧边栏）
-    surfaceVariant = Color(0xFFF7F3EF),
-    // 文字：暖调深灰（避免纯黑刺眼，保留浪漫柔和感）
-    onBackground = Color(0xFF4A3F38),
-    onSurface = Color(0xFF4A3F38),
-    // 次要文字：暖调浅灰（时间/备注，易读不抢戏）
-    onSurfaceVariant = Color(0xFF9D8E84),
+    // 表面变体：极浅暖灰（更精致的层级区分）
+    surfaceVariant = Color(0xFFF9F6F3),
+    // 文字：深灰（提升可读性，保持柔和）
+    onBackground = Color(0xFF2D2824),
+    onSurface = Color(0xFF2D2824),
+    // 次要文字：优雅中灰（更清晰但不抢戏）
+    onSurfaceVariant = Color(0xFF847B72),
 
-    // 轮廓线：极浅的暖灰（分割线不生硬）
-    outline = Color(0xFFE8E0D8),
-    outlineVariant = Color(0xFFF0E8E0),
+    // 轮廓线：更精致的浅灰（subtle但清晰）
+    outline = Color(0xFFE5DED6),
+    outlineVariant = Color(0xFFF0EBE5),
 
-    // 错误色：低饱和红（和整体粉调协调，不突兀）
-    error = Color(0xFFE85A6F),
+    // 错误色：优雅的低饱和红
+    error = Color(0xFFE65D72),
     onError = Color(0xFFFFFFFF),
-    errorContainer = Color(0xFFFFE8EC),
-    onErrorContainer = Color(0xFF832838)
+    errorContainer = Color(0xFFFFEBEE),
+    onErrorContainer = Color(0xFF8B2935)
 )
 
 private val RomanticDarkColorScheme = darkColorScheme(
-    // 深色模式保留浪漫感，低饱和暗粉+深棕灰
-    primary = Color(0xFFF08DA8),
-    onPrimary = Color(0xFF832845),
-    primaryContainer = Color(0xFF832845),
-    onPrimaryContainer = Color(0xFFFFEEF2),
+    // 深色模式 - 优化对比度和现代感
+    primary = Color(0xFFED90AA),
+    onPrimary = Color(0xFF5D1D33),
+    primaryContainer = Color(0xFF7D2E46),
+    onPrimaryContainer = Color(0xFFFFF0F4),
 
-    secondary = Color(0xFFF4C898),
-    onSecondary = Color(0xFF7A4F28),
-    secondaryContainer = Color(0xFF7A4F28),
-    onSecondaryContainer = Color(0xFFFFF5EB),
+    secondary = Color(0xFFF1C598),
+    onSecondary = Color(0xFF5A3A1F),
+    secondaryContainer = Color(0xFF6F4A2C),
+    onSecondaryContainer = Color(0xFFFFF7ED),
 
-    tertiary = Color(0xFFBFAF9F),
-    onTertiary = Color(0xFF4A3F38),
-    tertiaryContainer = Color(0xFF4A3F38),
-    onTertiaryContainer = Color(0xFFFAF6F2),
+    tertiary = Color(0xFFC0AEA0),
+    onTertiary = Color(0xFF332B25),
+    tertiaryContainer = Color(0xFF4A3E38),
+    onTertiaryContainer = Color(0xFFFBF8F5),
 
-    background = Color(0xFF2A2522),
-    surface = Color(0xFF332D29),
-    surfaceVariant = Color(0xFF403832),
-    onBackground = Color(0xFFF0E8E0),
-    onSurface = Color(0xFFF0E8E0),
-    onSurfaceVariant = Color(0xFFBFAF9F),
+    background = Color(0xFF151515),
+    surface = Color(0xFF1E1E1E),
+    surfaceVariant = Color(0xFF2A2A2A),
+    onBackground = Color(0xFFEDEDED),
+    onSurface = Color(0xFFEDEDED),
+    onSurfaceVariant = Color(0xFFB8B0A8),
 
-    outline = Color(0xFF6A5F58),
-    outlineVariant = Color(0xFF403832),
+    outline = Color(0xFF3D3D3D),
+    outlineVariant = Color(0xFF2A2A2A),
 
-    error = Color(0xFFF87085),
-    onError = Color(0xFF832838),
-    errorContainer = Color(0xFF832838),
-    onErrorContainer = Color(0xFFFFE8EC)
+    error = Color(0xFFF9758C),
+    onError = Color(0xFF5D1D2A),
+    errorContainer = Color(0xFF7D2E3D),
+    onErrorContainer = Color(0xFFFFEBEE)
 )
 
 @Composable

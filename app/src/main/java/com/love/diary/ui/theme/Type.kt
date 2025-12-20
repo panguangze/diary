@@ -6,86 +6,86 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-// 适配浪漫日记风格的排版（保留核心结构，优化细节）
+// 优化的浪漫日记风格排版系统
 val Typography = Typography(
-    // 顶级标题（比如App名称/日记封面标题）：弱化字重+微增字间距，更浪漫
+    // 顶级标题（App名称/封面标题）：优雅serif字体，增强呼吸感
     displaySmall = TextStyle(
         fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.SemiBold, // 原 Bold → SemiBold，降低厚重感
+        fontWeight = FontWeight.Medium,   // SemiBold → Medium，更轻盈
         fontSize = 32.sp,
-        lineHeight = 42.sp, // 原 40.sp → 增加2sp，呼吸感更强
-        letterSpacing = 0.5.sp // 原 0.sp → 微增字间距，复古感更浓
+        lineHeight = 44.sp,               // 42 → 44sp，更舒适
+        letterSpacing = 0.8.sp            // 0.5 → 0.8sp，更优雅
     ),
-    // 页面主标题（比如单篇日记标题）
+    // 页面主标题（日记标题）
     headlineMedium = TextStyle(
         fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.SemiBold, // 原 Bold → SemiBold，更柔和
+        fontWeight = FontWeight.Medium,   // SemiBold → Medium
         fontSize = 24.sp,
-        lineHeight = 34.sp, // 原 32.sp → 增加2sp
-        letterSpacing = 0.3.sp // 微增字间距
+        lineHeight = 36.sp,               // 34 → 36sp，更宽松
+        letterSpacing = 0.5.sp            // 0.3 → 0.5sp
     ),
-    // 卡片/模块标题（比如「我的日记」「收藏夹」）
+    // 卡片/模块标题
     titleLarge = TextStyle(
         fontFamily = FontFamily.Serif,
-        fontWeight = FontWeight.SemiBold, // 保持 SemiBold，和 headline 区分
+        fontWeight = FontWeight.Medium,   // 保持Medium，区分感
         fontSize = 22.sp,
-        lineHeight = 29.sp, // 原 28.sp → 微调
-        letterSpacing = 0.2.sp
+        lineHeight = 30.sp,               // 29 → 30sp
+        letterSpacing = 0.3.sp            // 0.2 → 0.3sp
     ),
-    // 次级标题（比如日记日期/分类标签）
+    // 次级标题（日期/标签）
     titleMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium, // 原 SemiBold → Medium，弱化次要标题
+        fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
-        lineHeight = 24.sp, // 保持不变
-        letterSpacing = 0.sp
+        lineHeight = 24.sp,
+        letterSpacing = 0.1.sp            // 0 → 0.1sp，微调
     ),
-    // 小型标题（比如按钮文字/输入框提示）
+    // 小型标题（按钮文字）
     titleSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        lineHeight = 20.sp, // 保持不变
-        letterSpacing = 0.sp
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp            // 增加可读性
     ),
-    // 日记正文（核心阅读区）：微调行高，提升阅读舒适度
+    // 日记正文（核心阅读区）
     bodyLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        lineHeight = 26.sp, // 原 24.sp → 增加2sp，长时间阅读不拥挤
-        letterSpacing = 0.sp
+        lineHeight = 28.sp,               // 26 → 28sp，更易阅读
+        letterSpacing = 0.15.sp           // 0 → 0.15sp，更清晰
     ),
-    // 次要正文（比如日记备注/补充说明）
+    // 次要正文
     bodyMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
-        lineHeight = 21.sp, // 原 20.sp → 微调
-        letterSpacing = 0.sp
+        lineHeight = 22.sp,               // 21 → 22sp
+        letterSpacing = 0.1.sp            // 增加间距
     ),
-    // 辅助文字（比如时间戳/底部说明）
+    // 辅助文字（时间戳/说明）
     bodySmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Light, // 原 Normal → Light，更轻盈
+        fontWeight = FontWeight.Normal,   // Light → Normal，更易读
         fontSize = 12.sp,
-        lineHeight = 17.sp, // 原 16.sp → 微调
-        letterSpacing = 0.sp
+        lineHeight = 18.sp,               // 17 → 18sp
+        letterSpacing = 0.4.sp            // 0 → 0.4sp，小字更需要间距
     ),
-    // 按钮/标签文字（主要交互元素）
+    // 按钮/标签文字
     labelLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        lineHeight = 20.sp, // 保持不变
-        letterSpacing = 0.sp
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp            // 0 → 0.1sp
     ),
-    // 小型标签/提示文字（比如输入框占位符）
+    // 小型标签
     labelMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
-        lineHeight = 16.sp, // 保持不变
-        letterSpacing = 0.sp
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp            // 0 → 0.5sp，标签需要清晰间距
     )
 )
