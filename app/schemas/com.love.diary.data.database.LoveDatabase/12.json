@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 12,
-    "identityHash": "c9f7ac13716cb519e156b74b33528ac4",
+    "identityHash": "0010c8b6b68adc66e4bf942c4e04d118",
     "entities": [
       {
         "tableName": "app_config",
@@ -759,7 +759,7 @@
       },
       {
         "tableName": "unified_checkin_configs",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `description` TEXT, `tag` TEXT, `buttonLabel` TEXT NOT NULL, `icon` TEXT NOT NULL, `color` TEXT NOT NULL, `startDate` TEXT NOT NULL, `targetDate` TEXT, `targetValue` INTEGER, `reminderTime` TEXT, `isRecurring` INTEGER NOT NULL, `recurrencePattern` TEXT, `countdownMode` TEXT, `countdownTarget` INTEGER, `countdownProgress` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, `metadata` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `description` TEXT, `tag` TEXT, `buttonLabel` TEXT NOT NULL, `icon` TEXT NOT NULL, `color` TEXT NOT NULL, `startDate` TEXT NOT NULL, `targetDate` TEXT, `targetValue` INTEGER, `reminderTime` TEXT, `isRecurring` INTEGER NOT NULL, `recurrencePattern` TEXT, `checkInCategory` TEXT, `recurrenceType` TEXT, `countdownMode` TEXT, `countdownTarget` INTEGER, `countdownProgress` INTEGER NOT NULL, `isActive` INTEGER NOT NULL, `metadata` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -846,6 +846,18 @@
             "notNull": false
           },
           {
+            "fieldPath": "checkInCategory",
+            "columnName": "checkInCategory",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "recurrenceType",
+            "columnName": "recurrenceType",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
             "fieldPath": "countdownMode",
             "columnName": "countdownMode",
             "affinity": "TEXT",
@@ -901,7 +913,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'c9f7ac13716cb519e156b74b33528ac4')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0010c8b6b68adc66e4bf942c4e04d118')"
     ]
   }
 }

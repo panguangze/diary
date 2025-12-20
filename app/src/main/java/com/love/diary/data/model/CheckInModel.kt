@@ -34,6 +34,22 @@ enum class CountdownMode {
 }
 
 /**
+ * 打卡类型分类：正向打卡或倒计时打卡
+ */
+enum class CheckInCategory {
+    POSITIVE,   // 正向打卡
+    COUNTDOWN   // 倒计时打卡
+}
+
+/**
+ * 正向打卡的重复类型枚举
+ */
+enum class RecurrenceType {
+    WEEKLY,    // 周打卡
+    MONTHLY    // 月度打卡
+}
+
+/**
  * 统一打卡实体 - 用于支持多种类型的打卡功能
  * 恋爱时间记录作为特殊类型的打卡存在
  */
@@ -97,6 +113,10 @@ data class UnifiedCheckInConfig(
     val reminderTime: String? = null,    // 提醒时间（HH:mm格式）
     val isRecurring: Boolean = false,    // 是否重复
     val recurrencePattern: String? = null, // 重复模式（daily, weekly, monthly等）
+    
+    // 打卡分类相关
+    val checkInCategory: CheckInCategory? = null, // 打卡类型分类（正向打卡或倒计时打卡）
+    val recurrenceType: RecurrenceType? = null,   // 正向打卡的重复类型（周打卡或月度打卡）
     
     // 倒计时相关
     val countdownMode: CountdownMode? = null, // 倒计时模式（天数倒计时或打卡倒计时）
