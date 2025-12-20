@@ -238,26 +238,21 @@ private fun CheckInHistoryRow(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(end = if (checkIn.isCompleted) 40.dp else 0.dp), // Add padding for icon button
-                    horizontalArrangement = Arrangement.Start,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = checkIn.name,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onSurface
+                    Text(
+                        text = checkIn.name,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    // Show tag if available
+                    checkIn.tag?.let { tag ->
+                        StatusBadge(
+                            text = tag,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                         )
-                        // Show tag if available
-                        checkIn.tag?.let { tag ->
-                            StatusBadge(
-                                text = tag,
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
                     }
                 }
                 
