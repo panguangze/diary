@@ -134,6 +134,7 @@ fun WeeklyDisplayView(
                 day = day,
                 isChecked = isChecked,
                 isToday = isToday,
+                showWeekday = true,  // Show weekday in weekly view
                 modifier = Modifier.weight(1f)
             )
         }
@@ -182,7 +183,8 @@ fun MonthlyDisplayView(
                 }
             }
             
-            items(daysInMonth) { day ->
+            items(daysInMonth) { dayIndex ->
+                val day = dayIndex + 1  // Convert 0-based index to 1-based day
                 val date = currentMonth.atDay(day)
                 val isToday = date == LocalDate.now()
                 val isChecked = isToday && habit.isCompletedToday
@@ -231,10 +233,25 @@ fun DayCheckInBox(
     day: LocalDate,
     isChecked: Boolean,
     isToday: Boolean,
+    showWeekday: Boolean = false,  // Whether to show weekday name instead of date
     modifier: Modifier = Modifier
 ) {
-    val formatter = DateTimeFormatter.ofPattern("d")
-    val dayNumber = day.format(formatter)
+    val displayText = if (showWeekday) {
+        // Show weekday name (一, 二, 三, etc.)
+        when (day.dayOfWeek) {
+            DayOfWeek.MONDAY -> "一"
+            DayOfWeek.TUESDAY -> "二"
+            DayOfWeek.WEDNESDAY -> "三"
+            DayOfWeek.THURSDAY -> "四"
+            DayOfWeek.FRIDAY -> "五"
+            DayOfWeek.SATURDAY -> "六"
+            DayOfWeek.SUNDAY -> "日"
+        }
+    } else {
+        // Show day number
+        val formatter = DateTimeFormatter.ofPattern("d")
+        day.format(formatter)
+    }
     
     Box(
         modifier = modifier
@@ -250,7 +267,7 @@ fun DayCheckInBox(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = dayNumber,
+            text = displayText,
             style = MaterialTheme.typography.bodySmall.copy(
                 color = if (isChecked) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
             )

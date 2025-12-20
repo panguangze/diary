@@ -181,7 +181,18 @@ fun HomeScreen(
     val avatarPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { viewModel.updateAvatar(isPartner = false, uri = it.toString()) }
+        uri?.let { 
+            // Take persistent URI permission so the URI remains valid across app restarts
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (e: SecurityException) {
+                // Permission not available, but continue anyway
+            }
+            viewModel.updateAvatar(isPartner = false, uri = it.toString()) 
+        }
     }
     val moodImagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
