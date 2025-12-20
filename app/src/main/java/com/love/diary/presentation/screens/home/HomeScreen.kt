@@ -469,8 +469,9 @@ private fun TopInfoCardRedesigned(
             .fillMaxWidth()
             .height(80.dp),
         shape = RoundedCornerShape(CardCornerRadius),
+        border = BorderStroke(CardBorderWidth, BorderColor),
         colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -841,8 +842,9 @@ private fun RecentMoodStatsSection(
             .fillMaxWidth()
             .heightIn(min = 240.dp),
         shape = RoundedCornerShape(CardCornerRadius),
+        border = BorderStroke(CardBorderWidth, BorderColor),
         colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -902,8 +904,9 @@ private fun MoodTrendPreviewCard(
             .fillMaxWidth()
             .heightIn(min = 220.dp),
         shape = RoundedCornerShape(CardCornerRadius),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
+        border = BorderStroke(CardBorderWidth, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier

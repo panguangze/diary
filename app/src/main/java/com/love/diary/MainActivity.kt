@@ -68,7 +68,6 @@ fun MainApp() {
     // 检查是否需要首次运行设置
     var isFirstRun by remember { mutableStateOf(true) } // 将在LaunchedEffect中更新
     var isLoading by remember { mutableStateOf(true) }   // 将在LaunchedEffect中更新
-    var darkMode by remember { mutableStateOf<Boolean?>(null) } // Dark mode setting
     val homeViewModel = hiltViewModel<HomeViewModel>()
     val repository = homeViewModel.repository // 获取repository实例
 
@@ -77,22 +76,11 @@ fun MainApp() {
         val firstRun = homeViewModel.isFirstRun()
         isFirstRun = firstRun
         
-        // Load dark mode setting
-        val config = repository.getAppConfig()
-        darkMode = config?.darkMode
-        
         isLoading = false
     }
     
-    // Observe config changes for dark mode
-    LaunchedEffect(Unit) {
-        repository.getAppConfigFlow().collect { config ->
-            darkMode = config?.darkMode
-        }
-    }
-    
-    // Apply theme based on dark mode setting
-    LoveDiaryTheme(darkTheme = darkMode ?: isSystemInDarkTheme()) {
+    // Always use light theme (Requirement 4: remove theme selection)
+    LoveDiaryTheme(darkTheme = false) {
         MainAppContent(
             isLoading = isLoading,
             isFirstRun = isFirstRun,
