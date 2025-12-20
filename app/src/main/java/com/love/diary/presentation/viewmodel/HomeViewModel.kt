@@ -3,7 +3,6 @@ package com.love.diary.presentation.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.love.diary.data.database.entities.AppConfigEntity
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.MoodType
 import com.love.diary.data.model.EventType
@@ -158,16 +157,15 @@ class HomeViewModel @Inject constructor(
                     
                     _uiState.update { state ->
                         state.copy(
-                            coupleName = it.coupleName,
-                            startDate = it.startDate,
-                            avatarUri = it.reservedText1,
-                            partnerAvatarUri = it.reservedText2,
-                            dayIndex = dayIndex,
-                            dayDisplay = dayDisplay,
-                            todayDate = todayStr,
-                            currentStreak = currentStreak
-                        )
-                    }
+                        coupleName = it.coupleName,
+                        startDate = it.startDate,
+                        avatarUri = it.reservedText1,
+                        partnerAvatarUri = it.reservedText2,
+                        dayIndex = dayIndex,
+                        dayDisplay = dayDisplay,
+                        todayDate = todayStr,
+                        currentStreak = currentStreak
+                    )
                     }
                     
                     checkAnniversary(dayIndex)
@@ -265,30 +263,12 @@ class HomeViewModel @Inject constructor(
 
     fun updateAvatar(isPartner: Boolean = false, uri: String) {
         viewModelScope.launch {
-            val config = repository.getAppConfig()
-            val updatedConfig = if (config != null) {
-                // 配置已存在，直接更新
-                config.copy(
-                    reservedText1 = if (isPartner) config.reservedText1 else uri,
-                    reservedText2 = if (isPartner) uri else config.reservedText2,
-                    updatedAt = System.currentTimeMillis()
-                )
-            } else {
-                // 首次设置头像，创建默认配置
-                AppConfigEntity(
-                    startDate = LocalDate.now().toString(),
-                    startTimeMinutes = 0,
-                    coupleName = null,
-                    partnerNickname = null,
-                    showMoodTip = true,
-                    showStreak = true,
-                    showAnniversary = true,
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis(),
-                    reservedText1 = if (isPartner) null else uri,
-                    reservedText2 = if (isPartner) uri else null
-                )
-            }
+            val config = repository.getAppConfig() ?: return@launch
+            val updatedConfig = config.copy(
+                reservedText1 = if (isPartner) config.reservedText1 else uri,
+                reservedText2 = if (isPartner) uri else config.reservedText2,
+                updatedAt = System.currentTimeMillis()
+            )
             repository.saveAppConfig(updatedConfig)
             _uiState.update {
                 it.copy(
