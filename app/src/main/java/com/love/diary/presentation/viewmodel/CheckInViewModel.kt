@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val DASHBOARD_HISTORY_DAYS = 90L
+
 data class CheckInUiState(
     val currentCheckInConfig: UnifiedCheckInConfig? = null,
     val checkInRecords: List<UnifiedCheckIn> = emptyList(),
@@ -58,9 +60,9 @@ class CheckInViewModel @Inject constructor(
     
     private fun loadAllCheckInRecords() {
         viewModelScope.launch {
-            // Load check-ins from the last 90 days for dashboard
+            // Load check-ins from the last DASHBOARD_HISTORY_DAYS for dashboard
             val endDate = java.time.LocalDate.now().toString()
-            val startDate = java.time.LocalDate.now().minusDays(90).toString()
+            val startDate = java.time.LocalDate.now().minusDays(DASHBOARD_HISTORY_DAYS).toString()
             checkInRepository.getCheckInsBetweenDates(startDate, endDate).collect { records ->
                 _uiState.update { state ->
                     state.copy(allCheckInRecords = records)

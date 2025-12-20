@@ -71,6 +71,10 @@ import com.love.diary.presentation.components.StatusBadge
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+// Constants
+private const val DAYS_IN_WEEK = 7
+private const val MONTHS_PER_ROW = 3
+private const val CHECKMARK_FONT_SIZE_SP = 10
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -394,7 +398,7 @@ private fun CollapsedCheckInContent(
 @Composable
 private fun WeeklyCheckInStatus(checkInRecords: List<UnifiedCheckIn>) {
     val today = LocalDate.now()
-    val last7Days = (6 downTo 0).map { today.minusDays(it.toLong()) }
+    val last7Days = (DAYS_IN_WEEK - 1 downTo 0).map { today.minusDays(it.toLong()) }
     val checkInMap = checkInRecords.associate { it.date to it }
     
     Row(
@@ -548,7 +552,7 @@ private fun MonthlyCheckInView(
         
         // Calendar grid
         androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
-            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(7),
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(DAYS_IN_WEEK),
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 300.dp),
@@ -615,7 +619,7 @@ private fun YearlyCheckInView(
         )
         
         androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
-            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(3),
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(MONTHS_PER_ROW),
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 400.dp),
@@ -745,7 +749,7 @@ private fun CheckInCountdownExpandedView(
                             text = "✓",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = 10.sp
+                            fontSize = CHECKMARK_FONT_SIZE_SP.sp
                         )
                     }
                 }
