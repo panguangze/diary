@@ -29,7 +29,7 @@ import com.love.diary.presentation.screens.home.HomeScreen
 import com.love.diary.presentation.screens.settings.SettingsScreen
 import com.love.diary.presentation.screens.setup.FirstRunScreen
 import com.love.diary.presentation.viewmodel.HomeViewModel
-import com.love.diary.habit.HabitListScreen
+import com.love.diary.presentation.screens.CheckInDashboardScreen
 import com.love.diary.presentation.components.AppScaffold
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.ui.theme.LoveDiaryTheme
@@ -178,13 +178,7 @@ fun MainAppContent(
                 }
 
                 composable(Screen.Habits.route) {
-                    AppScaffold(title = "打卡") { inner ->
-                        HabitListScreen(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(inner)
-                        )
-                    }
+                    CheckInDashboardScreen()
                 }
 
                 composable(Screen.Settings.route) {
