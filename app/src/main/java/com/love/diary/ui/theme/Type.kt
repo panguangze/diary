@@ -70,7 +70,7 @@ val Typography = Typography(
         fontWeight = FontWeight.Normal,   // Light → Normal，更易读
         fontSize = 12.sp,
         lineHeight = 18.sp,               // 17 → 18sp
-        letterSpacing = 0.4.sp            // 0 → 0.4sp，小字更需要间距
+        letterSpacing = 0.2.sp            // 0.4 → 0.2sp，更适合小字
     ),
     // 按钮/标签文字
     labelLarge = TextStyle(
@@ -86,6 +86,6 @@ val Typography = Typography(
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.5.sp            // 0 → 0.5sp，标签需要清晰间距
+        letterSpacing = 0.15.sp           // 0.5 → 0.15sp，更平衡的间距
     )
 )
