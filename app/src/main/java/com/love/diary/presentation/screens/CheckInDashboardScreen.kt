@@ -24,7 +24,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -206,14 +205,9 @@ private fun CheckInConfigCard(
     var isExpanded by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
     
-    // Get check-in records for this config
-    val checkInRecords = remember(uiState.checkInRecords, config.name) {
-        uiState.checkInRecords.filter { it.name == config.name }
-    }
-    
-    // Load check-in records when card is mounted
-    LaunchedEffect(config.name) {
-        viewModel.selectCheckInConfig(config)
+    // Get check-in records for this config from allCheckInRecords
+    val checkInRecords = remember(uiState.allCheckInRecords, config.name) {
+        uiState.allCheckInRecords.filter { it.name == config.name }
     }
     
     AppCard(
