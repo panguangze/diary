@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -135,14 +136,10 @@ fun WeeklyDisplayView(
     val context = androidx.compose.ui.platform.LocalContext.current
     val database = com.love.diary.data.database.LoveDatabase.getInstance(context)
     
-    // 获取历史打卡记录
-    val checkInRecords = remember(habit.id, showMore) {
-        mutableStateOf<List<String>>(emptyList())
-    }
-    
-    LaunchedEffect(habit.id, showMore) {
-        val records = database.habitDao().getHabitRecordsFlow(habit.id).first()
-        checkInRecords.value = records.map { it.date }
+    // 获取历史打卡记录 - use collectAsState for reactive updates
+    val allRecords by database.habitDao().getHabitRecordsFlow(habit.id).collectAsState(initial = emptyList())
+    val checkInRecords = remember(allRecords) {
+        allRecords.map { it.date }
     }
     
     val today = LocalDate.now()
@@ -179,13 +176,18 @@ fun WeeklyDisplayView(
             ) {
                 weekDays.forEach { day ->
                     val isToday = day == today
-                    val isChecked = checkInRecords.value.contains(day.toString())
+                    val isChecked = checkInRecords.contains(day.toString())
                     
-                    // Get tag color if available
+                    // Get tag color based on actual tag used for this check-in
                     val tagColor = if (habit.tags.isNotEmpty() && isChecked) {
                         val tags = habit.tags.split(",").filter { it.isNotEmpty() }
+                        // For now use first tag color - could be enhanced to track which tag was used
                         if (tags.isNotEmpty()) {
-                            com.love.diary.ui.theme.TagColors.getOrNull(0) // Use first tag color
+                            if (tags[0] == "其它") {
+                                com.love.diary.ui.theme.TagColorOther
+                            } else {
+                                com.love.diary.ui.theme.TagColors[0]
+                            }
                         } else null
                     } else null
                     
@@ -227,14 +229,10 @@ fun MonthlyDisplayView(
     val context = androidx.compose.ui.platform.LocalContext.current
     val database = com.love.diary.data.database.LoveDatabase.getInstance(context)
     
-    // 获取历史打卡记录
-    val checkInRecords = remember(habit.id, showMore) {
-        mutableStateOf<List<String>>(emptyList())
-    }
-    
-    LaunchedEffect(habit.id, showMore) {
-        val records = database.habitDao().getHabitRecordsFlow(habit.id).first()
-        checkInRecords.value = records.map { it.date }
+    // 获取历史打卡记录 - use collectAsState for reactive updates
+    val allRecords by database.habitDao().getHabitRecordsFlow(habit.id).collectAsState(initial = emptyList())
+    val checkInRecords = remember(allRecords) {
+        allRecords.map { it.date }
     }
     
     val currentMonth = YearMonth.now()
@@ -284,13 +282,18 @@ fun MonthlyDisplayView(
                         val day = dayIndex + 1  // Convert 0-based index to 1-based day
                         val date = displayMonth.atDay(day)
                         val isToday = date == LocalDate.now()
-                        val isChecked = checkInRecords.value.contains(date.toString())
+                        val isChecked = checkInRecords.contains(date.toString())
                         
-                        // Get tag color if available
+                        // Get tag color based on actual tag used for this check-in
                         val tagColor = if (habit.tags.isNotEmpty() && isChecked) {
                             val tags = habit.tags.split(",").filter { it.isNotEmpty() }
+                            // For now use first tag color - could be enhanced to track which tag was used
                             if (tags.isNotEmpty()) {
-                                com.love.diary.ui.theme.TagColors.getOrNull(0) // Use first tag color
+                                if (tags[0] == "其它") {
+                                    com.love.diary.ui.theme.TagColorOther
+                                } else {
+                                    com.love.diary.ui.theme.TagColors[0]
+                                }
                             } else null
                         } else null
                         

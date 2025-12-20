@@ -190,7 +190,7 @@ fun HabitItemCard(
                         val tagColor = if (tag == "其它") {
                             TagColorOther
                         } else {
-                            TagColors.getOrNull(index % TagColors.size) ?: TagColors[0]
+                            TagColors[index % TagColors.size]
                         }
                         
                         InputChip(
@@ -443,7 +443,7 @@ fun AddHabitDialog(
                             val tagColor = if (tag == "其它") {
                                 TagColorOther
                             } else {
-                                TagColors.getOrNull(index % TagColors.size) ?: TagColors[0]
+                                TagColors[index % TagColors.size]
                             }
                             
                             InputChip(
