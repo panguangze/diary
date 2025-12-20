@@ -277,4 +277,19 @@ object MigrationHelper {
             addColumnIfNotExists(database, "unified_checkins", "tagColor", "TEXT DEFAULT NULL")
         }
     }
+
+    /**
+     * Migration from version 12 to 13 - Add daily reminder settings
+     *
+     * This migration adds columns to app_config table to support:
+     * - reminderEnabled: Boolean flag to enable/disable daily reminders
+     * - reminderTime: Time of day in minutes from midnight (0-1439) for daily reminder
+     */
+    val MIGRATION_12_13 = object : Migration(12, 13) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add reminder settings columns to app_config table
+            addColumnIfNotExists(database, "app_config", "reminderEnabled", "INTEGER NOT NULL DEFAULT 0")
+            addColumnIfNotExists(database, "app_config", "reminderTime", "INTEGER NOT NULL DEFAULT 540") // 9:00 AM
+        }
+    }
 }

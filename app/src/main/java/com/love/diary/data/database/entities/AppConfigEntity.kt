@@ -30,6 +30,11 @@ data class AppConfigEntity(
     /** Dark mode setting: null = system, true = dark, false = light */
     val darkMode: Boolean? = null,
     
+    /** Daily reminder enabled */
+    val reminderEnabled: Boolean = false,
+    /** Daily reminder time in minutes from midnight (0-1439) */
+    val reminderTime: Int = 540, // Default: 9:00 AM (9 * 60)
+    
     val createdAt: Long,
     val updatedAt: Long,
     

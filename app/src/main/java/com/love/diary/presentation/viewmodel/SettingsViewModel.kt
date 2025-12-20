@@ -26,6 +26,8 @@ data class SettingsUiState(
     val showAnniversary: Boolean = true,
     /** Dark mode: null = follow system, true = dark, false = light */
     val darkMode: Boolean? = null,
+    val reminderEnabled: Boolean = false,
+    val reminderTime: Int = 540, // Time in minutes from midnight (default 9:00 AM)
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val successMessage: String? = null
@@ -57,6 +59,8 @@ class SettingsViewModel @Inject constructor(
                         showStreak = it.showStreak,
                         showAnniversary = it.showAnniversary,
                         darkMode = it.darkMode,
+                        reminderEnabled = it.reminderEnabled,
+                        reminderTime = it.reminderTime,
                         isLoading = false
                     )
                 }
@@ -317,6 +321,27 @@ class SettingsViewModel @Inject constructor(
                 repository.updateAppConfig(updated)
                 _uiState.update { state -> state.copy(darkMode = darkMode) }
             }
+        }
+    }
+
+    /**
+     * Toggle reminder enabled status
+     */
+    fun toggleReminder(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.updateReminderEnabled(enabled)
+            _uiState.update { state -> state.copy(reminderEnabled = enabled) }
+        }
+    }
+
+    /**
+     * Update reminder time
+     * @param timeInMinutes Time in minutes from midnight (0-1439)
+     */
+    fun updateReminderTime(timeInMinutes: Int) {
+        viewModelScope.launch {
+            repository.updateReminderTime(timeInMinutes)
+            _uiState.update { state -> state.copy(reminderTime = timeInMinutes) }
         }
     }
 }

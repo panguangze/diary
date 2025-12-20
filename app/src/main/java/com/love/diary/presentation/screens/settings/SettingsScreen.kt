@@ -44,6 +44,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -59,7 +60,9 @@ import android.net.Uri
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.AppSegmentedTabs
 import com.love.diary.presentation.components.Dimens
+import com.love.diary.presentation.components.TimePickerDialog
 import com.love.diary.presentation.components.UnifiedDatePickerDialog
+import com.love.diary.util.ReminderScheduler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,8 +95,11 @@ fun SettingsScreen(
     var showDatePickerDialog by remember { mutableStateOf(false) }
     var showNameEditDialog by remember { mutableStateOf(false) }
     var showNicknameEditDialog by remember { mutableStateOf(false) }
+    var showTimePickerDialog by remember { mutableStateOf(false) }
     var tempInput by remember { mutableStateOf("") }
     var currentEditType by remember { mutableStateOf("") } // "start_date", "couple_name", "partner_nickname"
+    
+    val context = LocalContext.current
     
     // 添加文件选择器
     val importLauncher = rememberLauncherForActivityResult(
@@ -194,6 +200,47 @@ fun SettingsScreen(
                     checked = uiState.showAnniversary,
                     onCheckedChange = viewModel::toggleAnniversary
                 )
+            }
+        }
+
+        // 提醒设置
+        item {
+            SettingsCard(title = "提醒设置") {
+                SwitchSettingsItem(
+                    title = "每日提醒",
+                    subtitle = if (uiState.reminderEnabled) {
+                        val hour = uiState.reminderTime / 60
+                        val minute = uiState.reminderTime % 60
+                        "每天 ${String.format("%02d:%02d", hour, minute)} 提醒"
+                    } else {
+                        "关闭"
+                    },
+                    checked = uiState.reminderEnabled,
+                    onCheckedChange = { enabled ->
+                        viewModel.toggleReminder(enabled)
+                        val reminderScheduler = ReminderScheduler(context)
+                        if (enabled) {
+                            reminderScheduler.scheduleDailyReminder(uiState.reminderTime)
+                        } else {
+                            reminderScheduler.cancelDailyReminder()
+                        }
+                    }
+                )
+
+                if (uiState.reminderEnabled) {
+                    Divider(modifier = Modifier.padding(horizontal = 16.dp))
+
+                    SettingsItem(
+                        icon = Icons.Default.Notifications,
+                        title = "提醒时间",
+                        subtitle = String.format(
+                            "%02d:%02d",
+                            uiState.reminderTime / 60,
+                            uiState.reminderTime % 60
+                        ),
+                        onClick = { showTimePickerDialog = true }
+                    )
+                }
             }
         }
 
@@ -341,6 +388,24 @@ fun SettingsScreen(
                     Text("取消")
                 }
             }
+        )
+    }
+    
+    // 时间选择器对话框
+    if (showTimePickerDialog) {
+        TimePickerDialog(
+            onDismiss = { showTimePickerDialog = false },
+            onTimeSelected = { hour, minute ->
+                val timeInMinutes = hour * 60 + minute
+                viewModel.updateReminderTime(timeInMinutes)
+                // Update the alarm schedule
+                val reminderScheduler = ReminderScheduler(context)
+                if (uiState.reminderEnabled) {
+                    reminderScheduler.scheduleDailyReminder(timeInMinutes)
+                }
+            },
+            initialHour = uiState.reminderTime / 60,
+            initialMinute = uiState.reminderTime % 60
         )
     }
     }
