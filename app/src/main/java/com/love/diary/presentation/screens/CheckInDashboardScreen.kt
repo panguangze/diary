@@ -78,6 +78,7 @@ fun CheckInDashboardScreen(
     var selectedCheckIn by remember { mutableStateOf<UnifiedCheckIn?>(null) }
     var showCheckInCalendar by remember { mutableStateOf(false) }
     var showAddCountdownDialog by remember { mutableStateOf(false) }
+    var selectedCountdownMode by remember { mutableStateOf<com.love.diary.data.model.CountdownMode?>(null) }
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
     // Filter countdown configs
@@ -164,7 +165,21 @@ fun CheckInDashboardScreen(
                     uiState.checkInTypes.forEach { checkInType ->
                         CheckInTypeCard(
                             type = checkInType,
-                            onClick = { performQuickCheckIn(checkInType, viewModel) }
+                            onClick = { 
+                                when (checkInType) {
+                                    CheckInType.DAY_COUNTDOWN -> {
+                                        selectedCountdownMode = com.love.diary.data.model.CountdownMode.DAY_COUNTDOWN
+                                        showAddCountdownDialog = true
+                                    }
+                                    CheckInType.CHECKIN_COUNTDOWN -> {
+                                        selectedCountdownMode = com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN
+                                        showAddCountdownDialog = true
+                                    }
+                                    else -> {
+                                        performQuickCheckIn(checkInType, viewModel)
+                                    }
+                                }
+                            }
                         )
                     }
                 }
@@ -224,7 +239,11 @@ fun CheckInDashboardScreen(
     // Show add countdown dialog
     if (showAddCountdownDialog) {
         AddCountdownDialog(
-            onDismiss = { showAddCountdownDialog = false },
+            onDismiss = { 
+                showAddCountdownDialog = false
+                selectedCountdownMode = null
+            },
+            initialMode = selectedCountdownMode,
             onConfirm = { name, countdownMode, targetDate, countdownTarget, tag, description, icon, color ->
                 when (countdownMode) {
                     com.love.diary.data.model.CountdownMode.DAY_COUNTDOWN -> {
