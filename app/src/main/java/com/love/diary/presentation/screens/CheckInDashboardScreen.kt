@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -225,83 +226,92 @@ private fun CheckInHistoryRow(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = Dimens.CardPadding, vertical = Dimens.SectionSpacing)
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            // Row 1: Name + Tag + More button (show for all positive/completed check-ins)
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Row 1: Name + Tag (removed "更多" button from here)
                 Row(
-                    modifier = Modifier.weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = if (checkIn.isCompleted) 40.dp else 0.dp), // Add padding for icon button
+                    horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = checkIn.name,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        // Show tag if available
+                        checkIn.tag?.let { tag ->
+                            StatusBadge(
+                                text = tag,
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+                }
+                
+                // Row 2: Type and Note
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
-                        text = checkIn.name,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface
+                        text = "类型：${checkInLabel(checkIn.type)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    // Show tag if available
-                    checkIn.tag?.let { tag ->
-                        StatusBadge(
-                            text = tag,
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    checkIn.note?.let { note ->
+                        Text(
+                            text = note,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
                 
-                // Show "更多" button for positive/completed check-ins
-                if (checkIn.isCompleted) {
+                // Row 3: Date and Status
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        text = "更多",
+                        text = checkIn.date,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { onMoreClick() }
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    StatusBadge(
+                        text = "完成",
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
             }
-            
-            // Row 2: Type and Note
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+        
+        // Position "更多" icon button in top-right corner for positive/completed check-ins
+        if (checkIn.isCompleted) {
+            IconButton(
+                onClick = onMoreClick,
+                modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                Text(
-                    text = "类型：${checkInLabel(checkIn.type)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                checkIn.note?.let { note ->
-                    Text(
-                        text = note,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-            
-            // Row 3: Date and Status
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = checkIn.date,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                StatusBadge(
-                    text = "完成",
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                Icon(
+                    imageVector = Icons.Filled.MoreVert,
+                    contentDescription = "查看更多",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+    }
     }
 }
 
