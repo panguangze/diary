@@ -25,6 +25,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -64,6 +65,9 @@ import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader
 import com.love.diary.habit.HabitDisplayView
 import com.love.diary.habit.HabitStatsView
+import com.love.diary.ui.theme.TagColors
+import com.love.diary.ui.theme.TagColorOther
+import androidx.compose.ui.graphics.Color as ComposeColor
 
 @OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
@@ -177,10 +181,18 @@ fun HabitItemCard(
             HabitDisplayView(habit = habit)
 
             if (habit.tags.isNotEmpty()) {
+                val tagList = habit.tags.split(",").filter { it.isNotEmpty() }
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    items(habit.tags.split(",").filter { it.isNotEmpty() }) { tag ->
+                    items(tagList.size) { index ->
+                        val tag = tagList[index]
+                        val tagColor = if (tag == "其它") {
+                            TagColorOther
+                        } else {
+                            TagColors[index % TagColors.size]
+                        }
+                        
                         InputChip(
                             selected = tag == todayUsedTag,
                             onClick = {
@@ -192,7 +204,13 @@ fun HabitItemCard(
                                     todayUsedTag = tag
                                 }
                             },
-                            label = { Text(tag) }
+                            label = { Text(tag) },
+                            colors = InputChipDefaults.inputChipColors(
+                                containerColor = tagColor.copy(alpha = 0.2f),
+                                labelColor = tagColor,
+                                selectedContainerColor = tagColor,
+                                selectedLabelColor = ComposeColor.White
+                            )
                         )
                     }
                 }
@@ -270,7 +288,9 @@ fun AddHabitDialog(
     
     // 添加标签
     fun addTag() {
-        if (tagText.isNotBlank() && !tags.contains(tagText.trim())) {
+        if (tagText.isNotBlank() && 
+            !tags.contains(tagText.trim()) && 
+            tags.size < 5) { // 限制最多5个标签
             tags = tags + listOf(tagText.trim())
             tagText = ""
         }
@@ -380,7 +400,18 @@ fun AddHabitDialog(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text("标签", style = MaterialTheme.typography.titleMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("标签", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = "${tags.size}/5",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (tags.size >= 5) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 // 标签输入和管理
@@ -389,12 +420,14 @@ fun AddHabitDialog(
                         value = tagText,
                         onValueChange = { tagText = it },
                         label = { Text("输入标签") },
-                        modifier = Modifier.weight(1f)
+                        placeholder = { Text("最多5个标签") },
+                        modifier = Modifier.weight(1f),
+                        enabled = tags.size < 5
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     IconButton(
                         onClick = { addTag() },
-                        enabled = tagText.isNotBlank()
+                        enabled = tagText.isNotBlank() && tags.size < 5
                     ) {
                         Icon(Icons.Default.Add, contentDescription = "添加标签")
                     }
@@ -407,10 +440,20 @@ fun AddHabitDialog(
                     LazyRow {
                         items(tags.size) { index ->
                             val tag = tags[index]
+                            val tagColor = if (tag == "其它") {
+                                TagColorOther
+                            } else {
+                                TagColors[index % TagColors.size]
+                            }
+                            
                             InputChip(
                                 selected = false,
                                 onClick = { },
                                 label = { Text(tag) },
+                                colors = InputChipDefaults.inputChipColors(
+                                    containerColor = tagColor.copy(alpha = 0.2f),
+                                    labelColor = tagColor
+                                ),
                                 trailingIcon = {
                                     IconButton(
                                         onClick = { removeTag(tag) }
