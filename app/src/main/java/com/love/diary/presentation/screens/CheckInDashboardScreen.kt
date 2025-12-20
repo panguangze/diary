@@ -24,6 +24,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -57,6 +59,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.model.CheckInType
 import com.love.diary.data.model.CountdownMode
 import com.love.diary.data.model.UnifiedCheckIn
+import com.love.diary.data.model.UnifiedCheckInConfig
 import com.love.diary.presentation.viewmodel.CheckInViewModel
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.AppScaffold
@@ -76,203 +79,269 @@ fun CheckInDashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
-    var selectedCheckIn by remember { mutableStateOf<UnifiedCheckIn?>(null) }
-    var showCheckInCalendar by remember { mutableStateOf(false) }
-    var showAddCountdownDialog by remember { mutableStateOf(false) }
-    var selectedCountdownMode by remember { mutableStateOf<CountdownMode?>(null) }
-    val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var showAddCheckInDialog by remember { mutableStateOf(false) }
     
-    // Filter countdown configs
-    val countdownConfigs = remember(uiState.allCheckInConfigs) {
-        uiState.allCheckInConfigs.filter { 
-            it.countdownMode != null && it.isActive 
-        }
+    // Filter active configs
+    val activeConfigs = remember(uiState.allCheckInConfigs) {
+        uiState.allCheckInConfigs.filter { it.isActive }
     }
     
     AppScaffold(title = "打卡") { padding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(Dimens.ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
-            contentPadding = PaddingValues(bottom = Dimens.LargeSpacing)
         ) {
-            // Countdown check-ins section
-            if (countdownConfigs.isNotEmpty()) {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        SectionHeader(
-                            title = "倒计时打卡",
-                            subtitle = "距离目标还有多远"
-                        )
-                        TextButton(onClick = { showAddCountdownDialog = true }) {
-                            Text("+ 添加")
-                        }
-                    }
-                }
-
-                items(countdownConfigs) { config ->
-                    CountdownCard(
-                        config = config,
-                        daysRemaining = config.targetDate?.let { 
-                            viewModel.calculateDaysRemaining(it) 
-                        },
-                        countdownRemaining = viewModel.getCheckInCountdownRemaining(config),
-                        progress = viewModel.getCountdownProgress(config),
-                        onCheckIn = if (config.countdownMode == CountdownMode.CHECKIN_COUNTDOWN) {
-                            { viewModel.checkInCountdown(config.id, config.tag) }
-                        } else null,
-                        onClick = { }
+            if (activeConfigs.isEmpty()) {
+                // Empty state - show centered message and add button
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(Dimens.ScreenPadding),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "还没有打卡事项",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(Dimens.SmallSpacing))
+                    Text(
+                        text = "点击下方按钮添加你的第一个打卡事项",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        SectionHeader(
-                            title = "倒计时打卡",
-                            subtitle = "添加你的第一个倒计时"
+                // Show list of check-in items
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(Dimens.ScreenPadding),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
+                    contentPadding = PaddingValues(bottom = 80.dp) // Space for FAB
+                ) {
+                    items(activeConfigs) { config ->
+                        CheckInConfigCard(
+                            config = config,
+                            viewModel = viewModel
                         )
-                        TextButton(onClick = { showAddCountdownDialog = true }) {
-                            Text("+ 添加")
+                    }
+                }
+            }
+            
+            // Floating Action Button for adding new check-in items
+            androidx.compose.material3.FloatingActionButton(
+                onClick = { showAddCheckInDialog = true },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(Dimens.ScreenPadding)
+            ) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Add,
+                    contentDescription = "添加打卡事项"
+                )
+            }
+        }
+    }
+    
+    // Show add check-in dialog
+    if (showAddCheckInDialog) {
+        AddCheckInDialog(
+            onDismiss = { showAddCheckInDialog = false },
+            onConfirm = { category, recurrenceType, countdownMode, name, targetDate, countdownTarget, description, icon, color ->
+                when (category) {
+                    com.love.diary.data.model.CheckInCategory.POSITIVE -> {
+                        viewModel.createPositiveCheckIn(
+                            name = name,
+                            recurrenceType = recurrenceType!!,
+                            description = description,
+                            icon = icon,
+                            color = color
+                        )
+                    }
+                    com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+                        when (countdownMode) {
+                            CountdownMode.DAY_COUNTDOWN -> {
+                                targetDate?.let {
+                                    viewModel.createDayCountdown(
+                                        name = name,
+                                        targetDate = it,
+                                        description = description,
+                                        icon = icon,
+                                        color = color
+                                    )
+                                }
+                            }
+                            CountdownMode.CHECKIN_COUNTDOWN -> {
+                                countdownTarget?.let {
+                                    viewModel.createCheckInCountdown(
+                                        name = name,
+                                        countdownTarget = it,
+                                        tag = null, // No tag support for countdown
+                                        description = description,
+                                        icon = icon,
+                                        color = color
+                                    )
+                                }
+                            }
+                            null -> {}
+                        }
+                    }
+                    null -> {}
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun CheckInConfigCard(
+    config: UnifiedCheckInConfig,
+    viewModel: CheckInViewModel
+) {
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            // Handle check-in action based on config type
+            when (config.checkInCategory) {
+                com.love.diary.data.model.CheckInCategory.POSITIVE -> {
+                    // Positive check-in - perform check-in
+                    viewModel.checkInPositive(config.id)
+                }
+                com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+                    when (config.countdownMode) {
+                        CountdownMode.CHECKIN_COUNTDOWN -> {
+                            // Check-in countdown - perform check-in
+                            viewModel.checkInCountdown(config.id)
+                        }
+                        CountdownMode.DAY_COUNTDOWN -> {
+                            // Day countdown - just show info (no check-in needed)
+                        }
+                        null -> {}
+                    }
+                }
+                null -> {}
+            }
+        }
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left side - Icon and info
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(Dimens.MediumSpacing),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                // Icon with background
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            color = com.love.diary.util.ColorUtil.parseColor(config.color)?.copy(alpha = 0.2f)
+                                ?: MaterialTheme.colorScheme.primaryContainer,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = config.icon,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
+                
+                // Name and description
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = config.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    // Show category-specific info
+                    when (config.checkInCategory) {
+                        com.love.diary.data.model.CheckInCategory.POSITIVE -> {
+                            val recurrenceText = when (config.recurrenceType) {
+                                com.love.diary.data.model.RecurrenceType.WEEKLY -> "周打卡"
+                                com.love.diary.data.model.RecurrenceType.MONTHLY -> "月度打卡"
+                                null -> "正向打卡"
+                            }
+                            Text(
+                                text = recurrenceText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+                            when (config.countdownMode) {
+                                CountdownMode.DAY_COUNTDOWN -> {
+                                    val daysRemaining = config.targetDate?.let {
+                                        viewModel.calculateDaysRemaining(it)
+                                    } ?: 0
+                                    Text(
+                                        text = "剩余 $daysRemaining 天",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                CountdownMode.CHECKIN_COUNTDOWN -> {
+                                    val remaining = viewModel.getCheckInCountdownRemaining(config)
+                                    Text(
+                                        text = "剩余 $remaining 次打卡",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                null -> {}
+                            }
+                        }
+                        null -> {
+                            config.description?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
             }
             
-
-            item {
-                SectionHeader(
-                    title = "今天的状态",
-                    subtitle = "选择一种方式快速记录"
-                )
-            }
-
-            item {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
-                    maxItemsInEachRow = 2
-                ) {
-                    uiState.checkInTypes.forEach { checkInType ->
-                        CheckInTypeCard(
-                            type = checkInType,
-                            onClick = { 
-                                when (checkInType) {
-                                    CheckInType.DAY_COUNTDOWN -> {
-                                        selectedCountdownMode = CountdownMode.DAY_COUNTDOWN
-                                        showAddCountdownDialog = true
-                                    }
-                                    CheckInType.CHECKIN_COUNTDOWN -> {
-                                        selectedCountdownMode = CountdownMode.CHECKIN_COUNTDOWN
-                                        showAddCountdownDialog = true
-                                    }
-                                    else -> {
-                                        performQuickCheckIn(checkInType, viewModel)
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-
-            item { 
-                SectionHeader(
-                    title = "最近打卡", 
-                    subtitle = "历史记录一目了然"
-                )
-            }
-
-            if (uiState.checkInRecords.isEmpty()) {
-                item {
-                    AppCard(
-                        modifier = Modifier.fillMaxWidth()
+            // Right side - Action indicator or progress
+            when (config.checkInCategory) {
+                com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+                    val progress = viewModel.getCountdownProgress(config)
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "还没有打卡记录，先从一个类别开始吧",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "${progress.toInt()}%",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        androidx.compose.material3.LinearProgressIndicator(
+                            progress = progress / 100f,
+                            modifier = Modifier.widthIn(max = 60.dp),
                         )
                     }
                 }
-            } else {
-                items(uiState.checkInRecords) { checkIn ->
-                    CheckInHistoryRow(checkIn = checkIn)
+                else -> {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
+                        contentDescription = "打卡",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }
-    }
-    
-    // Show detail bottom sheet when check-in is selected
-    selectedCheckIn?.let { checkIn ->
-        ModalBottomSheet(
-            sheetState = detailSheetState,
-            onDismissRequest = { selectedCheckIn = null }
-        ) {
-            CheckInDetailSheet(checkIn = checkIn)
-        }
-    }
-    
-    // Show check-in calendar dialog
-    if (showCheckInCalendar) {
-        CheckInCalendarDialog(
-            onDismiss = { showCheckInCalendar = false },
-            onDateClick = { date ->
-                val record = uiState.checkInRecords.find { it.date == date }
-                if (record != null) {
-                    selectedCheckIn = record
-                }
-            },
-            checkInRecords = uiState.checkInRecords
-        )
-    }
-    
-    // Show add countdown dialog
-    if (showAddCountdownDialog) {
-        AddCountdownDialog(
-            onDismiss = { 
-                showAddCountdownDialog = false
-                selectedCountdownMode = null
-            },
-            initialMode = selectedCountdownMode,
-            onConfirm = { name, countdownMode, targetDate, countdownTarget, tag, description, icon, color ->
-                when (countdownMode) {
-                    CountdownMode.DAY_COUNTDOWN -> {
-                        targetDate?.let {
-                            viewModel.createDayCountdown(
-                                name = name,
-                                targetDate = it,
-                                description = description,
-                                icon = icon,
-                                color = color
-                            )
-                        }
-                    }
-                    CountdownMode.CHECKIN_COUNTDOWN -> {
-                        countdownTarget?.let {
-                            viewModel.createCheckInCountdown(
-                                name = name,
-                                countdownTarget = it,
-                                tag = tag,
-                                description = description,
-                                icon = icon,
-                                color = color
-                            )
-                        }
-                    }
-                }
-            }
-        )
     }
 }
 

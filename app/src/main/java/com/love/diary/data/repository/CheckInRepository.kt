@@ -440,6 +440,7 @@ class CheckInRepository @Inject constructor(
             color = color,
             startDate = LocalDate.now().toString(),
             targetDate = targetDate,
+            checkInCategory = com.love.diary.data.model.CheckInCategory.COUNTDOWN,
             countdownMode = com.love.diary.data.model.CountdownMode.DAY_COUNTDOWN,
             countdownTarget = null, // 天数倒计时不需要设置目标值，自动计算
             countdownProgress = 0
@@ -451,7 +452,7 @@ class CheckInRepository @Inject constructor(
      * 创建打卡倒计时配置
      * @param name 倒计时名称
      * @param countdownTarget 倒计时目标次数
-     * @param tag 标签
+     * @param tag 标签（不再使用，保留参数以兼容）
      * @param description 描述
      * @param icon 图标
      * @param color 颜色
@@ -472,7 +473,8 @@ class CheckInRepository @Inject constructor(
             icon = icon,
             color = color,
             startDate = LocalDate.now().toString(),
-            tag = tag,
+            tag = null, // 倒计时打卡不使用标签
+            checkInCategory = com.love.diary.data.model.CheckInCategory.COUNTDOWN,
             countdownMode = com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN,
             countdownTarget = countdownTarget,
             countdownProgress = 0
@@ -483,6 +485,7 @@ class CheckInRepository @Inject constructor(
     /**
      * 打卡倒计时打卡
      * 每打卡一次，进度+1
+     * 每天只能打一次卡
      */
     suspend fun checkInCountdown(configId: Long, tag: String? = null, note: String? = null): Long {
         val config = getCheckInConfigById(configId) ?: return -1
@@ -496,12 +499,21 @@ class CheckInRepository @Inject constructor(
         if (config.countdownProgress >= (config.countdownTarget ?: 0)) {
             return -1
         }
+        
+        val today = LocalDate.now().toString()
+        
+        // 检查今天是否已经打卡（每天只能打一次卡）
+        val todayCheckIn = unifiedCheckInDao.getCheckInByDateAndConfigId(today, configId)
+        if (todayCheckIn != null) {
+            // 今天已经打过卡了，返回现有记录ID
+            return todayCheckIn.id
+        }
 
-        // 执行打卡
+        // 执行打卡（不使用标签）
         val checkInId = checkIn(
             name = config.name,
             type = config.type,
-            tag = tag ?: config.tag,
+            tag = null, // 倒计时打卡不使用标签
             tagColor = config.color, // Use config color as tag color
             note = note,
             configId = configId
@@ -574,5 +586,71 @@ class CheckInRepository @Inject constructor(
             }
             null -> 0f
         }
+    }
+    
+    /**
+     * 创建正向打卡配置
+     * @param name 打卡名称
+     * @param recurrenceType 重复类型（周打卡或月度打卡）
+     * @param description 描述
+     * @param icon 图标
+     * @param color 颜色
+     */
+    suspend fun createPositiveCheckIn(
+        name: String,
+        recurrenceType: com.love.diary.data.model.RecurrenceType,
+        description: String? = null,
+        icon: String = "✅",
+        color: String = "#4CAF50"
+    ): Long {
+        val config = UnifiedCheckInConfig(
+            name = name,
+            type = CheckInType.CUSTOM, // Using CUSTOM type for positive check-ins
+            description = description ?: when(recurrenceType) {
+                com.love.diary.data.model.RecurrenceType.WEEKLY -> "周打卡"
+                com.love.diary.data.model.RecurrenceType.MONTHLY -> "月度打卡"
+            },
+            buttonLabel = "打卡",
+            icon = icon,
+            color = color,
+            startDate = LocalDate.now().toString(),
+            checkInCategory = com.love.diary.data.model.CheckInCategory.POSITIVE,
+            recurrenceType = recurrenceType
+        )
+        return saveCheckInConfig(config)
+    }
+    
+    /**
+     * 正向打卡
+     * 每次打卡记录一次，根据recurrenceType判断是否今天已打卡
+     */
+    suspend fun checkInPositive(configId: Long): Long {
+        val config = getCheckInConfigById(configId) ?: return -1
+        
+        // 检查是否是正向打卡类型
+        if (config.checkInCategory != com.love.diary.data.model.CheckInCategory.POSITIVE) {
+            return -1
+        }
+        
+        val today = LocalDate.now().toString()
+        
+        // 检查今天是否已经打卡（避免重复打卡）
+        val todayCheckIn = unifiedCheckInDao.getCheckInByDateAndConfigId(today, configId)
+        if (todayCheckIn != null) {
+            // 今天已经打过卡了，返回现有记录ID
+            return todayCheckIn.id
+        }
+        
+        // 执行打卡
+        val checkInId = checkIn(
+            name = config.name,
+            type = config.type,
+            tag = null, // 正向打卡不使用标签
+            tagColor = config.color,
+            note = null,
+            configId = configId
+        )
+        
+        return checkInId
     }
 }

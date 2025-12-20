@@ -444,4 +444,34 @@ class CheckInViewModel @Inject constructor(
     fun getCountdownProgress(config: UnifiedCheckInConfig): Float {
         return checkInRepository.getCountdownProgress(config)
     }
+    
+    /**
+     * 创建正向打卡配置
+     */
+    fun createPositiveCheckIn(
+        name: String,
+        recurrenceType: com.love.diary.data.model.RecurrenceType,
+        description: String? = null,
+        icon: String = "✅",
+        color: String = "#4CAF50"
+    ) {
+        viewModelScope.launch {
+            checkInRepository.createPositiveCheckIn(
+                name = name,
+                recurrenceType = recurrenceType,
+                description = description,
+                icon = icon,
+                color = color
+            )
+        }
+    }
+    
+    /**
+     * 正向打卡
+     */
+    fun checkInPositive(configId: Long) {
+        viewModelScope.launch {
+            checkInRepository.checkInPositive(configId)
+        }
+    }
 }

@@ -67,6 +67,10 @@ interface UnifiedCheckInDao {
     // 获取特定日期的打卡记录
     @Query("SELECT * FROM unified_checkins WHERE date = :date AND name = :name")
     suspend fun getCheckInByDateAndName(date: String, name: String): UnifiedCheckIn?
+    
+    // 获取特定日期和配置ID的打卡记录
+    @Query("SELECT * FROM unified_checkins WHERE date = :date AND configId = :configId")
+    suspend fun getCheckInByDateAndConfigId(date: String, configId: Long): UnifiedCheckIn?
 
     // 获取某个打卡事项的统计信息
     @Query("SELECT COUNT(*) FROM unified_checkins WHERE name = :name")
