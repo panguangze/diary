@@ -270,11 +270,11 @@ fun BottomNavigationBar(
                 },
                 label = null,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
-                    selectedTextColor = Color.White,
-                    unselectedIconColor = unselectedColor,
-                    unselectedTextColor = unselectedColor,
-                    indicatorColor = Color.Transparent
+                    selectedIconColor = Color.Transparent,  // Icon color handled in custom layout
+                    selectedTextColor = Color.Transparent,  // Text color handled in custom layout
+                    unselectedIconColor = Color.Transparent,  // Icon color handled in custom layout
+                    unselectedTextColor = Color.Transparent,  // Text color handled in custom layout
+                    indicatorColor = Color.Transparent  // Remove black background indicator
                 ),
                 alwaysShowLabel = false
             )
