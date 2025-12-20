@@ -19,14 +19,12 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -112,23 +110,10 @@ fun CheckInDashboardScreen(
             }
 
             item { 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    SectionHeader(
-                        title = "最近打卡", 
-                        subtitle = "历史记录一目了然",
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        text = "更多",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { /* Future: Show all check-ins in a dedicated screen */ }
-                    )
-                }
+                SectionHeader(
+                    title = "最近打卡", 
+                    subtitle = "历史记录一目了然"
+                )
             }
 
             if (uiState.checkInRecords.isEmpty()) {
@@ -145,18 +130,7 @@ fun CheckInDashboardScreen(
                 }
             } else {
                 items(uiState.checkInRecords) { checkIn ->
-                    CheckInHistoryRow(
-                        checkIn = checkIn,
-                        onMoreClick = { 
-                            // For positive check-ins (completed), show calendar
-                            if (checkIn.isCompleted) {
-                                showCheckInCalendar = true
-                            } else {
-                                // For negative check-ins, show detail
-                                selectedCheckIn = checkIn
-                            }
-                        }
-                    )
+                    CheckInHistoryRow(checkIn = checkIn)
                 }
             }
         }
@@ -219,8 +193,7 @@ private fun CheckInTypeCard(
 
 @Composable
 private fun CheckInHistoryRow(
-    checkIn: UnifiedCheckIn,
-    onMoreClick: () -> Unit
+    checkIn: UnifiedCheckIn
 ) {
     AppCard(
         modifier = Modifier.fillMaxWidth(),
@@ -233,11 +206,9 @@ private fun CheckInHistoryRow(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Row 1: Name + Tag (removed "更多" button from here)
+                // Row 1: Name + Tag
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = if (checkIn.isCompleted) 40.dp else 0.dp), // Add padding for icon button
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -292,21 +263,7 @@ private fun CheckInHistoryRow(
                     )
                 }
             }
-        
-        // Position "更多" icon button in top-right corner for positive/completed check-ins
-        if (checkIn.isCompleted) {
-            IconButton(
-                onClick = onMoreClick,
-                modifier = Modifier.align(Alignment.TopEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = "查看更多",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
-    }
     }
 }
 
