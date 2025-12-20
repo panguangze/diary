@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,7 +32,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,6 +52,7 @@ import com.love.diary.data.repository.AppRepository
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.ShapeTokens
+import com.love.diary.presentation.components.UnifiedDatePickerDialog
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
@@ -211,53 +209,13 @@ fun FirstRunScreen(
                     
                     // 日期选择器
                     if (showDatePicker) {
-                        // 确保有有效的日期用于初始化日期选择器
-                        val initialDate = try {
-                            if (startDate.isNotEmpty()) {
-                                LocalDate.parse(startDate)
-                            } else {
-                                LocalDate.now()
-                            }
-                        } catch (e: Exception) {
-                            LocalDate.now()
-                        }
-                        
-                        val datePickerState = rememberDatePickerState(
-                            initialSelectedDateMillis = initialDate.atStartOfDay().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-                        )
-                        
-                        DatePickerDialog(
-                            onDismissRequest = { showDatePicker = false },
-                            confirmButton = {
-                                TextButton(
-                                    onClick = {
-                                        val selectedDate = datePickerState.selectedDateMillis
-                                        if (selectedDate != null) {
-                                            val newDate = java.util.Date(selectedDate).toInstant()
-                                                .atZone(java.time.ZoneId.systemDefault())
-                                                .toLocalDate()
-                                            startDate = newDate.format(dateFormatter)
-                                        }
-                                        showDatePicker = false
-                                    }
-                                ) {
-                                    Text("确定")
-                                }
+                        UnifiedDatePickerDialog(
+                            onDismiss = { showDatePicker = false },
+                            onDateSelected = { selectedDate ->
+                                startDate = selectedDate
                             },
-                            dismissButton = {
-                                TextButton(
-                                    onClick = {
-                                        showDatePicker = false
-                                    }
-                                ) {
-                                    Text("取消")
-                                }
-                            }
-                        ) {
-                            DatePicker(
-                                state = datePickerState
-                            )
-                        }
+                            initialDate = startDate.ifEmpty { null }
+                        )
                     }
 
                     // 组合名字
