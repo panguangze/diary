@@ -80,7 +80,7 @@ fun CountdownProgressView(
             .padding(vertical = 8.dp)
     ) {
         LinearProgressIndicator(
-            progress = progress,
+            progress = { progress },  // Use lambda for animated progress
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
@@ -102,6 +102,14 @@ fun CountdownProgressView(
                 style = MaterialTheme.typography.bodySmall
             )
         }
+        
+        // Add progress percentage text
+        Text(
+            text = "进度: ${(progress * 100).toInt()}% (已过 $elapsedDays / 共 $totalDays 天)",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp)
+        )
     }
 }
 

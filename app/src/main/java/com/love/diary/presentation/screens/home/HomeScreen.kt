@@ -132,6 +132,8 @@ private val MoodGridMaxHeight = 240.dp
 private val StatsGridMinHeight = 160.dp
 private val StatsGridMaxHeight = 320.dp
 private const val RecentMoodIconTargetCount = 10
+
+// Unified Color Palette
 private val PrimaryPink = Color(0xFFFF557F)
 private val AccentYellow = Color(0xFFFFD33D)
 private val NeutralGray = Color(0xFF888888)
@@ -151,6 +153,13 @@ private val AccentGradientStart = Color(0xFFFF6B81)
 private val AccentGradientEnd = Color(0xFFFF476F)
 private val MoodSelectedStart = Color(0xFFFFE6E8)
 private val MoodSelectedEnd = Color(0xFFFFC2C6)
+
+// Unified Card Styling
+private val CardCornerRadius = 16.dp
+private val CardElevation = 6.dp
+private val CardBackgroundColor = Color.White
+private val CardBorderWidth = 1.dp
+
 private val MoodTrendRangeOptions = StatisticsViewModel.DEFAULT_RANGE_OPTIONS.map { it to it.toRangeLabelRes() }
 
 private data class MoodOption(
@@ -260,9 +269,9 @@ fun HomeScreen(
                 inputText = uiState.otherMoodText,
                 selectedImageUri = uiState.selectedImageUri,
                 onMoodSelected = { mood ->
-                    // 只选择心情，不保存
+                    // 选择心情时，自动填充对应的feedbackText
                     if (mood != uiState.todayMood) {
-                        viewModel.updateOtherMoodText("")
+                        viewModel.updateOtherMoodText(mood.feedbackText)
                     }
                     viewModel.updateSelectedMood(mood)
                 },
@@ -459,9 +468,9 @@ private fun TopInfoCardRedesigned(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        shape = RoundedCornerShape(CardCornerRadius),
+        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
     ) {
         Row(
             modifier = Modifier
@@ -540,9 +549,9 @@ private fun MoodRecordSection(
     Card(
         modifier = Modifier
             .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(CardCornerRadius),
+        border = BorderStroke(CardBorderWidth, BorderColor),
+        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
@@ -831,9 +840,9 @@ private fun RecentMoodStatsSection(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 240.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        shape = RoundedCornerShape(CardCornerRadius),
+        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
     ) {
         Column(
             modifier = Modifier
@@ -892,9 +901,9 @@ private fun MoodTrendPreviewCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 220.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(CardCornerRadius),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = CardElevation)
     ) {
         Column(
             modifier = Modifier
@@ -1915,6 +1924,28 @@ private fun HistoryDetailSheet(
                     .heightIn(min = 120.dp),
                 label = { Text("一句话") }
             )
+        }
+
+        // Display image if available
+        if (!record.singleImageUri.isNullOrBlank()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                shape = RoundedCornerShape(CardCornerRadius),
+                colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(record.singleImageUri)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "心情图片",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
 
         Row(
