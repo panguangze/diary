@@ -56,7 +56,6 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
-import androidx.compose.material3.DatePickerDefaults
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader

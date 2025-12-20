@@ -20,15 +20,13 @@ import java.time.format.DateTimeFormatter
  * @param onDismiss Callback when dialog is dismissed
  * @param onDateSelected Callback with selected date in yyyy-MM-dd format
  * @param initialDate Initial date string in yyyy-MM-dd format, defaults to today
- * @param title Optional title for the dialog
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UnifiedDatePickerDialog(
     onDismiss: () -> Unit,
     onDateSelected: (String) -> Unit,
-    initialDate: String? = null,
-    title: String? = null
+    initialDate: String? = null
 ) {
     val formatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
     
@@ -81,13 +79,6 @@ fun UnifiedDatePickerDialog(
             }
         }
     ) {
-        DatePicker(
-            state = datePickerState,
-            title = title?.let {
-                {
-                    Text(text = it)
-                }
-            }
-        )
+        DatePicker(state = datePickerState)
     }
 }

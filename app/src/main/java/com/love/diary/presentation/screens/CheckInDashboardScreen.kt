@@ -47,7 +47,6 @@ fun CheckInDashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
-    var showAllCheckInsDialog by remember { mutableStateOf(false) }
     var selectedCheckIn by remember { mutableStateOf<UnifiedCheckIn?>(null) }
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
@@ -98,7 +97,7 @@ fun CheckInDashboardScreen(
                         text = "更多",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clickable { showAllCheckInsDialog = true }
+                        modifier = Modifier.clickable { /* Future: Show all check-ins in a dedicated screen */ }
                     )
                 }
             }
