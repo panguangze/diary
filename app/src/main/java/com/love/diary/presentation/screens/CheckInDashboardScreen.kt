@@ -408,28 +408,70 @@ private fun CollapsedCheckInContent(
 @Composable
 private fun WeeklyCheckInStatus(checkInRecords: List<UnifiedCheckIn>) {
     val today = LocalDate.now()
-    val last7Days = (DAYS_IN_WEEK - 1 downTo 0).map { today.minusDays(it.toLong()) }
+    val dayOfWeek = today.dayOfWeek.value // Monday = 1, Sunday = 7
+    
+    // Get Monday of current week
+    val monday = today.minusDays((dayOfWeek - 1).toLong())
+    
+    // Create list of dates from Monday to Sunday
+    val weekDays = (0..6).map { monday.plusDays(it.toLong()) }
     val checkInMap = checkInRecords.associate { it.date to it }
     
-    Row(
+    Column(
         modifier = Modifier.padding(top = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        last7Days.forEach { date ->
-            val dateStr = date.toString()
-            val hasCheckIn = checkInMap.containsKey(dateStr)
-            
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .background(
-                        color = if (hasCheckIn) 
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                        else 
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-                        shape = CircleShape
+        // Day labels (Mon-Sun)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            val dayLabels = listOf("一", "二", "三", "四", "五", "六", "日")
+            dayLabels.forEach { label ->
+                Box(
+                    modifier = Modifier.size(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 10.sp
                     )
-            )
+                }
+            }
+        }
+        
+        // Check-in status circles
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            weekDays.forEach { date ->
+                val dateStr = date.toString()
+                val hasCheckIn = checkInMap.containsKey(dateStr)
+                val isToday = date == today
+                
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .background(
+                            color = if (hasCheckIn) 
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                            else 
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                            shape = CircleShape
+                        )
+                        .then(
+                            if (isToday) {
+                                Modifier.border(
+                                    width = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = CircleShape
+                                )
+                            } else Modifier
+                        )
+                )
+            }
         }
     }
 }

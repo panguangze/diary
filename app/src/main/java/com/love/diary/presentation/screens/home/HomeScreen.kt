@@ -208,6 +208,42 @@ fun HomeScreen(
     ) { uri ->
         viewModel.updateSelectedImage(uri?.toString())
     }
+    
+    // Camera launcher
+    var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempCameraUri != null) {
+            // Save to gallery and update view model
+            com.love.diary.util.CameraHelper.saveImageToGallery(context, tempCameraUri!!)
+            viewModel.updateSelectedImage(tempCameraUri.toString())
+        }
+        tempCameraUri = null
+    }
+    
+    // Permission launchers
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Launch camera
+            val uri = com.love.diary.util.CameraHelper.createImageUri(context)
+            if (uri != null) {
+                tempCameraUri = uri
+                cameraLauncher.launch(uri)
+            }
+        }
+    }
+    
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // Handle notification permission result if needed
+    }
+    
+    // State for photo picker dialog
+    var showPhotoPickerDialog by remember { mutableStateOf(false) }
 
     var showCalendarSheet by remember { mutableStateOf(false) }
     var selectedHistoryItem by remember { mutableStateOf<DailyMoodEntity?>(null) }
@@ -276,7 +312,7 @@ fun HomeScreen(
                     viewModel.updateSelectedMood(mood)
                 },
                 onInputChange = viewModel::updateOtherMoodText,
-                onPickImage = { moodImagePicker.launch("image/*") },
+                onPickImage = { showPhotoPickerDialog = true },
                 onSave = { text -> viewModel.saveDescription(text, defaultMoodText) }
             )
 
@@ -430,6 +466,44 @@ fun HomeScreen(
                 }
             )
         }
+    }
+    
+    // Photo picker dialog
+    if (showPhotoPickerDialog) {
+        AlertDialog(
+            onDismissRequest = { showPhotoPickerDialog = false },
+            title = { Text("选择图片") },
+            text = { Text("请选择图片来源") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showPhotoPickerDialog = false
+                        // Check camera permission
+                        if (com.love.diary.util.PermissionHelper.isCameraPermissionGranted(context)) {
+                            val uri = com.love.diary.util.CameraHelper.createImageUri(context)
+                            if (uri != null) {
+                                tempCameraUri = uri
+                                cameraLauncher.launch(uri)
+                            }
+                        } else {
+                            cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                        }
+                    }
+                ) {
+                    Text("拍照")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showPhotoPickerDialog = false
+                        moodImagePicker.launch("image/*")
+                    }
+                ) {
+                    Text("从相册选择")
+                }
+            }
+        )
     }
 
 }
