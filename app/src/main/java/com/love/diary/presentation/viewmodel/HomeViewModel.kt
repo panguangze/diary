@@ -35,6 +35,7 @@ data class HomeUiState(
     val currentDateDisplay: String = "",
     val todayDate: String = "",
     val currentStreak: Int = 0,
+    val longestStreak: Int = 0, // 添加最长连续记录
     val currentCheckInConfig: String = "异地恋日记", // 添加当前打卡配置名称
     val recentTenMoods: List<DailyMoodEntity> = emptyList(), // 最近10条心情记录
     val isDescriptionEditing: Boolean = false,
@@ -124,6 +125,7 @@ class HomeViewModel @Inject constructor(
                 val dayIndex = calculateDayIndex(it.startDate, todayStr)
                 val dayDisplay = repository.getDayDisplay(dayIndex)
                 val currentStreak = calculateCurrentStreak() // 计算连续记录天数
+                val longestStreak = calculateLongestStreak() // 计算最长连续记录天数
                 
                 _uiState.update { state ->
                     state.copy(
@@ -132,6 +134,7 @@ class HomeViewModel @Inject constructor(
                         currentDateDisplay = "今天：$todayStr（$dayOfWeek）",
                         todayDate = todayStr,
                         currentStreak = currentStreak,
+                        longestStreak = longestStreak,
                         isLoading = false
                     )
                 }
@@ -154,6 +157,7 @@ class HomeViewModel @Inject constructor(
                     val dayIndex = calculateDayIndex(it.startDate, todayStr)
                     val dayDisplay = repository.getDayDisplay(dayIndex)
                     val currentStreak = calculateCurrentStreak()
+                    val longestStreak = calculateLongestStreak()
                     
                     _uiState.update { state ->
                         state.copy(
@@ -164,7 +168,8 @@ class HomeViewModel @Inject constructor(
                         dayIndex = dayIndex,
                         dayDisplay = dayDisplay,
                         todayDate = todayStr,
-                        currentStreak = currentStreak
+                        currentStreak = currentStreak,
+                        longestStreak = longestStreak
                     )
                     }
                     
@@ -198,6 +203,43 @@ class HomeViewModel @Inject constructor(
         
         return streak
     }
+    
+    private suspend fun calculateLongestStreak(): Int {
+        // 获取所有的记录，计算最长连续记录天数
+        val allMoods = repository.getAllMoodRecords()
+        if (allMoods.isEmpty()) return 0
+        
+        // 将日期字符串转换为LocalDate并排序
+        val sortedDates = allMoods
+            .mapNotNull { 
+                try {
+                    LocalDate.parse(it.date)
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            .sorted()
+        
+        if (sortedDates.isEmpty()) return 0
+        
+        var longestStreak = 1
+        var currentStreak = 1
+        
+        for (i in 1 until sortedDates.size) {
+            val prevDate = sortedDates[i - 1]
+            val currDate = sortedDates[i]
+            
+            // 检查是否连续（相差1天）
+            if (prevDate.plusDays(1) == currDate) {
+                currentStreak++
+                longestStreak = maxOf(longestStreak, currentStreak)
+            } else {
+                currentStreak = 1
+            }
+        }
+        
+        return longestStreak
+    }
 
     fun selectMood(moodType: MoodType, moodText: String? = null) {
         viewModelScope.launch {
@@ -221,7 +263,8 @@ class HomeViewModel @Inject constructor(
 
             loadRecentTenMoods()
             val currentStreak = calculateCurrentStreak()
-            _uiState.update { it.copy(currentStreak = currentStreak) }
+            val longestStreak = calculateLongestStreak()
+            _uiState.update { it.copy(currentStreak = currentStreak, longestStreak = longestStreak) }
         }
     }
 
@@ -266,7 +309,8 @@ class HomeViewModel @Inject constructor(
                 // Reload recent moods and streak
                 loadRecentTenMoods()
                 val currentStreak = calculateCurrentStreak()
-                _uiState.update { it.copy(currentStreak = currentStreak) }
+                val longestStreak = calculateLongestStreak()
+                _uiState.update { it.copy(currentStreak = currentStreak, longestStreak = longestStreak) }
             }
         }
     }
@@ -347,7 +391,8 @@ class HomeViewModel @Inject constructor(
                 // 刷新最近的心情记录和连续记录天数
                 loadRecentTenMoods()
                 val currentStreak = calculateCurrentStreak()
-                _uiState.update { it.copy(currentStreak = currentStreak) }
+                val longestStreak = calculateLongestStreak()
+                _uiState.update { it.copy(currentStreak = currentStreak, longestStreak = longestStreak) }
             }.onFailure {
                 _uiState.update { state ->
                     state.copy(
