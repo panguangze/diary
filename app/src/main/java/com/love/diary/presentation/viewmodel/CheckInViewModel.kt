@@ -55,29 +55,12 @@ class CheckInViewModel @Inject constructor(
     }
     
     private fun loadCheckInTypes() {
-        // Provide predefined check-in types instead of loading from database
-        // This ensures users always see available types, even if they haven't used them yet
-        val predefinedTypes = listOf(
-            CheckInType.LOVE_DIARY,
-            CheckInType.HABIT,
-            CheckInType.EXERCISE,
-            CheckInType.STUDY,
-            CheckInType.WORKOUT,
-            CheckInType.DIET,
-            CheckInType.MEDITATION,
-            CheckInType.READING,
-            CheckInType.WATER,
-            CheckInType.SLEEP,
-            CheckInType.MILESTONE,
-            CheckInType.CUSTOM,
-            CheckInType.DAY_COUNTDOWN,
-            CheckInType.CHECKIN_COUNTDOWN
-        )
+        // Use all available check-in types from the enum
+        // This ensures users always see all available types
+        val allTypes = CheckInType.values().toList()
         
         _uiState.update { state ->
-            state.copy(
-                checkInTypes = predefinedTypes
-            )
+            state.copy(checkInTypes = allTypes)
         }
     }
     
