@@ -734,10 +734,26 @@ private fun CheckInDayCell(
     isToday: Boolean,
     onClick: () -> Unit
 ) {
+    // Get tag color from first check-in if available
+    val tagColorStr = checkInsForDate?.firstOrNull()?.tagColor
+    val tagColor = tagColorStr?.let { 
+        try {
+            androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(it))
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
     val backgroundColor = when {
         isToday -> MaterialTheme.colorScheme.primaryContainer
+        !checkInsForDate.isNullOrEmpty() && tagColor != null -> tagColor.copy(alpha = 0.8f)
         !checkInsForDate.isNullOrEmpty() -> MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
         else -> MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+    }
+    
+    val textColor = when {
+        !checkInsForDate.isNullOrEmpty() && tagColor != null -> androidx.compose.ui.graphics.Color.White
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     androidx.compose.material3.Card(
@@ -768,7 +784,8 @@ private fun CheckInDayCell(
                     Text(
                         text = day.toString(),
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp
+                        fontSize = 10.sp,
+                        color = textColor
                     )
                 }
             } else {
@@ -836,6 +853,16 @@ private fun CheckInMiniMonthGrid(
                     val date = java.time.LocalDate.of(year, month, day)
                     val dateStr = date.toString()
                     val checkInsForDate = checkInMap[dateStr]
+                    
+                    // Get tag color from first check-in if available
+                    val tagColorStr = checkInsForDate?.firstOrNull()?.tagColor
+                    val tagColor = tagColorStr?.let { 
+                        try {
+                            androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(it))
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
 
                     Box(
                         modifier = Modifier.size(12.dp),
@@ -847,7 +874,7 @@ private fun CheckInMiniMonthGrid(
                                 modifier = Modifier
                                     .size(10.dp)
                                     .background(
-                                        MaterialTheme.colorScheme.primary,
+                                        tagColor ?: MaterialTheme.colorScheme.primary,
                                         shape = androidx.compose.foundation.shape.CircleShape
                                     )
                             )

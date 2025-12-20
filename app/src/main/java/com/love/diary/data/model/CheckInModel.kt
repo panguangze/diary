@@ -50,6 +50,7 @@ data class UnifiedCheckIn(
     // 通用字段
     val moodType: MoodType? = null,      // 心情类型（恋爱日记等场景使用）
     val tag: String? = null,             // 标签（分类或备注）
+    val tagColor: String? = null,        // 标签颜色（用于在日历上显示）
     val note: String? = null,            // 打卡备注
     val attachmentUri: String? = null,   // 附件URI（图片、音频等）
     

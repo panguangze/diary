@@ -264,4 +264,17 @@ object MigrationHelper {
             addColumnIfNotExists(database, "unified_checkin_configs", "countdownProgress", "INTEGER NOT NULL DEFAULT 0")
         }
     }
+
+    /**
+     * Migration from version 11 to 12 - Add tag color to check-ins
+     *
+     * This migration adds the tagColor column to unified_checkins table to support:
+     * - tagColor: Color of the tag used for check-in (for calendar display)
+     */
+    val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add tagColor column to unified_checkins table
+            addColumnIfNotExists(database, "unified_checkins", "tagColor", "TEXT DEFAULT NULL")
+        }
+    }
 }
