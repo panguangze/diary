@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun AddCountdownDialog(
     onDismiss: () -> Unit,
+    initialMode: CountdownMode? = null,
     onConfirm: (
         name: String,
         countdownMode: CountdownMode,
@@ -39,13 +40,27 @@ fun AddCountdownDialog(
     ) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var selectedMode by remember { mutableStateOf(CountdownMode.DAY_COUNTDOWN) }
+    var selectedMode by remember { mutableStateOf(initialMode ?: CountdownMode.DAY_COUNTDOWN) }
     var targetDate by remember { mutableStateOf(LocalDate.now().plusDays(30).toString()) }
     var countdownTarget by remember { mutableStateOf("30") }
     var tag by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var selectedIcon by remember { mutableStateOf("⏰") }
-    var selectedColor by remember { mutableStateOf("#FF5722") }
+    var selectedIcon by remember { 
+        mutableStateOf(
+            when (initialMode) {
+                CountdownMode.CHECKIN_COUNTDOWN -> "📅"
+                else -> "⏰"
+            }
+        )
+    }
+    var selectedColor by remember { 
+        mutableStateOf(
+            when (initialMode) {
+                CountdownMode.CHECKIN_COUNTDOWN -> "#2196F3"
+                else -> "#FF5722"
+            }
+        )
+    }
     
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 

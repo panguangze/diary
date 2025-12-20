@@ -55,14 +55,12 @@ class CheckInViewModel @Inject constructor(
     }
     
     private fun loadCheckInTypes() {
-        viewModelScope.launch {
-            checkInRepository.getUniqueCheckInTypes().collect { types ->
-                _uiState.update { state ->
-                    state.copy(
-                        checkInTypes = types
-                    )
-                }
-            }
+        // Use all available check-in types from the enum
+        // This ensures users always see all available types
+        val allTypes = CheckInType.values().toList()
+        
+        _uiState.update { state ->
+            state.copy(checkInTypes = allTypes)
         }
     }
     

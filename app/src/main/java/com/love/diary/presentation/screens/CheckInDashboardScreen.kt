@@ -55,6 +55,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.love.diary.data.model.CheckInType
+import com.love.diary.data.model.CountdownMode
 import com.love.diary.data.model.UnifiedCheckIn
 import com.love.diary.presentation.viewmodel.CheckInViewModel
 import com.love.diary.presentation.components.AppCard
@@ -78,6 +79,7 @@ fun CheckInDashboardScreen(
     var selectedCheckIn by remember { mutableStateOf<UnifiedCheckIn?>(null) }
     var showCheckInCalendar by remember { mutableStateOf(false) }
     var showAddCountdownDialog by remember { mutableStateOf(false) }
+    var selectedCountdownMode by remember { mutableStateOf<CountdownMode?>(null) }
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
     // Filter countdown configs
@@ -122,7 +124,7 @@ fun CheckInDashboardScreen(
                         },
                         countdownRemaining = viewModel.getCheckInCountdownRemaining(config),
                         progress = viewModel.getCountdownProgress(config),
-                        onCheckIn = if (config.countdownMode == com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN) {
+                        onCheckIn = if (config.countdownMode == CountdownMode.CHECKIN_COUNTDOWN) {
                             { viewModel.checkInCountdown(config.id, config.tag) }
                         } else null,
                         onClick = { }
@@ -164,7 +166,21 @@ fun CheckInDashboardScreen(
                     uiState.checkInTypes.forEach { checkInType ->
                         CheckInTypeCard(
                             type = checkInType,
-                            onClick = { performQuickCheckIn(checkInType, viewModel) }
+                            onClick = { 
+                                when (checkInType) {
+                                    CheckInType.DAY_COUNTDOWN -> {
+                                        selectedCountdownMode = CountdownMode.DAY_COUNTDOWN
+                                        showAddCountdownDialog = true
+                                    }
+                                    CheckInType.CHECKIN_COUNTDOWN -> {
+                                        selectedCountdownMode = CountdownMode.CHECKIN_COUNTDOWN
+                                        showAddCountdownDialog = true
+                                    }
+                                    else -> {
+                                        performQuickCheckIn(checkInType, viewModel)
+                                    }
+                                }
+                            }
                         )
                     }
                 }
@@ -224,10 +240,14 @@ fun CheckInDashboardScreen(
     // Show add countdown dialog
     if (showAddCountdownDialog) {
         AddCountdownDialog(
-            onDismiss = { showAddCountdownDialog = false },
+            onDismiss = { 
+                showAddCountdownDialog = false
+                selectedCountdownMode = null
+            },
+            initialMode = selectedCountdownMode,
             onConfirm = { name, countdownMode, targetDate, countdownTarget, tag, description, icon, color ->
                 when (countdownMode) {
-                    com.love.diary.data.model.CountdownMode.DAY_COUNTDOWN -> {
+                    CountdownMode.DAY_COUNTDOWN -> {
                         targetDate?.let {
                             viewModel.createDayCountdown(
                                 name = name,
@@ -238,7 +258,7 @@ fun CheckInDashboardScreen(
                             )
                         }
                     }
-                    com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN -> {
+                    CountdownMode.CHECKIN_COUNTDOWN -> {
                         countdownTarget?.let {
                             viewModel.createCheckInCountdown(
                                 name = name,
