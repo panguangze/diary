@@ -56,13 +56,10 @@ import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerDefaults
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader
+import com.love.diary.presentation.components.UnifiedDatePickerDialog
 import com.love.diary.habit.HabitDisplayView
 import com.love.diary.habit.HabitStatsView
 import com.love.diary.ui.theme.TagColors
@@ -503,42 +500,12 @@ fun AddHabitDialog(
     
     // 日期选择器对话框
     if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = System.currentTimeMillis()
+        UnifiedDatePickerDialog(
+            onDismiss = { showDatePicker = false },
+            onDateSelected = { selectedDate ->
+                targetDate = selectedDate
+            },
+            initialDate = targetDate.ifEmpty { null }
         )
-        
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        // 获取选择的日期并更新targetDate
-                        val selectedDateMillis = datePickerState.selectedDateMillis
-                        if (selectedDateMillis != null) {
-                            val selectedDate = LocalDate.ofEpochDay(selectedDateMillis / (24 * 60 * 60 * 1000))
-                            targetDate = selectedDate.toString()
-                        }
-                        showDatePicker = false
-                    },
-                    enabled = datePickerState.selectedDateMillis != null
-                ) {
-                    Text("确定")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showDatePicker = false
-                    }
-                ) {
-                    Text("取消")
-                }
-            },
-            colors = DatePickerDefaults.colors()
-        ) {
-            DatePicker(
-                state = datePickerState
-            )
-        }
     }
 }

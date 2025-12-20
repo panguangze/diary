@@ -19,8 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
+
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,7 +32,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
+
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,6 +59,7 @@ import android.net.Uri
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.AppSegmentedTabs
 import com.love.diary.presentation.components.Dimens
+import com.love.diary.presentation.components.UnifiedDatePickerDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -273,49 +273,13 @@ fun SettingsScreen(
     
     // 添加日期选择对话框
     if (showDatePickerDialog) {
-        val formatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
-        val initialMillis = remember(uiState.startDate) {
-            uiState.startDate?.let {
-                runCatching {
-                    LocalDate.parse(it, formatter)
-                        .atStartOfDay()
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant()
-                        .toEpochMilli()
-                }.getOrNull()
-            }
-        }
-
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = initialMillis ?: System.currentTimeMillis()
-        )
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePickerDialog = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            val selectedDate = Instant.ofEpochMilli(millis)
-                                .atZone(ZoneId.systemDefault())
-                                .toLocalDate()
-                                .format(formatter)
-                            viewModel.updateStartDate(selectedDate)
-                            showDatePickerDialog = false
-                        }
-                    }
-                ) {
-                    Text("确定")
-                }
+        UnifiedDatePickerDialog(
+            onDismiss = { showDatePickerDialog = false },
+            onDateSelected = { selectedDate ->
+                viewModel.updateStartDate(selectedDate)
             },
-            dismissButton = {
-                TextButton(onClick = { showDatePickerDialog = false }) {
-                    Text("取消")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
+            initialDate = uiState.startDate
+        )
     }
 
 
