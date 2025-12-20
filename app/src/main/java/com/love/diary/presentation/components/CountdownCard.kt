@@ -156,17 +156,23 @@ fun CountdownCard(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            config.tag?.let {
+                            config.tag?.let { tagText ->
+                                val tagColor = try {
+                                    androidx.compose.ui.graphics.Color(android.graphics.Color.parseColor(config.color))
+                                } catch (e: Exception) {
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                }
+                                
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
+                                    color = tagColor.copy(alpha = 0.8f),
                                     modifier = Modifier.padding(top = 4.dp)
                                 ) {
                                     Text(
-                                        text = it,
+                                        text = tagText,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                        color = Color.White
                                     )
                                 }
                             }
