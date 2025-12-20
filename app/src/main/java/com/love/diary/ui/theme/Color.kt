@@ -30,3 +30,21 @@ public val WarmDarkOnSurface = Color(0xFFF1E6EA)
 public val WarmDarkOnSurfaceVariant = Color(0xFFD0C1C8)
 public val WarmDarkOutline = Color(0xFF6A555E)
 public val WarmDarkOutlineVariant = Color(0xFF8A737C)
+
+// ===================== Tag Colors Schema（标签颜色方案） =====================
+// 用于打卡标签的5种配色，按顺序自动分配
+public val TagColor1 = Color(0xFF6200EE)  // 紫色
+public val TagColor2 = Color(0xFF03DAC6)  // 青色
+public val TagColor3 = Color(0xFFFF6F00)  // 橙色
+public val TagColor4 = Color(0xFFE91E63)  // 粉色
+public val TagColor5 = Color(0xFF4CAF50)  // 绿色
+public val TagColorOther = Color(0xFF9E9E9E) // 灰色（"其它"标签专用）
+
+// Tag color list for easy access
+public val TagColors = listOf(
+    TagColor1,
+    TagColor2,
+    TagColor3,
+    TagColor4,
+    TagColor5
+)

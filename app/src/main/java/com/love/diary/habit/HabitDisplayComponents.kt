@@ -8,14 +8,23 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.love.diary.data.model.Habit
 import com.love.diary.data.model.PositiveDisplayType
@@ -25,6 +34,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.first
 
 /**
  * 根据打卡类型展示不同的打卡组件
@@ -80,7 +90,7 @@ fun CountdownProgressView(
             .padding(vertical = 8.dp)
     ) {
         LinearProgressIndicator(
-            progress = progress,
+            progress = { progress },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
@@ -121,29 +131,85 @@ fun WeeklyDisplayView(
     habit: Habit,
     modifier: Modifier = Modifier
 ) {
-    val today = LocalDate.now()
-    val weekStart = today.minusDays(today.dayOfWeek.value.toLong() - 1) // 从周一算起
+    var showMore by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val database = com.love.diary.data.database.LoveDatabase.getInstance(context)
     
-    val weekDays = (0..6).map { day ->
-        weekStart.plusDays(day.toLong())
+    // 获取历史打卡记录
+    val checkInRecords = remember(habit.id, showMore) {
+        mutableStateOf<List<String>>(emptyList())
     }
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    
+    LaunchedEffect(habit.id, showMore) {
+        val records = database.habitDao().getHabitRecordsFlow(habit.id).first()
+        checkInRecords.value = records.map { it.date }
+    }
+    
+    val today = LocalDate.now()
+    val currentWeekStart = today.minusDays(today.dayOfWeek.value.toLong() - 1) // 从周一算起
+    
+    // 显示当前周或最近4周
+    val weeksToShow = if (showMore) 4 else 1
+    
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        weekDays.forEach { day ->
-            val isToday = day == today
-            val isChecked = isToday && habit.isCompletedToday
+        repeat(weeksToShow) { weekIndex ->
+            val weekStart = currentWeekStart.minusWeeks(weekIndex.toLong())
+            val weekDays = (0..6).map { day ->
+                weekStart.plusDays(day.toLong())
+            }
             
-            DayCheckInBox(
-                day = day,
-                isChecked = isChecked,
-                isToday = isToday,
-                showWeekday = true,  // Show weekday in weekly view
-                modifier = Modifier.weight(1f)
+            // Show week label for multiple weeks
+            if (weeksToShow > 1) {
+                Text(
+                    text = if (weekIndex == 0) "本周" else "${weekIndex}周前",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                weekDays.forEach { day ->
+                    val isToday = day == today
+                    val isChecked = checkInRecords.value.contains(day.toString())
+                    
+                    // Get tag color if available
+                    val tagColor = if (habit.tags.isNotEmpty() && isChecked) {
+                        val tags = habit.tags.split(",").filter { it.isNotEmpty() }
+                        if (tags.isNotEmpty()) {
+                            com.love.diary.ui.theme.TagColors.getOrNull(0) // Use first tag color
+                        } else null
+                    } else null
+                    
+                    DayCheckInBox(
+                        day = day,
+                        isChecked = isChecked,
+                        isToday = isToday,
+                        showWeekday = true,  // Show weekday in weekly view
+                        tagColor = tagColor,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+        
+        // "更多" button
+        TextButton(
+            onClick = { showMore = !showMore },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(if (showMore) "收起" else "更多")
+            Icon(
+                imageVector = if (showMore) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (showMore) "收起" else "更多"
             )
         }
     }
@@ -157,55 +223,101 @@ fun MonthlyDisplayView(
     habit: Habit,
     modifier: Modifier = Modifier
 ) {
+    var showMore by remember { mutableStateOf(false) }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val database = com.love.diary.data.database.LoveDatabase.getInstance(context)
+    
+    // 获取历史打卡记录
+    val checkInRecords = remember(habit.id, showMore) {
+        mutableStateOf<List<String>>(emptyList())
+    }
+    
+    LaunchedEffect(habit.id, showMore) {
+        val records = database.habitDao().getHabitRecordsFlow(habit.id).first()
+        checkInRecords.value = records.map { it.date }
+    }
+    
     val currentMonth = YearMonth.now()
+    val monthsToShow = if (showMore) 3 else 1
     
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = "${currentMonth.year}年${currentMonth.month.value}月",
-            style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        // 星期标题行
-        WeekdayHeaders()
-        
-        // 日历网格
-        val daysInMonth = currentMonth.lengthOfMonth()
-        val firstDayOfWeek = currentMonth.atDay(1).dayOfWeek.value
-        
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(7),
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(7f / 5f)
-        ) {
-            // 添加空白占位符以对齐第一个日期
-            repeat(firstDayOfWeek - 1) {
-                item {
-                    Spacer(modifier = Modifier.fillMaxSize())
+        repeat(monthsToShow) { monthIndex ->
+            val displayMonth = currentMonth.minusMonths(monthIndex.toLong())
+            
+            Column {
+                Text(
+                    text = if (monthIndex == 0) 
+                        "${displayMonth.year}年${displayMonth.month.value}月（本月）" 
+                    else 
+                        "${displayMonth.year}年${displayMonth.month.value}月",
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                // 星期标题行
+                WeekdayHeaders()
+                
+                // 日历网格
+                val daysInMonth = displayMonth.lengthOfMonth()
+                val firstDayOfWeek = displayMonth.atDay(1).dayOfWeek.value
+                
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(7),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(7f / 5f)
+                ) {
+                    // 添加空白占位符以对齐第一个日期
+                    repeat(firstDayOfWeek - 1) {
+                        item {
+                            Spacer(modifier = Modifier.fillMaxSize())
+                        }
+                    }
+                    
+                    items(daysInMonth) { dayIndex ->
+                        val day = dayIndex + 1  // Convert 0-based index to 1-based day
+                        val date = displayMonth.atDay(day)
+                        val isToday = date == LocalDate.now()
+                        val isChecked = checkInRecords.value.contains(date.toString())
+                        
+                        // Get tag color if available
+                        val tagColor = if (habit.tags.isNotEmpty() && isChecked) {
+                            val tags = habit.tags.split(",").filter { it.isNotEmpty() }
+                            if (tags.isNotEmpty()) {
+                                com.love.diary.ui.theme.TagColors.getOrNull(0) // Use first tag color
+                            } else null
+                        } else null
+                        
+                        DayCheckInBox(
+                            day = date,
+                            isChecked = isChecked,
+                            isToday = isToday,
+                            tagColor = tagColor,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(2.dp)
+                        )
+                    }
                 }
             }
-            
-            items(daysInMonth) { dayIndex ->
-                val day = dayIndex + 1  // Convert 0-based index to 1-based day
-                val date = currentMonth.atDay(day)
-                val isToday = date == LocalDate.now()
-                val isChecked = isToday && habit.isCompletedToday
-                
-                DayCheckInBox(
-                    day = date,
-                    isChecked = isChecked,
-                    isToday = isToday,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(2.dp)
-                )
-            }
+        }
+        
+        // "更多" button
+        TextButton(
+            onClick = { showMore = !showMore },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(if (showMore) "收起" else "更多")
+            Icon(
+                imageVector = if (showMore) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (showMore) "收起" else "更多"
+            )
         }
     }
 }
@@ -242,6 +354,7 @@ fun DayCheckInBox(
     isChecked: Boolean,
     isToday: Boolean,
     showWeekday: Boolean = false,  // Whether to show weekday name instead of date
+    tagColor: Color? = null,  // Tag color to fill when checked
     modifier: Modifier = Modifier
 ) {
     val displayText = if (showWeekday) {
@@ -261,25 +374,58 @@ fun DayCheckInBox(
         day.format(formatter)
     }
     
+    val backgroundColor = when {
+        isChecked && tagColor != null -> tagColor.copy(alpha = 0.8f)
+        isChecked -> MaterialTheme.colorScheme.primaryContainer
+        else -> Color.Transparent
+    }
+    
+    val textColor = when {
+        isChecked && tagColor != null -> Color.White
+        isChecked -> MaterialTheme.colorScheme.onPrimaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+    
+    val borderColor = when {
+        isToday && tagColor != null -> tagColor
+        isToday -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.outline
+    }
+    
     Box(
         modifier = modifier
             .aspectRatio(1f)
             .border(
                 width = if (isToday) 2.dp else 1.dp,
-                color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                shape = RoundedCornerShape(4.dp)
+                color = borderColor,
+                shape = RoundedCornerShape(8.dp)
             )
             .background(
-                color = if (isChecked) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+                color = backgroundColor,
+                shape = RoundedCornerShape(8.dp)
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = displayText,
-            style = MaterialTheme.typography.bodySmall.copy(
-                color = if (isChecked) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = displayText,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = textColor,
+                    fontWeight = if (isToday) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal
+                )
             )
-        )
+            if (showWeekday && isToday) {
+                Text(
+                    text = day.format(DateTimeFormatter.ofPattern("d")),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = textColor.copy(alpha = 0.8f)
+                    )
+                )
+            }
+        }
     }
 }
 
