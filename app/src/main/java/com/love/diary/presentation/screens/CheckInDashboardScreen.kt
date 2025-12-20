@@ -64,7 +64,6 @@ import com.love.diary.data.model.UnifiedCheckInConfig
 import com.love.diary.presentation.viewmodel.CheckInViewModel
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.AppScaffold
-import com.love.diary.presentation.components.CountdownCard
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader
 import com.love.diary.presentation.components.StatusBadge
@@ -194,7 +193,6 @@ fun CheckInDashboardScreen(
                             null -> {}
                         }
                     }
-                    null -> {}
                 }
             }
         )

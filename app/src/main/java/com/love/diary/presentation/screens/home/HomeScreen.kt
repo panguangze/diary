@@ -223,7 +223,7 @@ fun HomeScreen(
             MoodOption("正常", MoodType.NORMAL),
             MoodOption("失落", MoodType.SAD),
             MoodOption("愤怒", MoodType.ANGRY),
-            MoodOption("其他", MoodType.OTHER)
+            MoodOption("哭哭", MoodType.OTHER)
         )
     }
 
