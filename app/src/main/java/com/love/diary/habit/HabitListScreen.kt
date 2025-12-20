@@ -176,28 +176,6 @@ fun HabitItemCard(
                 fontWeight = FontWeight.Medium
             )
 
-            Text(
-                text = when (habit.type) {
-                    HabitType.POSITIVE -> "已打卡 ${habit.currentCount} 次"
-                    HabitType.COUNTDOWN -> {
-                        val targetDate = habit.targetDate?.let { LocalDate.parse(it) }
-                        val today = LocalDate.now()
-                        val daysLeft = if (targetDate != null) {
-                            ChronoUnit.DAYS.between(today, targetDate).toInt()
-                        } else 0
-                        "距离目标还有 $daysLeft 天"
-                    }
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Text(
-                text = if (habit.isCompletedToday) "今日已完成" else "今日未完成",
-                style = MaterialTheme.typography.bodySmall,
-                color = if (habit.isCompletedToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-            )
-
             // 显示打卡统计信息
             HabitStatsView(habit = habit)
 

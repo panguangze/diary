@@ -260,11 +260,11 @@ fun HomeScreen(
                 inputText = uiState.otherMoodText,
                 selectedImageUri = uiState.selectedImageUri,
                 onMoodSelected = { mood ->
-                    val noteToSave = uiState.otherMoodText.ifBlank { null }
+                    // 只选择心情，不保存
                     if (mood != uiState.todayMood) {
                         viewModel.updateOtherMoodText("")
                     }
-                    viewModel.selectMood(mood, noteToSave)
+                    viewModel.updateSelectedMood(mood)
                 },
                 onInputChange = viewModel::updateOtherMoodText,
                 onPickImage = { moodImagePicker.launch("image/*") },
@@ -626,17 +626,16 @@ private fun MoodRecordSection(
                     contentAlignment = Alignment.Center
                 ) {
                     if (selectedImageUri != null) {
-                        // 显示图片（如果有Coil库，建议替换为AsyncImage）
-                        // 这里暂时用Icon代替已选状态，你可以换成 Image(painter = rememberImagePainter(selectedImageUri)...)
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.AddPhotoAlternate, // 或者用 Image 组件
-                                contentDescription = "已选择",
-                                tint = PrimaryPink,
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Text("已选择一张图片", fontSize = 10.sp, color = PrimaryPink)
-                        }
+                        // 显示选择的图片
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(selectedImageUri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "已选择的图片",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
                     } else {
                         // 未选择状态
                         Column(
@@ -872,13 +871,6 @@ private fun RecentMoodStatsSection(
             ) {
                 StatItem(title = "已经记录", value = totalRecords.toString(), unit = "天")
                 StatItem(title = "连续记录", value = streak.toString(), unit = "天")
-                // 隐藏最近x天的卡片
-//                StatItem(
-//                    title = "最近30天常见心情",
-//                    value = favoriteMood?.displayName ?: "-",
-//                    unit = null,
-//                    highlight = true
-//                )
             }
 
             Column(
@@ -1049,11 +1041,15 @@ private fun MoodIconRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // 过滤掉今天的心情记录，避免重复显示
+            val todayDateString = LocalDate.now().toString()
+            val filteredRecentMoods = recentMoods.filter { it.date != todayDateString }
+            
             // 计算可用空间和每个图标所需空间，以确定最多能显示多少个图标
             // 每个图标36dp + 4dp间距，减去今天图标的额外空间
             val hasTodayMood = todayMood != null
             val maxIcons = if (hasTodayMood) 9 else 10 // 如果有今天的心情，最多显示9个历史心情
-            val recentMoodsToShow = recentMoods.take(maxIcons)
+            val recentMoodsToShow = filteredRecentMoods.take(maxIcons)
             
             recentMoodsToShow.forEach { mood ->
                 Box(

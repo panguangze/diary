@@ -225,6 +225,24 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Updates the selected mood in UI state without saving to database.
+     * This is used when the user clicks on a mood option to select it,
+     * but the actual save will happen when they click the save button.
+     * 
+     * @param moodType The mood type selected by the user
+     */
+    fun updateSelectedMood(moodType: MoodType) {
+        // 只更新选中的心情，不保存到数据库
+        _uiState.update {
+            it.copy(
+                todayMood = moodType,
+                isDescriptionEditing = true,
+                descriptionError = null
+            )
+        }
+    }
+
     fun saveOtherMood(text: String) {
         viewModelScope.launch {
             if (text.isNotBlank()) {
@@ -321,10 +339,15 @@ class HomeViewModel @Inject constructor(
                         todayMoodText = finalText,
                         otherMoodText = finalText ?: "",
                         selectedImageUri = imageUri,
+                        todayMoodDate = LocalDate.now().toString(),
                         isDescriptionEditing = false,
                         descriptionError = null
                     )
                 }
+                // 刷新最近的心情记录和连续记录天数
+                loadRecentTenMoods()
+                val currentStreak = calculateCurrentStreak()
+                _uiState.update { it.copy(currentStreak = currentStreak) }
             }.onFailure {
                 _uiState.update { state ->
                     state.copy(
