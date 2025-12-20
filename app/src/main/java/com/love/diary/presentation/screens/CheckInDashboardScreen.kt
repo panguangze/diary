@@ -745,7 +745,8 @@ private fun CheckInDayCell(
     }
     
     val textColor = when {
-        !checkInsForDate.isNullOrEmpty() && tagColor != null -> androidx.compose.ui.graphics.Color.White
+        !checkInsForDate.isNullOrEmpty() && tagColor != null -> 
+            com.love.diary.util.ColorUtil.getContrastingTextColor(tagColor)
         else -> MaterialTheme.colorScheme.onSurface
     }
 

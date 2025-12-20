@@ -169,7 +169,7 @@ fun CountdownCard(
                                         text = tagText,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White
+                                        color = com.love.diary.util.ColorUtil.getContrastingTextColor(tagColor)
                                     )
                                 }
                             }
