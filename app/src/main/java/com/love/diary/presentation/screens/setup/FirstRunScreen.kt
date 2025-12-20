@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -52,7 +54,9 @@ import com.love.diary.data.repository.AppRepository
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.ShapeTokens
+import com.love.diary.presentation.components.TimePickerDialog
 import com.love.diary.presentation.components.UnifiedDatePickerDialog
+import com.love.diary.util.ReminderScheduler
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
@@ -71,6 +75,12 @@ fun FirstRunScreen(
     var partnerName by remember { mutableStateOf("") }
     var showDatePicker by remember { mutableStateOf(false) }
     var avatarUri by remember { mutableStateOf<String?>(null) }
+    
+    // Reminder settings
+    var reminderEnabled by remember { mutableStateOf(false) }
+    var reminderHour by remember { mutableStateOf(9) }
+    var reminderMinute by remember { mutableStateOf(0) }
+    var showTimePicker by remember { mutableStateOf(false) }
     
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -206,17 +216,6 @@ fun FirstRunScreen(
                         readOnly = true,
                         shape = ShapeTokens.Field
                     )
-                    
-                    // 日期选择器
-                    if (showDatePicker) {
-                        UnifiedDatePickerDialog(
-                            onDismiss = { showDatePicker = false },
-                            onDateSelected = { selectedDate ->
-                                startDate = selectedDate
-                            },
-                            initialDate = startDate.ifEmpty { null }
-                        )
-                    }
 
                     // 组合名字
                     OutlinedTextField(
@@ -256,6 +255,66 @@ fun FirstRunScreen(
 
             Spacer(modifier = Modifier.height(Dimens.LargeSpacing))
 
+            // 提醒设置卡片
+            AppCard(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+                ) {
+                    Text(
+                        text = "每日提醒",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "开启每日提醒",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = "每天定时提醒记录心情",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = reminderEnabled,
+                            onCheckedChange = { reminderEnabled = it }
+                        )
+                    }
+
+                    if (reminderEnabled) {
+                        OutlinedTextField(
+                            value = String.format("%02d:%02d", reminderHour, reminderMinute),
+                            onValueChange = { /* 只允许通过时间选择器修改 */ },
+                            label = { Text("提醒时间") },
+                            leadingIcon = {
+                                Icon(Icons.Default.Notifications, contentDescription = null)
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { showTimePicker = true }) {
+                                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = "选择时间")
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showTimePicker = true },
+                            singleLine = true,
+                            readOnly = true,
+                            shape = ShapeTokens.Field
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.LargeSpacing))
+
             // 说明文字
             Text(
                 text = "这些信息将用于计算恋爱天数，生成专属的恋爱日记。",
@@ -271,12 +330,22 @@ fun FirstRunScreen(
             Button(
                 onClick = {
                     coroutineScope.launch {
+                        val reminderTimeInMinutes = reminderHour * 60 + reminderMinute
+                        
                         repository.initializeFirstRun(
                             startDate = startDate,
                             coupleName = if (coupleName.isNotBlank()) coupleName else null,
                             partnerNickname = if (partnerName.isNotBlank()) partnerName else null,
-                            avatarUri = avatarUri
+                            avatarUri = avatarUri,
+                            reminderEnabled = reminderEnabled,
+                            reminderTime = reminderTimeInMinutes
                         )
+                        
+                        // Schedule reminder if enabled
+                        if (reminderEnabled) {
+                            val reminderScheduler = ReminderScheduler(context)
+                            reminderScheduler.scheduleDailyReminder(reminderTimeInMinutes)
+                        }
                         
                         onSetupComplete()
                     }
@@ -287,5 +356,29 @@ fun FirstRunScreen(
                 Text(text = "开始使用")
             }
         }
+    }
+    
+    // 日期选择器
+    if (showDatePicker) {
+        UnifiedDatePickerDialog(
+            onDismiss = { showDatePicker = false },
+            onDateSelected = { selectedDate ->
+                startDate = selectedDate
+            },
+            initialDate = startDate.ifEmpty { null }
+        )
+    }
+    
+    // 时间选择器
+    if (showTimePicker) {
+        TimePickerDialog(
+            onDismiss = { showTimePicker = false },
+            onTimeSelected = { hour, minute ->
+                reminderHour = hour
+                reminderMinute = minute
+            },
+            initialHour = reminderHour,
+            initialMinute = reminderMinute
+        )
     }
 }

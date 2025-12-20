@@ -42,13 +42,17 @@ class AppRepository @Inject constructor(
      * @param coupleName Optional couple display name
      * @param partnerNickname Optional partner nickname
      * @param avatarUri Optional user avatar URI
+     * @param reminderEnabled Whether to enable daily reminders
+     * @param reminderTime Time for daily reminder in minutes from midnight (0-1439)
      * @throws IllegalArgumentException if startDate is invalid
      */
     suspend fun initializeFirstRun(
         startDate: String,
         coupleName: String? = null,
         partnerNickname: String? = null,
-        avatarUri: String? = null
+        avatarUri: String? = null,
+        reminderEnabled: Boolean = false,
+        reminderTime: Int = 540 // Default: 9:00 AM
     ) {
         require(startDate.isNotBlank()) { "Start date cannot be blank" }
         
@@ -67,6 +71,8 @@ class AppRepository @Inject constructor(
             showMoodTip = true,
             showStreak = true,
             showAnniversary = true,
+            reminderEnabled = reminderEnabled,
+            reminderTime = reminderTime,
             reservedText1 = avatarUri, // Save avatar URI
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
@@ -637,5 +643,50 @@ class AppRepository @Inject constructor(
     // 删除打卡记录
     suspend fun deleteCheckIn(id: Long) {
         checkInRepository.deleteCheckIn(id)
+    }
+
+    // === Daily Reminder Management ===
+
+    /**
+     * Update reminder enabled status
+     * @param enabled Whether reminders should be enabled
+     */
+    suspend fun updateReminderEnabled(enabled: Boolean) {
+        val config = getAppConfig() ?: return
+        val updated = config.copy(
+            reminderEnabled = enabled,
+            updatedAt = System.currentTimeMillis()
+        )
+        updateAppConfig(updated)
+    }
+
+    /**
+     * Update reminder time
+     * @param timeInMinutes Time in minutes from midnight (0-1439)
+     */
+    suspend fun updateReminderTime(timeInMinutes: Int) {
+        require(timeInMinutes in 0..1439) { "Reminder time must be between 0 and 1439 minutes" }
+        val config = getAppConfig() ?: return
+        val updated = config.copy(
+            reminderTime = timeInMinutes,
+            updatedAt = System.currentTimeMillis()
+        )
+        updateAppConfig(updated)
+    }
+
+    /**
+     * Update both reminder settings at once
+     * @param enabled Whether reminders should be enabled
+     * @param timeInMinutes Time in minutes from midnight (0-1439)
+     */
+    suspend fun updateReminderSettings(enabled: Boolean, timeInMinutes: Int) {
+        require(timeInMinutes in 0..1439) { "Reminder time must be between 0 and 1439 minutes" }
+        val config = getAppConfig() ?: return
+        val updated = config.copy(
+            reminderEnabled = enabled,
+            reminderTime = timeInMinutes,
+            updatedAt = System.currentTimeMillis()
+        )
+        updateAppConfig(updated)
     }
 }
