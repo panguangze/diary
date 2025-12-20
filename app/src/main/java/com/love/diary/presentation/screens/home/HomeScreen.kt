@@ -1,334 +1,389 @@
+/**
+ * HomeScreen.kt 文件说明：
+ * 这是恋爱日记应用的主页屏幕实现文件
+ * 包含了用户界面的主要组件，如心情选择、统计信息、历史记录等功能
+ */
+
+// 声明包名，表示此文件属于应用的主页屏幕展示层
 package com.love.diary.presentation.screens.home
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+// 导入必要的库和组件，用于构建UI和处理功能
+import android.net.Uri  // 用于处理文件路径和URI
+import androidx.activity.compose.rememberLauncherForActivityResult  // 用于启动活动并获取结果
+import androidx.activity.result.contract.ActivityResultContracts  // 定义启动活动的结果合同
+import androidx.compose.animation.AnimatedVisibility  // 用于控制元素的动画可见性
+import androidx.compose.animation.core.animateFloatAsState  // 用于创建浮点数值的动画
+import androidx.compose.animation.expandVertically  // 垂直展开动画
+import androidx.compose.animation.fadeIn  // 淡入动画
+import androidx.compose.foundation.BorderStroke  // 边框绘制
+import androidx.compose.foundation.Image  // 图像显示组件
+import androidx.compose.foundation.background  // 背景设置
+import androidx.compose.foundation.border  // 边框设置
+import androidx.compose.foundation.clickable  // 点击交互
+import androidx.compose.foundation.interaction.MutableInteractionSource  // 交互源管理
+import androidx.compose.foundation.interaction.collectIsPressedAsState  // 收集按压状态
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.Celebration
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.FormatQuote
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Divider
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.surfaceColorAtElevation
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.key
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.love.diary.R
-import com.love.diary.data.database.entities.DailyMoodEntity
-import com.love.diary.data.model.MoodType
-import com.love.diary.presentation.components.AppCard
-import com.love.diary.presentation.components.Dimens
-import com.love.diary.presentation.components.SectionHeader
-import com.love.diary.presentation.components.ShapeTokens
-import com.love.diary.presentation.components.StatusBadge
-import com.love.diary.presentation.viewmodel.HistoryViewModel
-import com.love.diary.presentation.viewmodel.HomeViewModel
-import com.love.diary.presentation.viewmodel.StatisticsViewModel
-import com.love.diary.util.ShareHelper
-import com.love.diary.presentation.screens.statistics.SimpleTrendChart
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
-import java.util.Locale
+import androidx.compose.foundation.layout.Arrangement  // 布局排列方式
+import androidx.compose.foundation.layout.Box  // 盒子布局容器
+import androidx.compose.foundation.layout.BoxWithConstraints  // 带约束的盒子布局
+import androidx.compose.foundation.layout.Column  // 列式布局容器
+import androidx.compose.foundation.layout.ExperimentalLayoutApi  // 实验性布局API
+import androidx.compose.foundation.layout.FlowRow  // 流式行布局
+import androidx.compose.foundation.layout.IntrinsicSize  // 固有尺寸
+import androidx.compose.foundation.layout.PaddingValues  // 内边距值
+import androidx.compose.foundation.layout.Row  // 行式布局容器
+import androidx.compose.foundation.layout.Spacer  // 空白填充器
+import androidx.compose.foundation.layout.defaultMinSize  // 默认最小尺寸
+import androidx.compose.foundation.layout.fillMaxHeight  // 填充最大高度
+import androidx.compose.foundation.layout.fillMaxSize  // 填充最大尺寸
+import androidx.compose.foundation.layout.fillMaxWidth  // 填充最大宽度
+import androidx.compose.foundation.layout.height  // 高度设置
+import androidx.compose.foundation.layout.heightIn  // 高度范围限制
+import androidx.compose.foundation.layout.padding  // 内边距设置
+import androidx.compose.foundation.layout.size  // 大小设置
+import androidx.compose.foundation.layout.width  // 宽度设置
+import androidx.compose.foundation.layout.widthIn  // 宽度范围限制
+import androidx.compose.foundation.lazy.grid.GridCells  // 网格单元格配置
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid  // 垂直网格列表
+import androidx.compose.foundation.lazy.grid.items  // 网格项
+import androidx.compose.foundation.rememberScrollState  // 滚动状态记忆
+import androidx.compose.foundation.shape.CircleShape  // 圆形形状
+import androidx.compose.foundation.shape.RoundedCornerShape  // 圆角矩形形状
+import androidx.compose.foundation.text.BasicTextField  // 基础文本输入框
+import androidx.compose.foundation.verticalScroll  // 垂直滚动
+import androidx.compose.material.icons.Icons  // 材料设计图标
+import androidx.compose.material.icons.filled.AddPhotoAlternate  // 添加照片图标
+import androidx.compose.material.icons.filled.Celebration  // 庆祝图标
+import androidx.compose.material.icons.filled.ChevronRight  // 向右箭头图标
+import androidx.compose.material.icons.filled.Close  // 关闭图标
+import androidx.compose.material.icons.filled.ContentCopy  // 复制内容图标
+import androidx.compose.material.icons.filled.FormatQuote  // 引号图标
+import androidx.compose.material.icons.filled.Person  // 人物图标
+import androidx.compose.material.icons.filled.Share  // 分享图标
+import androidx.compose.material3.AlertDialog  // 对话框组件
+import androidx.compose.material3.Button  // 按钮组件
+import androidx.compose.material3.ButtonDefaults  // 按钮默认样式
+import androidx.compose.material3.Card  // 卡片组件
+import androidx.compose.material3.CardDefaults  // 卡片默认样式
+import androidx.compose.material3.ElevatedCard  // 抬起的卡片组件
+import androidx.compose.material3.ExperimentalMaterial3Api  // 实验性材料设计3 API
+import androidx.compose.material3.Divider  // 分割线组件
+import androidx.compose.material3.IconButton  // 图标按钮组件
+import androidx.compose.material3.FilterChip  // 过滤芯片组件
+import androidx.compose.material3.Icon  // 图标组件
+import androidx.compose.material3.MaterialTheme  // 材料设计主题
+import androidx.compose.material3.ModalBottomSheet  // 模态底部表单
+import androidx.compose.material3.OutlinedCard  // 轮廓卡片组件
+import androidx.compose.material3.OutlinedButton  // 轮廓按钮组件
+import androidx.compose.material3.OutlinedTextField  // 轮廓文本输入框
+import androidx.compose.material3.Surface  // 表面组件
+import androidx.compose.material3.Text  // 文本组件
+import androidx.compose.material3.TextButton  // 文本按钮组件
+import androidx.compose.material3.rememberModalBottomSheetState  // 记住底部表单状态
+import androidx.compose.material3.surfaceColorAtElevation  // 表面颜色随海拔变化
+import androidx.compose.runtime.Composable  // Composable 函数注解
+import androidx.compose.runtime.collectAsState  // 收集状态流转换为 State
+import androidx.compose.runtime.getValue  // 获取状态值
+import androidx.compose.runtime.mutableIntStateOf  // 可变整数状态
+import androidx.compose.runtime.mutableStateOf  // 可变状态
+import androidx.compose.runtime.remember  // 记住变量
+import androidx.compose.runtime.setValue  // 设置状态值
+import androidx.compose.runtime.key  // 键值用于重组优化
+import androidx.compose.ui.geometry.CornerRadius  // 圆角半径
+import androidx.compose.ui.geometry.Offset  // 偏移量
+import androidx.compose.ui.Alignment  // 对齐方式
+import androidx.compose.ui.Modifier  // 修饰符，用于修改UI元素
+import androidx.compose.ui.draw.clip  // 裁剪绘制
+import androidx.compose.ui.draw.drawBehind  // 在背景绘制
+import androidx.compose.ui.graphics.Brush  // 画刷，用于渐变色等效果
+import androidx.compose.ui.graphics.Color  // 颜色定义
+import androidx.compose.ui.graphics.PathEffect  // 路径效果
+import androidx.compose.ui.graphics.drawscope.DrawScope  // 绘制范围
+import androidx.compose.ui.graphics.drawscope.Stroke  // 笔划
+import androidx.compose.ui.graphics.graphicsLayer  // 图形层
+import androidx.compose.ui.layout.ContentScale  // 内容缩放
+import androidx.compose.ui.platform.LocalClipboardManager  // 本地剪贴板管理器
+import androidx.compose.ui.platform.LocalContext  // 本地上下文
+import androidx.compose.ui.platform.LocalDensity  // 本地密度
+import androidx.compose.ui.res.painterResource  // 从资源获取图像绘制器
+import androidx.compose.ui.res.stringResource  // 从资源获取字符串
+import androidx.compose.ui.semantics.contentDescription  // 语义描述
+import androidx.compose.ui.semantics.semantics  // 语义属性
+import androidx.compose.ui.text.font.FontWeight  // 字体粗细
+import androidx.compose.ui.text.style.TextAlign  // 文本对齐
+import androidx.compose.ui.unit.dp  // 密度独立像素单位
+import androidx.compose.ui.unit.sp  // 缩放独立像素单位
+import androidx.compose.ui.window.Dialog  // 对话框窗口
+import androidx.compose.ui.window.DialogProperties  // 对话框属性
+import androidx.hilt.navigation.compose.hiltViewModel  // Hilt依赖注入的ViewModel
+import coil.compose.AsyncImage  // Coil异步加载图像
+import coil.request.ImageRequest  // 图像请求
+import com.love.diary.R  // 应用资源访问
+import com.love.diary.data.database.entities.DailyMoodEntity  // 日常心情实体
+import com.love.diary.data.model.MoodType  // 心情类型枚举
+import com.love.diary.presentation.components.AppCard  // 应用卡片组件
+import com.love.diary.presentation.components.Dimens  // 尺寸定义组件
+import com.love.diary.presentation.components.SectionHeader  // 区域标题组件
+import com.love.diary.presentation.components.ShapeTokens  // 形状规范组件
+import com.love.diary.presentation.components.StatusBadge  // 状态徽章组件
+import com.love.diary.presentation.viewmodel.HistoryViewModel  // 历史视图模型
+import com.love.diary.presentation.viewmodel.HomeViewModel  // 主页视图模型
+import com.love.diary.presentation.viewmodel.StatisticsViewModel  // 统计视图模型
+import com.love.diary.util.ShareHelper  // 分享辅助类
+import com.love.diary.presentation.screens.statistics.SimpleTrendChart  // 简单趋势图表
+import java.time.LocalDate  // 本地日期
+import java.time.format.DateTimeFormatter  // 日期时间格式化器
+import java.time.format.TextStyle  // 文本样式
+import java.util.Locale  // 语言环境
 
-private val MoodGridMaxHeight = 240.dp
-private val StatsGridMinHeight = 160.dp
-private val StatsGridMaxHeight = 320.dp
-private const val RecentMoodIconTargetCount = 10
-private val PrimaryPink = Color(0xFFFF557F)
-private val AccentYellow = Color(0xFFFFD33D)
-private val NeutralGray = Color(0xFF888888)
-private val AccentGreen = Color(0xFF34C759)
-private val AccentBlue = Color(0xFF007AFF)
-private val AccentRed = Color(0xFFFF3B30)
-private val BorderColor = Color(0xFFE5E7EB)
-private val SubtitleGray = Color(0xFF666666)
-private val BodyGray = Color(0xFF333333)
-private val HeaderTextColor = Color(0xFF2D2D33)
-private val SubTextColor = Color(0xFF999999)
-private val ControlTextColor = Color(0xFF4A4A52)
-private val LightSurfaceColor = Color(0xFFF2F2F5)
-private val UploadBorderColor = Color(0xFFE5E5EA)
-private val AccentPinkText = Color(0xFFFF7A90)
-private val AccentGradientStart = Color(0xFFFF6B81)
-private val AccentGradientEnd = Color(0xFFFF476F)
-private val MoodSelectedStart = Color(0xFFFFE6E8)
-private val MoodSelectedEnd = Color(0xFFFFC2C6)
+// 定义一些全局使用的常量和颜色值
+private val MoodGridMaxHeight = 240.dp  // 心情网格的最大高度
+private val StatsGridMinHeight = 160.dp  // 统计网格的最小高度
+private val StatsGridMaxHeight = 320.dp  // 统计网格的最大高度
+private const val RecentMoodIconTargetCount = 10  // 最近心情图标的显示数量目标
+
+// 定义应用的主要颜色
+private val PrimaryPink = Color(0xFFFF557F)  // 主要粉色
+private val AccentYellow = Color(0xFFFFD33D)  // 强调黄色
+private val NeutralGray = Color(0xFF888888)  // 中性灰色
+private val AccentGreen = Color(0xFF34C759)  // 强调绿色
+private val AccentBlue = Color(0xFF007AFF)  // 强调蓝色
+private val AccentRed = Color(0xFFFF3B30)  // 强调红色
+private val BorderColor = Color(0xFFE5E7EB)  // 边框颜色
+private val SubtitleGray = Color(0xFF666666)  // 副标题灰色
+private val BodyGray = Color(0xFF333333)  // 正文灰色
+private val HeaderTextColor = Color(0xFF2D2D33)  // 标题文字颜色
+private val SubTextColor = Color(0xFF999999)  // 次要文字颜色
+private val ControlTextColor = Color(0xFF4A4A52)  // 控件文字颜色
+private val LightSurfaceColor = Color(0xFFF2F2F5)  // 浅表面颜色
+private val UploadBorderColor = Color(0xFFE5E5EA)  // 上传框边框颜色
+private val AccentPinkText = Color(0xFFFF7A90)  // 强调粉色文字
+private val AccentGradientStart = Color(0xFFFF6B81)  // 渐变强调色开始
+private val AccentGradientEnd = Color(0xFFFF476F)  // 渐变强调色结束
+private val MoodSelectedStart = Color(0xFFFFE6E8)  // 心情选中状态渐变开始色
+private val MoodSelectedEnd = Color(0xFFFFC2C6)  // 心情选中状态渐变结束色
+
+// 获取心情趋势范围选项，用于筛选统计数据的时间范围
 private val MoodTrendRangeOptions = StatisticsViewModel.DEFAULT_RANGE_OPTIONS.map { it to it.toRangeLabelRes() }
 
+// 定义心情选项数据类，包含标签和心情类型
 private data class MoodOption(
-    val label: String,
-    val moodType: MoodType
+    val label: String,  // 心情标签，如"开心"、"难过"等
+    val moodType: MoodType  // 心情类型枚举
 )
 
+// 将整数范围值转换为对应的资源字符串ID
 private fun Int.toRangeLabelRes(): Int = when (this) {
-    StatisticsViewModel.RANGE_WEEK -> R.string.home_mood_trend_range_week
-    StatisticsViewModel.RANGE_MONTH -> R.string.home_mood_trend_range_month
-    StatisticsViewModel.RANGE_QUARTER -> R.string.home_mood_trend_range_quarter
-    else -> R.string.home_mood_trend_range_year
+    StatisticsViewModel.RANGE_WEEK -> R.string.home_mood_trend_range_week  // 一周范围
+    StatisticsViewModel.RANGE_MONTH -> R.string.home_mood_trend_range_month  // 一个月范围
+    StatisticsViewModel.RANGE_QUARTER -> R.string.home_mood_trend_range_quarter  // 一个季度范围
+    else -> R.string.home_mood_trend_range_year  // 一年范围
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
+/**
+ * HomeScreen 可组合函数 - 主页屏幕的主要UI组件
+ * 这是应用的主页，包含情侣信息、心情记录、统计图表等主要功能
+ * 
+ * @param viewModel HomeViewModel 实例，提供UI状态和业务逻辑
+ * @param modifier 修饰符，用于自定义组件的外观和行为
+ */
+@OptIn(ExperimentalMaterial3Api::class)  // 允许使用实验性API
+@Composable  // 标记为可组合函数，用于构建UI
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
+    viewModel: HomeViewModel = hiltViewModel(),  // 使用Hilt依赖注入获取HomeViewModel实例
+    modifier: Modifier = Modifier  // 默认修饰符
 ) {
+    // 从ViewModel中收集UI状态，当状态变化时自动重组UI
     val uiState by viewModel.uiState.collectAsState()
+    
+    // 获取其他ViewModel实例，用于处理历史记录和统计数据
     val historyViewModel: HistoryViewModel = hiltViewModel()
     val statisticsViewModel: StatisticsViewModel = hiltViewModel()
+    
+    // 从历史记录ViewModel收集心情记录数据
     val historyRecords by historyViewModel.moodRecords.collectAsState()
+    // 从统计ViewModel收集统计UI状态
     val statisticsState by statisticsViewModel.uiState.collectAsState()
+    
+    // 获取当前上下文和剪贴板管理器，用于分享和复制功能
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    
+    // 创建图像选择器，用于选择头像
     val avatarPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let { viewModel.updateAvatar(isPartner = false, uri = it.toString()) }
+        contract = ActivityResultContracts.GetContent()  // 启动获取内容的活动
+    ) { uri ->  // 回调函数处理选择的URI
+        uri?.let { viewModel.updateAvatar(isPartner = false, uri = it.toString()) }  // 更新头像
     }
+    
+    // 创建心情图片选择器，用于为心情添加图片
     val moodImagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        viewModel.updateSelectedImage(uri?.toString())
+        contract = ActivityResultContracts.GetContent()  // 启动获取内容的活动
+    ) { uri ->  // 回调函数处理选择的URI
+        viewModel.updateSelectedImage(uri?.toString())  // 更新选择的图片
     }
 
+    // 使用状态变量控制日历对话框的显示/隐藏
     var showCalendarSheet by remember { mutableStateOf(false) }
+    // 使用状态变量存储选中的历史记录项
     var selectedHistoryItem by remember { mutableStateOf<DailyMoodEntity?>(null) }
 
+    // 记住模态底部表单状态
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
+    // 获取今天的日期字符串
     val todayString = uiState.todayDate.ifBlank { LocalDate.now().toString() }
 
+    // 定义心情选项列表，包含标签和对应的心情类型
     val moodOptions = remember {
         listOf(
-            MoodOption("甜蜜", MoodType.SATISFIED),
-            MoodOption("开心", MoodType.HAPPY),
-            MoodOption("正常", MoodType.NORMAL),
-            MoodOption("失落", MoodType.SAD),
-            MoodOption("愤怒", MoodType.ANGRY),
-            MoodOption("其他", MoodType.OTHER)
+            MoodOption("甜蜜", MoodType.SATISFIED),  // 满意/甜蜜心情
+            MoodOption("开心", MoodType.HAPPY),     // 开心心情
+            MoodOption("正常", MoodType.NORMAL),    // 正常心情
+            MoodOption("失落", MoodType.SAD),       // 悲伤心情
+            MoodOption("愤怒", MoodType.ANGRY),     // 愤怒心情
+            MoodOption("其他", MoodType.OTHER)      // 其他心情
         )
     }
 
+    // 计算最近30天中最常出现的心情类型
     val favoriteMood = historyRecords
-        .takeLast(30)
-        .groupBy { it.moodTypeCode }
-        .maxByOrNull { it.value.size }
-        ?.let { MoodType.fromCode(it.key) }
+        .takeLast(30)  // 获取最近30条记录
+        .groupBy { it.moodTypeCode }  // 按心情类型代码分组
+        .maxByOrNull { it.value.size }  // 找到数量最多的组
+        ?.let { MoodType.fromCode(it.key) }  // 转换为MoodType
 
+    // 定义页面背景渐变色
     val pageBackground = Brush.verticalGradient(listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8)))
+    // 获取默认心情文本资源
     val defaultMoodText = stringResource(id = R.string.home_default_mood_text)
 
+    // 使用Box作为根布局容器
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(pageBackground)
+            .fillMaxSize()  // 填充整个可用空间
+            .background(pageBackground)  // 设置背景渐变色
     ) {
+        // 使用Column垂直排列所有UI组件
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = Dimens.ScreenPadding)
-                .padding(top = 24.dp, bottom = 80.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()  // 填充整个可用空间
+                .verticalScroll(rememberScrollState())  // 添加垂直滚动功能
+                .padding(horizontal = Dimens.ScreenPadding)  // 设置水平内边距
+                .padding(top = 24.dp, bottom = 80.dp),  // 设置上下内边距
+            horizontalAlignment = Alignment.CenterHorizontally  // 水平居中对齐
         ) {
+            // 今日头部组件 - 显示应用标题
             TodayHeader()
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(20.dp))  // 添加垂直间距
 
+            // 顶部信息卡片 - 显示情侣信息和头像
             TopInfoCardRedesigned(
-                title = "${uiState.coupleName ?: "小明 & 小红"}的第${if (uiState.dayIndex > 0) uiState.dayIndex else 16}天",
-                subtitle = "From ${uiState.startDate.ifBlank { "2025 - 01 - 01" }} to ${uiState.todayDate.ifBlank { todayString }}",
-                avatarUri = uiState.avatarUri,
-                onAvatarClick = { avatarPicker.launch("image/*") },
-                onAiClick = { viewModel.showOtherMoodDialog() }
+                title = "${uiState.coupleName ?: \"小明 & 小红\"}的第${if (uiState.dayIndex > 0) uiState.dayIndex else 16}天",  // 恋爱天数标题
+                subtitle = "From ${uiState.startDate.ifBlank { \"2025 - 01 - 01\" }} to ${uiState.todayDate.ifBlank { todayString }}",  // 日期范围副标题
+                avatarUri = uiState.avatarUri,  // 头像URI
+                onAvatarClick = { avatarPicker.launch("image/*") },  // 点击头像选择图片
+                onAiClick = { viewModel.showOtherMoodDialog() }  // 点击AI按钮显示对话框
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))  // 添加垂直间距
 
+            // 心情记录区域 - 选择心情、添加图片、输入文字
             MoodRecordSection(
-                moodOptions = moodOptions,
-                selectedMood = uiState.todayMood,
-                inputText = uiState.otherMoodText,
-                selectedImageUri = uiState.selectedImageUri,
-                onMoodSelected = { mood ->
-                    val noteToSave = uiState.otherMoodText.ifBlank { null }
-                    if (mood != uiState.todayMood) {
-                        viewModel.updateOtherMoodText("")
+                moodOptions = moodOptions,  // 心情选项列表
+                selectedMood = uiState.todayMood,  // 当前选择的心情
+                inputText = uiState.otherMoodText,  // 输入的文字内容
+                selectedImageUri = uiState.selectedImageUri,  // 选择的图片URI
+                onMoodSelected = { mood ->  // 心情选择回调
+                    val noteToSave = uiState.otherMoodText.ifBlank { null }  // 获取要保存的笔记
+                    if (mood != uiState.todayMood) {  // 如果心情发生变化
+                        viewModel.updateOtherMoodText("")  // 清空心情文本
                     }
-                    viewModel.selectMood(mood, noteToSave)
+                    viewModel.selectMood(mood, noteToSave)  // 选择心情
                 },
-                onInputChange = viewModel::updateOtherMoodText,
-                onPickImage = { moodImagePicker.launch("image/*") },
-                onSave = { text -> viewModel.saveDescription(text, defaultMoodText) }
+                onInputChange = viewModel::updateOtherMoodText,  // 输入文本变化回调
+                onPickImage = { moodImagePicker.launch("image/*") },  // 选择图片回调
+                onSave = { text -> viewModel.saveDescription(text, defaultMoodText) }  // 保存回调
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))  // 添加垂直间距
 
             // 获取今天的心情记录
             val todayDateString = LocalDate.now().toString()
             val todayMoodRecord = historyRecords.find { it.date == todayDateString }
 
+            // 最近心情统计区域 - 显示最近的心情记录和统计数据
             RecentMoodStatsSection(
-                recentMoods = uiState.recentTenMoods,
-                todayMood = todayMoodRecord,
-                totalRecords = historyRecords.size,
-                streak = uiState.currentStreak,
-                favoriteMood = favoriteMood,
-                moodQuote = uiState.todayMood?.feedbackText
-                    ?: "无论今天心情如何，我都在你身边，爱你每一天。",
-                onMoreClick = { showCalendarSheet = true },
-                onMoodClick = { selectedHistoryItem = it }
+                recentMoods = uiState.recentTenMoods,  // 最近10条心情记录
+                todayMood = todayMoodRecord,  // 今天的心情记录
+                totalRecords = historyRecords.size,  // 总记录数
+                streak = uiState.currentStreak,  // 当前连续记录天数
+                favoriteMood = favoriteMood,  // 最喜欢的心情类型
+                moodQuote = uiState.todayMood?.feedbackText  // 今日心情反馈文本
+                    ?: "无论今天心情如何，我都在你身边，爱你每一天。",  // 默认反馈文本
+                onMoreClick = { showCalendarSheet = true },  // 点击更多按钮回调
+                onMoodClick = { selectedHistoryItem = it }  // 点击心情记录回调
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))  // 添加垂直间距
 
+            // 心情趋势预览卡片 - 显示心情统计图表
             MoodTrendPreviewCard(
-                uiState = statisticsState,
-                onRangeChange = statisticsViewModel::updateTimeRange
+                uiState = statisticsState,  // 统计UI状态
+                onRangeChange = statisticsViewModel::updateTimeRange  // 时间范围变化回调
             )
         }
 
+    // 显示周年庆弹窗（如果需要）
     if (uiState.showAnniversaryPopup) {
-        Dialog(onDismissRequest = { viewModel.dismissAnniversaryPopup() }) {
-            Card(
+        Dialog(onDismissRequest = { viewModel.dismissAnniversaryPopup() }) {  // 点击外部关闭弹窗
+            Card(  // 使用卡片组件
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                shape = RoundedCornerShape(16.dp)
+                    .fillMaxWidth()  // 填充最大宽度
+                    .padding(24.dp),  // 设置内边距
+                shape = RoundedCornerShape(16.dp)  // 设置圆角形状
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Column(  // 垂直列布局
+                    modifier = Modifier.padding(24.dp),  // 设置内边距
+                    horizontalAlignment = Alignment.CenterHorizontally  // 水平居中对齐
                 ) {
+                    // 庆祝图标
                     Icon(
-                        imageVector = Icons.Filled.Celebration,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        imageVector = Icons.Filled.Celebration,  // 庆祝图标
+                        contentDescription = null,  // 无内容描述（装饰性图标）
+                        modifier = Modifier.size(48.dp),  // 设置图标大小
+                        tint = MaterialTheme.colorScheme.primary  // 使用主题主色
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))  // 添加垂直间距
 
+                    // 周年庆消息文本
                     Text(
-                        text = uiState.anniversaryMessage,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        text = uiState.anniversaryMessage,  // 周年庆消息
+                        style = MaterialTheme.typography.bodyLarge,  // 使用大号正文样式
+                        textAlign = TextAlign.Center,  // 居中对齐
+                        modifier = Modifier.padding(vertical = 8.dp)  // 设置垂直内边距
                     )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))  // 添加垂直间距
 
+                    // 按钮行
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                        modifier = Modifier.fillMaxWidth(),  // 填充最大宽度
+                        horizontalArrangement = Arrangement.SpaceEvenly  // 按钮均匀分布
                     ) {
+                        // 知道了按钮
                         TextButton(onClick = { viewModel.dismissAnniversaryPopup() }) {
-                            Text("知道啦")
+                            Text("知道啦")  // 按钮文本
                         }
 
+                        // 写点想说的话按钮
                         Button(onClick = {
-                            viewModel.dismissAnniversaryPopup()
-                            viewModel.showOtherMoodDialog()
+                            viewModel.dismissAnniversaryPopup()  // 关闭弹窗
+                            viewModel.showOtherMoodDialog()  // 显示其他心情对话框
                         }) {
-                            Text("写点想说的话")
+                            Text("写点想说的话")  // 按钮文本
                         }
                     }
                 }
@@ -336,76 +391,81 @@ fun HomeScreen(
         }
     }
 
+    // 显示其他心情对话框（如果需要）
     if (uiState.showOtherMoodDialog) {
-        AlertDialog(
-            onDismissRequest = { viewModel.closeOtherMoodDialog() },
-            title = { Text("想对我说点什么？") },
-            text = {
-                Column {
+        AlertDialog(  // 显示警告对话框
+            onDismissRequest = { viewModel.closeOtherMoodDialog() },  // 点击外部关闭对话框
+            title = { Text("想对我说点什么？") },  // 对话框标题
+            text = {  // 对话框内容
+                Column {  // 垂直列布局
+                    // 说明文本
                     Text(
-                        text = "写点今天的心情、想对我说的话，只有我会看。",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = "写点今天的心情、想对我说的话，只有我会看。",  // 说明文字
+                        style = MaterialTheme.typography.bodyMedium,  // 使用中号正文样式
+                        color = MaterialTheme.colorScheme.onSurfaceVariant  // 使用表面变体颜色
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))  // 添加垂直间距
 
+                    // 文本输入框
                     OutlinedTextField(
-                        value = uiState.otherMoodText,
-                        onValueChange = { viewModel.updateOtherMoodText(it) },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("比如：今天看到你消息的时候，突然很安心……") },
-                        maxLines = 5
+                        value = uiState.otherMoodText,  // 输入框的当前值
+                        onValueChange = { viewModel.updateOtherMoodText(it) },  // 文本变化回调
+                        modifier = Modifier.fillMaxWidth(),  // 填充最大宽度
+                        placeholder = { Text("比如：今天看到你消息的时候，突然很安心……") },  // 占位符文本
+                        maxLines = 5  // 最大5行
                     )
                 }
             },
-            confirmButton = {
+            confirmButton = {  // 确认按钮
                 TextButton(onClick = {
-                    if (uiState.otherMoodText.isNotBlank()) {
-                        viewModel.saveOtherMood(uiState.otherMoodText)
+                    if (uiState.otherMoodText.isNotBlank()) {  // 如果输入不为空
+                        viewModel.saveOtherMood(uiState.otherMoodText)  // 保存其他心情
                     }
                 }) {
-                    Text("保存")
+                    Text("保存")  // 保存按钮文本
                 }
             },
-            dismissButton = {
-                TextButton(onClick = { viewModel.closeOtherMoodDialog() }) {
-                    Text("取消")
+            dismissButton = {  // 取消按钮
+                TextButton(onClick = { viewModel.closeOtherMoodDialog() }) {  // 取消按钮点击事件
+                    Text("取消")  // 取消按钮文本
                 }
             }
         )
     }
 
+    // 显示心情日历对话框（如果需要）
     if (showCalendarSheet) {
-        MoodCalendarDialog(
-            onDismiss = { showCalendarSheet = false },
-            onDateClick = { date ->
-                val record = historyRecords.find { it.date == date }
-                if (record != null) {
-                    selectedHistoryItem = record
+        MoodCalendarDialog(  // 显示心情日历对话框
+            onDismiss = { showCalendarSheet = false },  // 关闭日历对话框
+            onDateClick = { date ->  // 日期点击回调
+                val record = historyRecords.find { it.date == date }  // 查找对应日期的记录
+                if (record != null) {  // 如果找到记录
+                    selectedHistoryItem = record  // 设置选中的历史记录
                 }
             },
-            moodRecords = historyRecords
+            moodRecords = historyRecords  // 传递心情记录数据
         )
     }
 
-    selectedHistoryItem?.let { record ->
-        ModalBottomSheet(
-            sheetState = detailSheetState,
-            onDismissRequest = { selectedHistoryItem = null }
+    // 显示历史详情底部表单（如果选中了历史记录）
+    selectedHistoryItem?.let { record ->  // 如果有选中的记录
+        ModalBottomSheet(  // 显示模态底部表单
+            sheetState = detailSheetState,  // 底部表单状态
+            onDismissRequest = { selectedHistoryItem = null }  // 关闭底部表单
         ) {
-            HistoryDetailSheet(
-                record = record,
-                onShare = {
-                    ShareHelper(context).shareMoodAsText(
-                        date = record.date,
-                        moodType = MoodType.fromCode(record.moodTypeCode),
-                        moodText = record.moodText,
-                        dayIndex = record.dayIndex
+            HistoryDetailSheet(  // 历史详情组件
+                record = record,  // 传递选中的记录
+                onShare = {  // 分享回调
+                    ShareHelper(context).shareMoodAsText(  // 使用分享辅助类分享心情
+                        date = record.date,  // 日期
+                        moodType = MoodType.fromCode(record.moodTypeCode),  // 心情类型
+                        moodText = record.moodText,  // 心情文本
+                        dayIndex = record.dayIndex  // 恋爱天数
                     )
                 },
-                onCopy = {
-                    record.moodText?.let { clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(it)) }
+                onCopy = {  // 复制回调
+                    record.moodText?.let { clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(it)) }  // 复制到剪贴板
                 }
             )
         }
@@ -415,96 +475,116 @@ fun HomeScreen(
 
 }
 
+/**
+ * TodayHeader 可组合函数 - 今日头部组件
+ * 显示应用标题和装饰性分隔线
+ */
 @Composable
 private fun TodayHeader() {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {  // 创建垂直列，内容水平居中
+        // 显示应用标题文本
         Text(
-            text = "恋爱日记",
-            fontSize = 24.sp,
-            lineHeight = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = HeaderTextColor
+            text = "恋爱日记",  // 文本内容
+            fontSize = 24.sp,  // 字体大小24sp
+            lineHeight = 32.sp,  // 行高32sp
+            fontWeight = FontWeight.Bold,  // 粗体字
+            color = HeaderTextColor  // 使用标题文本颜色
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))  // 添加8dp的垂直间距
+        // 创建装饰性分隔线
         Box(
             modifier = Modifier
-                .width(80.dp)
-                .height(1.dp)
-                .background(AccentPinkText, shape = RoundedCornerShape(50))
+                .width(80.dp)  // 设置宽度为80dp
+                .height(1.dp)  // 设置高度为1dp
+                .background(AccentPinkText, shape = RoundedCornerShape(50))  // 设置背景色和圆角形状
         )
     }
 }
 
+/**
+ * TopInfoCardRedesigned 可组合函数 - 顶部信息卡片组件（重新设计版）
+ * 显示情侣名称、恋爱天数、起始日期和头像
+ * 
+ * @param title 标题文本，显示恋爱天数信息
+ * @param subtitle 副标题文本，显示日期范围
+ * @param avatarUri 头像图片的URI路径
+ * @param onAvatarClick 点击头像时的回调函数
+ * @param onAiClick 点击AI按钮时的回调函数
+ */
 @Composable
 private fun TopInfoCardRedesigned(
-    title: String,
-    subtitle: String,
-    avatarUri: String?,
-    onAvatarClick: () -> Unit,
-    onAiClick: () -> Unit
+    title: String,  // 标题文本
+    subtitle: String,  // 副标题文本
+    avatarUri: String?,  // 头像URI，可为空
+    onAvatarClick: () -> Unit,  // 点击头像的回调
+    onAiClick: () -> Unit  // 点击AI按钮的回调
 ) {
-    Card(
+    Card(  // 创建卡片组件
         modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            .fillMaxWidth()  // 填充最大宽度
+            .height(80.dp),  // 设置高度为80dp
+        shape = RoundedCornerShape(16.dp),  // 设置圆角形状，半径16dp
+        colors = CardDefaults.cardColors(containerColor = Color.White),  // 设置卡片颜色为白色
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)  // 设置卡片阴影高度为6dp
     ) {
-        Row(
+        Row(  // 创建水平行布局
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()  // 填充父容器大小
+                .padding(horizontal = 16.dp),  // 设置水平内边距16dp
+            horizontalArrangement = Arrangement.SpaceBetween,  // 水平方向两端对齐，元素间等距分布
+            verticalAlignment = Alignment.CenterVertically  // 垂直方向居中对齐
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Column(  // 左侧信息列
+                modifier = Modifier.weight(1f),  // 设置权重为1，占据剩余空间
+                verticalArrangement = Arrangement.spacedBy(4.dp)  // 垂直元素间距4dp
             ) {
+                // 显示标题文本
                 Text(
-                    text = title,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 24.sp,
-                    color = HeaderTextColor
+                    text = title,  // 标题内容
+                    fontSize = 18.sp,  // 字体大小18sp
+                    fontWeight = FontWeight.Bold,  // 粗体
+                    lineHeight = 24.sp,  // 行高24sp
+                    color = HeaderTextColor  // 使用标题文本颜色
                 )
+                // 显示副标题文本
                 Text(
-                    text = subtitle,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Light,
-                    lineHeight = 16.sp,
-                    color = SubTextColor
+                    text = subtitle,  // 副标题内容
+                    fontSize = 12.sp,  // 字体大小12sp
+                    fontWeight = FontWeight.Light,  // 细体
+                    lineHeight = 16.sp,  // 行高16sp
+                    color = SubTextColor  // 使用副文本颜色
                 )
             }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Row(  // 右侧按钮行
+                horizontalArrangement = Arrangement.spacedBy(12.dp),  // 水平间距12dp
+                verticalAlignment = Alignment.CenterVertically  // 垂直居中对齐
             ) {
+                // 头像容器
                 Box(
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(AccentPinkText.copy(alpha = 0.12f))
-                        .clickable { onAvatarClick() },
-                    contentAlignment = Alignment.Center
+                        .size(40.dp)  // 设置大小为40dp
+                        .clip(CircleShape)  // 裁剪为圆形
+                        .background(AccentPinkText.copy(alpha = 0.12f))  // 设置背景色（半透明粉色）
+                        .clickable { onAvatarClick() },  // 添加点击事件
+                    contentAlignment = Alignment.Center  // 内容居中对齐
                 ) {
-                    if (avatarUri != null) {
+                    if (avatarUri != null) {  // 如果头像URI不为空
+                        // 显示异步加载的头像图片
                         AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(avatarUri)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = stringResource(id = R.string.home_avatar_desc),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
+                            model = ImageRequest.Builder(LocalContext.current)  // 构建图片请求
+                                .data(avatarUri)  // 设置图片数据源
+                                .crossfade(true)  // 设置淡入淡出过渡效果
+                                .build(),  // 构建请求
+                            contentDescription = stringResource(id = R.string.home_avatar_desc),  // 内容描述
+                            modifier = Modifier.fillMaxSize(),  // 填充容器大小
+                            contentScale = ContentScale.Crop  // 裁剪缩放模式
                         )
-                    } else {
+                    } else {  // 如果头像URI为空，显示默认图标
                         Icon(
-                            imageVector = Icons.Filled.Person,
-                            contentDescription = null,
-                            tint = AccentPinkText
+                            imageVector = Icons.Filled.Person,  // 人物图标
+                            contentDescription = null,  // 无内容描述
+                            tint = AccentPinkText  // 使用强调粉色作为图标颜色
                         )
                     }
                 }
@@ -513,136 +593,149 @@ private fun TopInfoCardRedesigned(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+/**
+ * MoodRecordSection 可组合函数 - 心情记录区域组件
+ * 提供心情选择、图片上传、文字输入和保存功能
+ * 
+ * @param moodOptions 心情选项列表，包含标签和心情类型
+ * @param selectedMood 当前选中的心情类型
+ * @param inputText 输入的文本内容
+ * @param selectedImageUri 选中的图片URI（可选）
+ * @param onMoodSelected 心情选择回调函数
+ * @param onInputChange 文本输入变化回调函数
+ * @param onPickImage 选择图片回调函数
+ * @param onSave 保存回调函数
+ */
+@OptIn(ExperimentalLayoutApi::class)  // 允许使用实验性布局API
 @Composable
 private fun MoodRecordSection(
-    moodOptions: List<MoodOption>,
-    selectedMood: MoodType?,
-    inputText: String,
-    selectedImageUri: String? = null, // 图片URI参数
-    onMoodSelected: (MoodType) -> Unit,
-    onInputChange: (String) -> Unit,
-    onPickImage: () -> Unit,       // 选图回调
-    onSave: (String) -> Unit
+    moodOptions: List<MoodOption>,  // 心情选项列表
+    selectedMood: MoodType?,  // 当前选中的心情类型（可为空）
+    inputText: String,  // 输入的文本内容
+    selectedImageUri: String? = null,  // 选中的图片URI（默认为空）
+    onMoodSelected: (MoodType) -> Unit,  // 心情选择回调
+    onInputChange: (String) -> Unit,  // 文本输入变化回调
+    onPickImage: () -> Unit,  // 选择图片回调
+    onSave: (String) -> Unit  // 保存回调
 ) {
-    Card(
+    Card(  // 创建卡片组件
         modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, BorderColor),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .fillMaxWidth(),  // 填充最大宽度
+        shape = RoundedCornerShape(12.dp),  // 设置圆角形状，半径12dp
+        border = BorderStroke(1.dp, BorderColor),  // 设置边框，1dp宽，边框颜色
+        colors = CardDefaults.cardColors(containerColor = Color.White),  // 设置卡片背景为白色
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)  // 设置无阴影
     ) {
-        Column(
+        Column(  // 创建垂直列布局
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxWidth()  // 填充最大宽度
+                .padding(16.dp),  // 设置内边距16dp
+            verticalArrangement = Arrangement.spacedBy(16.dp)  // 垂直元素间距16dp
         ) {
-            // 标题
+            // 标题文本
             Text(
-                text = "今天感觉如何？",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = "今天感觉如何？",  // 标题内容
+                style = MaterialTheme.typography.titleMedium,  // 使用中等标题样式
+                fontWeight = FontWeight.Bold  // 粗体
             )
 
             // --- 核心布局：左侧(3行2列) + 右侧(自动填满高度) ---
-            Row(
+            Row(  // 创建水平行布局
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min), // 【关键】让左右高度互相对齐
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .fillMaxWidth()  // 填充最大宽度
+                    .height(IntrinsicSize.Min),  // 【关键】让左右高度互相对齐
+                horizontalArrangement = Arrangement.spacedBy(12.dp)  // 水平间距12dp
             ) {
                 // 1. 左侧：心情选择区域 (权重 1.4)
-                Column(
+                Column(  // 创建心情选择列
                     modifier = Modifier
-                        .weight(1.4f)
-                        .fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceBetween // 让三行心情垂直均匀分布
+                        .weight(1.4f)  // 设置权重1.4，占据更多宽度
+                        .fillMaxHeight(),  // 填充最大高度
+                    verticalArrangement = Arrangement.SpaceBetween  // 垂直方向两端对齐，使三行心情垂直均匀分布
                 ) {
                     // 将 moodOptions (6个) 分成 3组，每组 2个
-                    val rows = moodOptions.chunked(2)
+                    val rows = moodOptions.chunked(2)  // 将心情选项列表按2个一组分组
 
-                    rows.forEachIndexed { index, rowOptions ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween // 两个心情在行内左右散开
+                    rows.forEachIndexed { index, rowOptions ->  // 遍历分组后的心情选项
+                        Row(  // 创建每行的心情选项
+                            modifier = Modifier.fillMaxWidth(),  // 填充最大宽度
+                            horizontalArrangement = Arrangement.SpaceBetween  // 两个心情在行内左右散开
                         ) {
                             // 如果不足2个（防止越界），用Spacer占位，但通常你是6个
-                            for (i in 0 until 2) {
-                                if (i < rowOptions.size) {
-                                    val option = rowOptions[i]
-                                    Box(modifier = Modifier.weight(1f)) { // 给每个MoodTag分配等宽容器
-                                        MoodTag(
-                                            option = option,
-                                            selected = selectedMood == option.moodType,
-                                            onClick = { onMoodSelected(option.moodType) }
+                            for (i in 0 until 2) {  // 循环两次，处理每行最多2个心情选项
+                                if (i < rowOptions.size) {  // 如果当前索引小于该行选项数量
+                                    val option = rowOptions[i]  // 获取当前心情选项
+                                    Box(modifier = Modifier.weight(1f)) {  // 给每个MoodTag分配等宽容器
+                                        MoodTag(  // 显示心情标签组件
+                                            option = option,  // 传递心情选项
+                                            selected = selectedMood == option.moodType,  // 判断是否为选中状态
+                                            onClick = { onMoodSelected(option.moodType) }  // 点击回调
                                         )
                                     }
-                                } else {
-                                    Spacer(modifier = Modifier.weight(1f))
+                                } else {  // 如果当前行选项不足2个，用Spacer占位
+                                    Spacer(modifier = Modifier.weight(1f))  // 等宽占位
                                 }
                                 // 中间加个间距，除了最后一个
-                                if(i == 0) Spacer(modifier = Modifier.width(8.dp))
+                                if(i == 0) Spacer(modifier = Modifier.width(8.dp))  // 仅在第一个元素后添加间距
                             }
                         }
                         // 行与行之间加间距（除了最后一行）
-                        if (index < rows.size - 1) {
-                            Spacer(modifier = Modifier.height(12.dp))
+                        if (index < rows.size - 1) {  // 如果不是最后一行
+                            Spacer(modifier = Modifier.height(12.dp))  // 添加12dp垂直间距
                         }
                     }
                 }
 
                 // 2. 右侧：上传图片框 (权重 1.0)
-                Box(
+                Box(  // 创建图片上传区域容器
                     modifier = Modifier
-                        .weight(1f) // 占据剩余宽度
-                        .fillMaxHeight() // 【关键】高度拉伸，跟随左侧高度
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable { onPickImage() }
-                        .drawBehind {
-                            if (selectedImageUri == null) {
-                                drawRoundRect(
-                                    color = BorderColor,
-                                    cornerRadius = CornerRadius(8.dp.toPx()),
-                                    style = Stroke(
-                                        width = 2.dp.toPx(),
-                                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f))
+                        .weight(1f)  // 占据剩余宽度
+                        .fillMaxHeight()  // 【关键】高度拉伸，跟随左侧高度
+                        .clip(RoundedCornerShape(8.dp))  // 设置圆角
+                        .clickable { onPickImage() }  // 添加点击事件
+                        .drawBehind {  // 在背景绘制
+                            if (selectedImageUri == null) {  // 如果没有选择图片
+                                drawRoundRect(  // 绘制圆角矩形
+                                    color = BorderColor,  // 边框颜色
+                                    cornerRadius = CornerRadius(8.dp.toPx()),  // 圆角半径
+                                    style = Stroke(  // 笔划样式
+                                        width = 2.dp.toPx(),  // 线条宽度
+                                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f))  // 虚线效果
                                     )
                                 )
                             }
                         },
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center  // 内容居中对齐
                 ) {
-                    if (selectedImageUri != null) {
+                    if (selectedImageUri != null) {  // 如果已选择图片
                         // 显示图片（如果有Coil库，建议替换为AsyncImage）
                         // 这里暂时用Icon代替已选状态，你可以换成 Image(painter = rememberImagePainter(selectedImageUri)...)
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.AddPhotoAlternate, // 或者用 Image 组件
-                                contentDescription = "已选择",
-                                tint = PrimaryPink,
-                                modifier = Modifier.size(32.dp)
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {  // 垂直列，水平居中
+                            Icon(  // 显示已选择图标
+                                imageVector = Icons.Default.AddPhotoAlternate,  // 或者用 Image 组件
+                                contentDescription = "已选择",  // 内容描述
+                                tint = PrimaryPink,  // 使用主要粉色
+                                modifier = Modifier.size(32.dp)  // 图标大小32dp
                             )
-                            Text("已选择一张图片", fontSize = 10.sp, color = PrimaryPink)
+                            Text("已选择一张图片", fontSize = 10.sp, color = PrimaryPink)  // 显示已选择文本
                         }
-                    } else {
+                    } else {  // 如果未选择图片
                         // 未选择状态
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        Column(  // 垂直列布局
+                            horizontalAlignment = Alignment.CenterHorizontally,  // 水平居中
+                            verticalArrangement = Arrangement.Center  // 垂直居中
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.AddPhotoAlternate,
-                                contentDescription = null,
-                                tint = NeutralGray,
-                                modifier = Modifier.size(32.dp) // 图标大一点
+                            Icon(  // 显示添加图片图标
+                                imageVector = Icons.Filled.AddPhotoAlternate,  // 图标
+                                contentDescription = null,  // 无内容描述
+                                tint = NeutralGray,  // 使用中性灰色
+                                modifier = Modifier.size(32.dp)  // 图标大小32dp
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "添加图片",
-                                fontSize = 14.sp,
-                                color = SubtitleGray
+                            Spacer(modifier = Modifier.height(8.dp))  // 添加8dp垂直间距
+                            Text(  // 显示添加图片文本
+                                text = "添加图片",  // 文本内容
+                                fontSize = 14.sp,  // 字体大小14sp
+                                color = SubtitleGray  // 使用副标题灰色
                             )
                         }
                     }
@@ -650,217 +743,246 @@ private fun MoodRecordSection(
             }
 
             // --- 底部：输入框 + 保存按钮 ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Row(  // 创建底部水平行
+                modifier = Modifier.fillMaxWidth(),  // 填充最大宽度
+                verticalAlignment = Alignment.CenterVertically,  // 垂直居中对齐
+                horizontalArrangement = Arrangement.spacedBy(8.dp)  // 水平间距8dp
             ) {
                 // 输入框
-                BasicTextField(
-                    value = inputText,
-                    onValueChange = onInputChange,
+                BasicTextField(  // 基础文本输入框
+                    value = inputText,  // 输入框的当前值
+                    onValueChange = onInputChange,  // 文本变化回调
                     modifier = Modifier
-                        .weight(1f)
-                        .height(44.dp)
-                        .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp),
-                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                    singleLine = true,
-                    decorationBox = { innerTextField ->
-                        Box(contentAlignment = Alignment.CenterStart) {
-                            if (inputText.isBlank()) {
-                                Text("写点什么...", color = SubtitleGray, fontSize = 14.sp)
+                        .weight(1f)  // 设置权重，占据剩余空间
+                        .height(44.dp)  // 设置高度44dp
+                        .border(1.dp, BorderColor, RoundedCornerShape(8.dp))  // 设置边框和圆角
+                        .padding(horizontal = 12.dp),  // 设置水平内边距
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),  // 设置文本样式
+                    singleLine = true,  // 单行输入
+                    decorationBox = { innerTextField ->  // 装饰框
+                        Box(contentAlignment = Alignment.CenterStart) {  // 左对齐
+                            if (inputText.isBlank()) {  // 如果输入为空
+                                Text("写点什么...", color = SubtitleGray, fontSize = 14.sp)  // 显示占位符文本
                             }
-                            innerTextField()
+                            innerTextField()  // 显示输入框内容
                         }
                     }
                 )
 
                 // 保存按钮
-                Button(
-                    onClick = { onSave(inputText) },
-                    enabled = selectedMood != null, // 没选心情时禁用
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryPink,
-                        disabledContainerColor = PrimaryPink.copy(alpha = 0.5f)
+                Button(  // 保存按钮
+                    onClick = { onSave(inputText) },  // 点击保存
+                    enabled = selectedMood != null,  // 没选心情时禁用
+                    shape = RoundedCornerShape(8.dp),  // 设置圆角
+                    colors = ButtonDefaults.buttonColors(  // 设置按钮颜色
+                        containerColor = PrimaryPink,  // 主要粉色背景
+                        disabledContainerColor = PrimaryPink.copy(alpha = 0.5f)  // 禁用时半透明
                     ),
-                    modifier = Modifier.height(44.dp),
-                    contentPadding = PaddingValues(horizontal = 20.dp)
+                    modifier = Modifier.height(44.dp),  // 设置高度44dp
+                    contentPadding = PaddingValues(horizontal = 20.dp)  // 设置水平内边距
                 ) {
-                    Text("保存", color = Color.White)
+                    Text("保存", color = Color.White)  // 按钮文本
                 }
             }
         }
     }
 }
 
+/**
+ * MoodTag 可组合函数 - 心情标签组件
+ * 显示单个心情选项，包含图标和文字，支持选中状态
+ * 
+ * @param option 心情选项数据类，包含标签和心情类型
+ * @param selected 是否为选中状态
+ * @param onClick 点击回调函数
+ */
 @Composable
 private fun MoodTag(
-    option: MoodOption,
-    selected: Boolean,
-    onClick: () -> Unit
+    option: MoodOption,  // 心情选项
+    selected: Boolean,  // 是否选中
+    onClick: () -> Unit  // 点击回调
 ) {
-    Surface(
+    Surface(  // 表面组件，用于创建可点击的表面
         modifier = Modifier
-            .width(80.dp)
-            .height(40.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(8.dp),
-        color = Color.Transparent,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-        border = null
+            .width(80.dp)  // 设置宽度80dp
+            .height(40.dp)  // 设置高度40dp
+            .clickable { onClick() },  // 添加点击事件
+        shape = RoundedCornerShape(8.dp),  // 设置圆角形状
+        color = Color.Transparent,  // 设置透明背景色
+        tonalElevation = 0.dp,  // 设置色调海拔为0
+        shadowElevation = 0.dp,  // 设置阴影海拔为0
+        border = null  // 无边框
     ) {
-        Box(
+        Box(  // 盒子容器
             modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = if (selected) {
-                        Brush.verticalGradient(listOf(MoodSelectedStart, MoodSelectedEnd))
+                .fillMaxSize()  // 填充最大尺寸
+                .background(  // 设置背景
+                    brush = if (selected) {  // 根据是否选中设置不同背景色
+                        Brush.verticalGradient(listOf(MoodSelectedStart, MoodSelectedEnd))  // 选中状态渐变色
                     } else {
-                        Brush.verticalGradient(listOf(LightSurfaceColor, LightSurfaceColor))
+                        Brush.verticalGradient(listOf(LightSurfaceColor, LightSurfaceColor))  // 未选中状态浅色
                     },
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(8.dp)  // 设置圆角形状
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center  // 内容居中对齐
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            Row(  // 水平行布局，包含图标和文字
+                verticalAlignment = Alignment.CenterVertically,  // 垂直居中对齐
+                horizontalArrangement = Arrangement.spacedBy(4.dp)  // 水平间距4dp
             ) {
-                Image(
-                    painter = painterResource(id = option.moodType.getDrawableResourceId()),
-                    contentDescription = option.label,
-                    modifier = Modifier.size(16.dp)
+                Image(  // 显示心情图标
+                    painter = painterResource(id = option.moodType.getDrawableResourceId()),  // 从资源获取图标绘制器
+                    contentDescription = option.label,  // 内容描述为心情标签
+                    modifier = Modifier.size(16.dp)  // 设置图标大小16dp
                 )
-                Text(
-                    text = option.label,
-                    fontSize = 14.sp,
-                    fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
-                    lineHeight = 20.sp,
-                    color = if (selected) AccentPinkText else ControlTextColor
+                Text(  // 显示心情标签文字
+                    text = option.label,  // 标签文字
+                    fontSize = 14.sp,  // 字体大小14sp
+                    fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,  // 选中时为中等粗细，否则为正常
+                    lineHeight = 20.sp,  // 行高20sp
+                    color = if (selected) AccentPinkText else ControlTextColor  // 选中时为强调粉色，否则为控制文本色
                 )
             }
         }
     }
 }
 
+/**
+ * DashedUploadBox 可组合函数 - 虚线边框上传框组件
+ * 用于显示上传图片的区域，支持显示已选图片或上传提示
+ * 
+ * @param imageUri 图片URI路径，为空时显示上传提示
+ * @param onClick 点击回调函数
+ * @param modifier 修饰符，用于自定义组件外观和行为
+ */
 @Composable
 private fun DashedUploadBox(
-    imageUri: String?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    imageUri: String?,  // 图片URI路径
+    onClick: () -> Unit,  // 点击回调
+    modifier: Modifier = Modifier  // 修饰符
 ) {
-    Box(
+    Box(  // 盒子容器
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .drawBehind {
-                drawRoundRect(
-                    color = UploadBorderColor,
-                    cornerRadius = CornerRadius(8.dp.toPx()),
-                    style = Stroke(
-                        width = 2.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f))
+            .clip(RoundedCornerShape(8.dp))  // 裁剪为圆角矩形
+            .clickable { onClick() }  // 添加点击事件
+            .drawBehind {  // 在背景绘制虚线边框
+                drawRoundRect(  // 绘制圆角矩形
+                    color = UploadBorderColor,  // 边框颜色
+                    cornerRadius = CornerRadius(8.dp.toPx()),  // 圆角半径
+                    style = Stroke(  // 笔划样式
+                        width = 2.dp.toPx(),  // 线条宽度
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 8f))  // 虚线效果
                     )
                 )
             }
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .padding(16.dp),  // 设置内边距
+        contentAlignment = Alignment.Center  // 内容居中对齐
     ) {
-        if (imageUri != null) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUri)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = stringResource(id = R.string.home_upload_image_preview),
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+        if (imageUri != null) {  // 如果已选择图片
+            AsyncImage(  // 异步加载并显示图片
+                model = ImageRequest.Builder(LocalContext.current)  // 构建图片请求
+                    .data(imageUri)  // 设置图片数据
+                    .crossfade(true)  // 设置淡入淡出效果
+                    .build(),  // 构建请求
+                contentDescription = stringResource(id = R.string.home_upload_image_preview),  // 内容描述
+                modifier = Modifier.fillMaxSize(),  // 填充容器大小
+                contentScale = ContentScale.Crop  // 裁剪缩放模式
             )
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        } else {  // 如果未选择图片
+            Column(  // 垂直列布局，显示上传提示
+                horizontalAlignment = Alignment.CenterHorizontally,  // 水平居中对齐
+                verticalArrangement = Arrangement.spacedBy(8.dp)  // 垂直间距8dp
             ) {
-                Icon(
-                    imageVector = Icons.Filled.AddPhotoAlternate,
-                    contentDescription = null,
-                    tint = SubTextColor,
-                    modifier = Modifier.size(32.dp)
+                Icon(  // 显示添加图片图标
+                    imageVector = Icons.Filled.AddPhotoAlternate,  // 图标向量
+                    contentDescription = null,  // 无内容描述
+                    tint = SubTextColor,  // 使用副文本颜色
+                    modifier = Modifier.size(32.dp)  // 图标大小32dp
                 )
-                Text(
-                    text = stringResource(id = R.string.home_upload_image_hint),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 16.sp,
-                    color = SubTextColor
+                Text(  // 显示上传提示文字
+                    text = stringResource(id = R.string.home_upload_image_hint),  // 从资源获取文本
+                    fontSize = 12.sp,  // 字体大小12sp
+                    fontWeight = FontWeight.Normal,  // 正常粗细
+                    lineHeight = 16.sp,  // 行高16sp
+                    color = SubTextColor  // 使用副文本颜色
                 )
             }
         }
     }
 }
 
+/**
+ * RecentMoodStatsSection 可组合函数 - 最近心情统计区域组件
+ * 显示最近的心情记录、统计数据和心情寄语
+ * 
+ * @param recentMoods 最近的心情记录列表
+ * @param todayMood 今天的心情记录（可选）
+ * @param totalRecords 总记录天数
+ * @param streak 连续记录天数
+ * @param favoriteMood 最喜欢的心情类型（可选）
+ * @param moodQuote 心情寄语文本
+ * @param onMoreClick 点击"更多"按钮的回调
+ * @param onMoodClick 点击心情图标时的回调
+ */
 @Composable
 private fun RecentMoodStatsSection(
-    recentMoods: List<DailyMoodEntity>,
+    recentMoods: List<DailyMoodEntity>,  // 最近的心情记录列表
     todayMood: DailyMoodEntity?, // 新增参数：今天的心情
-    totalRecords: Int,
-    streak: Int,
-    favoriteMood: MoodType?,
-    moodQuote: String,
-    onMoreClick: () -> Unit,
-    onMoodClick: (DailyMoodEntity) -> Unit
+    totalRecords: Int,  // 总记录天数
+    streak: Int,  // 连续记录天数
+    favoriteMood: MoodType?,  // 最喜欢的心情类型
+    moodQuote: String,  // 心情寄语文本
+    onMoreClick: () -> Unit,  // 点击"更多"的回调
+    onMoodClick: (DailyMoodEntity) -> Unit  // 点击心情的回调
 ) {
-    Card(
+    Card(  // 卡片容器
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 240.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            .fillMaxWidth()  // 填充最大宽度
+            .heightIn(min = 240.dp),  // 最小高度240dp
+        shape = RoundedCornerShape(16.dp),  // 圆角形状
+        colors = CardDefaults.cardColors(containerColor = Color.White),  // 白色背景
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)  // 阴影高度6dp
     ) {
-        Column(
+        Column(  // 垂直列布局
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxWidth()  // 填充最大宽度
+                .padding(16.dp),  // 内边距16dp
+            verticalArrangement = Arrangement.spacedBy(12.dp)  // 垂直间距12dp
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Row(  // 标题行，包含"最近心情"和"更多"按钮
+                modifier = Modifier.fillMaxWidth(),  // 填充最大宽度
+                horizontalArrangement = Arrangement.SpaceBetween,  // 两端对齐
+                verticalAlignment = Alignment.CenterVertically  // 垂直居中
             ) {
-                Text(
-                    text = "最近心情",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 22.sp,
-                    color = HeaderTextColor
+                Text(  // "最近心情"标题
+                    text = "最近心情",  // 文本内容
+                    fontSize = 16.sp,  // 字体大小16sp
+                    fontWeight = FontWeight.Bold,  // 粗体
+                    lineHeight = 22.sp,  // 行高22sp
+                    color = HeaderTextColor  // 标题文本颜色
                 )
-                Text(
-                    text = "更多",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    lineHeight = 16.sp,
-                    color = AccentPinkText,
-                    modifier = Modifier.clickable { onMoreClick() }
+                Text(  // "更多"按钮
+                    text = "更多",  // 文本内容
+                    fontSize = 12.sp,  // 字体大小12sp
+                    fontWeight = FontWeight.Medium,  // 中等粗细
+                    lineHeight = 16.sp,  // 行高16sp
+                    color = AccentPinkText,  // 强调粉色
+                    modifier = Modifier.clickable { onMoreClick() }  // 添加点击事件
                 )
             }
 
-            MoodIconRow(
-                recentMoods = recentMoods,
-                todayMood = todayMood,
-                onMoodClick = onMoodClick
+            MoodIconRow(  // 显示心情图标行
+                recentMoods = recentMoods,  // 传递最近心情记录
+                todayMood = todayMood,  // 传递今天的心情
+                onMoodClick = onMoodClick  // 传递点击回调
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            Row(  // 统计数据行
+                modifier = Modifier.fillMaxWidth(),  // 填充最大宽度
+                horizontalArrangement = Arrangement.spacedBy(12.dp)  // 水平间距12dp
             ) {
-                StatItem(title = "已经记录", value = totalRecords.toString(), unit = "天")
-                StatItem(title = "连续记录", value = streak.toString(), unit = "天")
+                StatItem(title = "已经记录", value = totalRecords.toString(), unit = "天")  // 总记录天数统计
+                StatItem(title = "连续记录", value = streak.toString(), unit = "天")  // 连续记录天数统计
                 // 隐藏最近x天的卡片
 //                StatItem(
 //                    title = "最近30天常见心情",
@@ -870,115 +992,122 @@ private fun RecentMoodStatsSection(
 //                )
             }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            Column(  // 心情寄语区域
+                verticalArrangement = Arrangement.spacedBy(12.dp)  // 垂直间距12dp
             ) {
-                Text(
-                    text = "心情寄语",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 22.sp,
-                    color = HeaderTextColor
+                Text(  // "心情寄语"标题
+                    text = "心情寄语",  // 文本内容
+                    fontSize = 16.sp,  // 字体大小16sp
+                    fontWeight = FontWeight.Bold,  // 粗体
+                    lineHeight = 22.sp,  // 行高22sp
+                    color = HeaderTextColor  // 标题文本颜色
                 )
-                Text(
-                    text = moodQuote,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 20.sp,
-                    color = ControlTextColor
+                Text(  // 心情寄语文本
+                    text = moodQuote,  // 寄语内容
+                    fontSize = 14.sp,  // 字体大小14sp
+                    fontWeight = FontWeight.Normal,  // 正常粗细
+                    lineHeight = 20.sp,  // 行高20sp
+                    color = ControlTextColor  // 控制文本颜色
                 )
             }
         }
     }
 }
 
+/**
+ * MoodTrendPreviewCard 可组合函数 - 心情趋势预览卡片组件
+ * 显示心情统计数据的趋势图表和时间范围选择
+ * 
+ * @param uiState 统计UI状态，包含趋势数据和加载状态
+ * @param onRangeChange 时间范围变化回调函数
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MoodTrendPreviewCard(
-    uiState: StatisticsViewModel.StatisticsUiState,
-    onRangeChange: (Int) -> Unit
+    uiState: StatisticsViewModel.StatisticsUiState,  // 统计UI状态
+    onRangeChange: (Int) -> Unit  // 时间范围变化回调
 ) {
-    Card(
+    Card(  // 卡片容器
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 220.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+            .fillMaxWidth()  // 填充最大宽度
+            .heightIn(min = 220.dp),  // 最小高度220dp
+        shape = RoundedCornerShape(16.dp),  // 圆角形状
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),  // 表面颜色
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)  // 阴影高度6dp
     ) {
-        Column(
+        Column(  // 垂直列布局
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxWidth()  // 填充最大宽度
+                .padding(16.dp),  // 内边距16dp
+            verticalArrangement = Arrangement.spacedBy(12.dp)  // 垂直间距12dp
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Row(  // 标题和筛选行
+                modifier = Modifier.fillMaxWidth(),  // 填充最大宽度
+                horizontalArrangement = Arrangement.SpaceBetween,  // 两端对齐
+                verticalAlignment = Alignment.CenterVertically  // 垂直居中
             ) {
-                Text(
-                    text = stringResource(R.string.home_mood_trend_title, uiState.selectedDays),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 22.sp,
-                    color = HeaderTextColor
+                Text(  // 趋势标题
+                    text = stringResource(R.string.home_mood_trend_title, uiState.selectedDays),  // 从资源获取标题文本并插入天数
+                    fontSize = 16.sp,  // 字体大小16sp
+                    fontWeight = FontWeight.Bold,  // 粗体
+                    lineHeight = 22.sp,  // 行高22sp
+                    color = HeaderTextColor  // 标题文本颜色
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    MoodTrendRangeOptions.forEach { (days, labelRes) ->
-                        key(days) {
-                            FilterChip(
-                                selected = uiState.selectedDays == days,
-                                onClick = { onRangeChange(days) },
-                                label = { Text(stringResource(labelRes)) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {  // 时间范围筛选按钮行
+                    MoodTrendRangeOptions.forEach { (days, labelRes) ->  // 遍历时间范围选项
+                        key(days) {  // 为每个选项设置唯一键值
+                            FilterChip(  // 筛选芯片组件
+                                selected = uiState.selectedDays == days,  // 判断是否选中
+                                onClick = { onRangeChange(days) },  // 点击回调，改变时间范围
+                                label = { Text(stringResource(labelRes)) }  // 显示标签文本
                             )
                         }
                     }
                 }
             }
 
-            when (uiState.contentState) {
-                StatisticsViewModel.ContentState.LOADING -> {
-                    Text(
-                        text = stringResource(R.string.home_mood_trend_loading),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = 20.sp,
-                        color = SubtitleGray
+            when (uiState.contentState) {  // 根据内容状态显示不同内容
+                StatisticsViewModel.ContentState.LOADING -> {  // 加载状态
+                    Text(  // 显示加载文本
+                        text = stringResource(R.string.home_mood_trend_loading),  // 从资源获取加载文本
+                        fontSize = 14.sp,  // 字体大小14sp
+                        fontWeight = FontWeight.Normal,  // 正常粗细
+                        lineHeight = 20.sp,  // 行高20sp
+                        color = SubtitleGray  // 副标题灰色
                     )
                 }
 
-                StatisticsViewModel.ContentState.CONTENT -> {
-                    if (uiState.moodTrend.isNotEmpty()) {
-                        SimpleTrendChart(trendData = uiState.moodTrend)
-                    } else {
-                        Text(
-                            text = stringResource(R.string.home_mood_trend_no_data),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Normal,
-                            lineHeight = 20.sp,
-                            color = SubtitleGray
+                StatisticsViewModel.ContentState.CONTENT -> {  // 有内容状态
+                    if (uiState.moodTrend.isNotEmpty()) {  // 如果趋势数据不为空
+                        SimpleTrendChart(trendData = uiState.moodTrend)  // 显示趋势图表
+                    } else {  // 如果趋势数据为空
+                        Text(  // 显示无数据文本
+                            text = stringResource(R.string.home_mood_trend_no_data),  // 从资源获取无数据文本
+                            fontSize = 14.sp,  // 字体大小14sp
+                            fontWeight = FontWeight.Normal,  // 正常粗细
+                            lineHeight = 20.sp,  // 行高20sp
+                            color = SubtitleGray  // 副标题灰色
                         )
                     }
                 }
 
-                StatisticsViewModel.ContentState.EMPTY -> {
-                    Text(
-                        text = stringResource(R.string.home_mood_trend_empty),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = 20.sp,
-                        color = SubtitleGray
+                StatisticsViewModel.ContentState.EMPTY -> {  // 空状态
+                    Text(  // 显示空状态文本
+                        text = stringResource(R.string.home_mood_trend_empty),  // 从资源获取空状态文本
+                        fontSize = 14.sp,  // 字体大小14sp
+                        fontWeight = FontWeight.Normal,  // 正常粗细
+                        lineHeight = 20.sp,  // 行高20sp
+                        color = SubtitleGray  // 副标题灰色
                     )
                 }
 
-                StatisticsViewModel.ContentState.ERROR -> {
-                    Text(
-                        text = uiState.errorMessage ?: stringResource(R.string.home_mood_trend_error_default),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = 20.sp,
-                        color = AccentRed
+                StatisticsViewModel.ContentState.ERROR -> {  // 错误状态
+                    Text(  // 显示错误文本
+                        text = uiState.errorMessage ?: stringResource(R.string.home_mood_trend_error_default),  // 显示错误消息或默认错误文本
+                        fontSize = 14.sp,  // 字体大小14sp
+                        fontWeight = FontWeight.Normal,  // 正常粗细
+                        lineHeight = 20.sp,  // 行高20sp
+                        color = AccentRed  // 强调红色
                     )
                 }
             }
@@ -986,44 +1115,61 @@ private fun MoodTrendPreviewCard(
     }
 }
 
+/**
+ * StatItem 可组合函数 - 统计项组件
+ * 显示统计数据项，包含值和标题
+ * 
+ * @param title 标题文本
+ * @param value 值文本
+ * @param unit 单位文本（可选）
+ * @param highlight 是否高亮显示
+ */
 @Composable
 private fun StatItem(
-    title: String,
-    value: String,
-    unit: String?,
-    highlight: Boolean = false
+    title: String,  // 标题文本
+    value: String,  // 值文本
+    unit: String?,  // 单位文本（可选）
+    highlight: Boolean = false  // 是否高亮显示，默认为false
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+    Column(  // 垂直列布局
+        verticalArrangement = Arrangement.spacedBy(4.dp)  // 垂直间距4dp
     ) {
-        val valueText = unit?.let { "$value$it" } ?: value
-        val valueColor = if (highlight) AccentPinkText else ControlTextColor
-        val valueSize = if (highlight) 18.sp else 16.sp
-        val valueWeight = if (highlight) FontWeight.Bold else FontWeight.Normal
+        val valueText = unit?.let { "$value$it" } ?: value  // 如果单位不为空则拼接值和单位，否则只显示值
+        val valueColor = if (highlight) AccentPinkText else ControlTextColor  // 根据高亮状态选择颜色
+        val valueSize = if (highlight) 18.sp else 16.sp  // 根据高亮状态选择字体大小
+        val valueWeight = if (highlight) FontWeight.Bold else FontWeight.Normal  // 根据高亮状态选择字体粗细
 
-        Text(
-            text = valueText,
-            fontSize = valueSize,
-            fontWeight = valueWeight,
-            lineHeight = if (highlight) 24.sp else 22.sp,
-            color = valueColor
+        Text(  // 显示数值文本
+            text = valueText,  // 值文本（可能包含单位）
+            fontSize = valueSize,  // 字体大小
+            fontWeight = valueWeight,  // 字体粗细
+            lineHeight = if (highlight) 24.sp else 22.sp,  // 行高
+            color = valueColor  // 文本颜色
         )
-        Text(
-            text = title,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Light,
-            lineHeight = 16.sp,
-            color = SubTextColor
+        Text(  // 显示标题文本
+            text = title,  // 标题文本
+            fontSize = 12.sp,  // 字体大小12sp
+            fontWeight = FontWeight.Light,  // 细体
+            lineHeight = 16.sp,  // 行高16sp
+            color = SubTextColor  // 副文本颜色
         )
     }
 }
 
+/**
+ * MoodIconRow 可组合函数 - 心情图标行组件
+ * 显示最近的心情图标，最多显示10个（如果有今天的心情则显示9个历史+1个今天）
+ * 
+ * @param recentMoods 最近的心情记录列表
+ * @param todayMood 今天的心情记录（可选）
+ * @param onMoodClick 点击心情图标时的回调
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun MoodIconRow(
-    recentMoods: List<DailyMoodEntity>,
+    recentMoods: List<DailyMoodEntity>,  // 最近的心情记录列表
     todayMood: DailyMoodEntity?, // 新增参数：今天的心情
-    onMoodClick: (DailyMoodEntity) -> Unit
+    onMoodClick: (DailyMoodEntity) -> Unit  // 点击心情的回调
 ) {
     if (recentMoods.isEmpty() && todayMood == null) {
         Text(
