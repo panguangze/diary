@@ -1,5 +1,6 @@
 package com.love.diary.presentation.screens.home
 
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -20,10 +21,12 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -516,146 +519,176 @@ private fun MoodRecordSection(
     moodOptions: List<MoodOption>,
     selectedMood: MoodType?,
     inputText: String,
-    selectedImageUri: String?,
+    selectedImageUri: String? = null, // 图片URI参数
     onMoodSelected: (MoodType) -> Unit,
     onInputChange: (String) -> Unit,
-    onPickImage: () -> Unit,
+    onPickImage: () -> Unit,       // 选图回调
     onSave: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 160.dp),
-        shape = RoundedCornerShape(16.dp),
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(1.dp, BorderColor),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            // 标题
+            Text(
+                text = "今天感觉如何？",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
+            // --- 核心布局：左侧(3行2列) + 右侧(自动填满高度) ---
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min), // 【关键】让左右高度互相对齐
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
+                // 1. 左侧：心情选择区域 (权重 1.4)
+                Column(
+                    modifier = Modifier
+                        .weight(1.4f)
+                        .fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween // 让三行心情垂直均匀分布
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(
-                            text = "今天感觉如何？",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            lineHeight = 22.sp,
-                            color = HeaderTextColor
-                        )
+                    // 将 moodOptions (6个) 分成 3组，每组 2个
+                    val rows = moodOptions.chunked(2)
 
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            maxItemsInEachRow = 2
-                        ) {
-                            moodOptions.forEach { option ->
-                                MoodTag(
-                                    option = option,
-                                    selected = selectedMood == option.moodType,
-                                    onClick = { onMoodSelected(option.moodType) }
-                                )
-                            }
-                        }
-
+                    rows.forEachIndexed { index, rowOptions ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.SpaceBetween // 两个心情在行内左右散开
                         ) {
-                            BasicTextField(
-                                value = inputText,
-                                onValueChange = onInputChange,
-                                modifier = Modifier
-                                    .weight(1f) // 占据剩余空间
-                                    .fillMaxWidth()
-                                    .height(40.dp)
-                                    .background(LightSurfaceColor, RoundedCornerShape(8.dp))
-                                    .border(1.dp, UploadBorderColor, RoundedCornerShape(8.dp))
-                                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                    color = HeaderTextColor,
-                                    fontSize = 14.sp,
-                                    lineHeight = 20.sp
-                                ),
-                                singleLine = true,
-                                decorationBox = { innerTextField ->
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.CenterStart
-                                    ) {
-                                        if (inputText.isBlank()) {
-                                            Text(
-                                                text = "记录下你",
-                                                color = SubTextColor,
-                                                fontSize = 14.sp,
-                                                lineHeight = 20.sp
-                                            )
-                                        }
-                                        innerTextField()
-                                    }
-                                }
-                            )
-
-                            Button(
-                                onClick = { onSave(inputText) },
-                                enabled = selectedMood != null,
-                                modifier = Modifier
-                                    .height(40.dp)
-                                    .background(
-                                        brush = Brush.verticalGradient(
-                                            colors = listOf(AccentGradientStart, AccentGradientEnd)
-                                        ),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .drawBehind {
-                                        drawLine(
-                                            color = Color.White.copy(alpha = 0.2f),
-                                            start = Offset(0f, 0f),
-                                            end = Offset(size.width, 0f),
-                                            strokeWidth = 1.dp.toPx()
+                            // 如果不足2个（防止越界），用Spacer占位，但通常你是6个
+                            for (i in 0 until 2) {
+                                if (i < rowOptions.size) {
+                                    val option = rowOptions[i]
+                                    Box(modifier = Modifier.weight(1f)) { // 给每个MoodTag分配等宽容器
+                                        MoodTag(
+                                            option = option,
+                                            selected = selectedMood == option.moodType,
+                                            onClick = { onMoodSelected(option.moodType) }
                                         )
-                                    },
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.Transparent,
-                                    contentColor = Color.White,
-                                    disabledContainerColor = AccentGradientStart.copy(alpha = 0.4f),
-                                    disabledContentColor = Color.White
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp)
-                            ) {
-                                Text(
-                                    text = "保存",
-                                    fontSize = 14.sp,
-                                    lineHeight = 20.sp
-                                )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                                // 中间加个间距，除了最后一个
+                                if(i == 0) Spacer(modifier = Modifier.width(8.dp))
                             }
                         }
+                        // 行与行之间加间距（除了最后一行）
+                        if (index < rows.size - 1) {
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
                     }
-                    
-                    // 图片上传框与表情选择区域在同一侧，对齐底部
-                    DashedUploadBox(
-                        imageUri = selectedImageUri,
-                        onClick = onPickImage,
-                        modifier = Modifier
-                            .width(120.dp)
-                            .height(136.dp) // 高度与左侧内容区域保持一致
-                            .align(Alignment.Top) // 与左侧内容顶部对齐
-                    )
+                }
+
+                // 2. 右侧：上传图片框 (权重 1.0)
+                Box(
+                    modifier = Modifier
+                        .weight(1f) // 占据剩余宽度
+                        .fillMaxHeight() // 【关键】高度拉伸，跟随左侧高度
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onPickImage() }
+                        .drawBehind {
+                            if (selectedImageUri == null) {
+                                drawRoundRect(
+                                    color = BorderColor,
+                                    cornerRadius = CornerRadius(8.dp.toPx()),
+                                    style = Stroke(
+                                        width = 2.dp.toPx(),
+                                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(12f, 12f))
+                                    )
+                                )
+                            }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (selectedImageUri != null) {
+                        // 显示图片（如果有Coil库，建议替换为AsyncImage）
+                        // 这里暂时用Icon代替已选状态，你可以换成 Image(painter = rememberImagePainter(selectedImageUri)...)
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.AddPhotoAlternate, // 或者用 Image 组件
+                                contentDescription = "已选择",
+                                tint = PrimaryPink,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Text("已选择一张图片", fontSize = 10.sp, color = PrimaryPink)
+                        }
+                    } else {
+                        // 未选择状态
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.AddPhotoAlternate,
+                                contentDescription = null,
+                                tint = NeutralGray,
+                                modifier = Modifier.size(32.dp) // 图标大一点
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "添加图片",
+                                fontSize = 14.sp,
+                                color = SubtitleGray
+                            )
+                        }
+                    }
+                }
+            }
+
+            // --- 底部：输入框 + 保存按钮 ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // 输入框
+                BasicTextField(
+                    value = inputText,
+                    onValueChange = onInputChange,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .border(1.dp, BorderColor, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 12.dp),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    singleLine = true,
+                    decorationBox = { innerTextField ->
+                        Box(contentAlignment = Alignment.CenterStart) {
+                            if (inputText.isBlank()) {
+                                Text("写点什么...", color = SubtitleGray, fontSize = 14.sp)
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+
+                // 保存按钮
+                Button(
+                    onClick = { onSave(inputText) },
+                    enabled = selectedMood != null, // 没选心情时禁用
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryPink,
+                        disabledContainerColor = PrimaryPink.copy(alpha = 0.5f)
+                    ),
+                    modifier = Modifier.height(44.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp)
+                ) {
+                    Text("保存", color = Color.White)
                 }
             }
         }
@@ -1053,7 +1086,10 @@ private fun MoodIconRow(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .border(BorderStroke(1.dp, AccentPinkText.copy(alpha = 0.12f)), RoundedCornerShape(8.dp)),
+                        .border(
+                            BorderStroke(1.dp, AccentPinkText.copy(alpha = 0.12f)),
+                            RoundedCornerShape(8.dp)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     // 空白，无内容
@@ -1093,7 +1129,9 @@ private fun HeroHeader(
                 
                 // Center content
                 Column(
-                    modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -2389,7 +2427,10 @@ private fun MiniMonthGrid(
                                             MoodType.HAPPY -> MaterialTheme.colorScheme.primary
                                             MoodType.SATISFIED -> MaterialTheme.colorScheme.tertiary
                                             MoodType.NORMAL -> MaterialTheme.colorScheme.secondary
-                                            MoodType.SAD -> MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                                            MoodType.SAD -> MaterialTheme.colorScheme.error.copy(
+                                                alpha = 0.7f
+                                            )
+
                                             MoodType.ANGRY -> MaterialTheme.colorScheme.error
                                             MoodType.OTHER -> MaterialTheme.colorScheme.outline
                                         },
