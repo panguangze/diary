@@ -366,20 +366,8 @@ private fun CollapsedCheckInContent(
         
         when (config.checkInCategory) {
             com.love.diary.data.model.CheckInCategory.POSITIVE -> {
-                // Check-in button - larger size (56dp) with visual state difference
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(
-                            color = if (hasCheckedInToday) 
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                            else 
-                                MaterialTheme.colorScheme.surfaceVariant,
-                            shape = CircleShape
-                        )
-                        .clickable(onClick = onCheckIn),
-                    contentAlignment = Alignment.Center
-                ) {
+                // Check-in button - icon only without outer circle
+                IconButton(onClick = onCheckIn) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
                         contentDescription = if (hasCheckedInToday) "已打卡" else "打卡",
@@ -394,20 +382,8 @@ private fun CollapsedCheckInContent(
             com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
                 when (config.countdownMode) {
                     CountdownMode.CHECKIN_COUNTDOWN -> {
-                        // Check-in button for check-in countdown - larger size with visual state
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .background(
-                                    color = if (hasCheckedInToday) 
-                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                                    else 
-                                        MaterialTheme.colorScheme.surfaceVariant,
-                                    shape = CircleShape
-                                )
-                                .clickable(onClick = onCheckIn),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        // Check-in button for check-in countdown - icon only without outer circle
+                        IconButton(onClick = onCheckIn) {
                             Icon(
                                 imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
                                 contentDescription = if (hasCheckedInToday) "已打卡" else "打卡",
