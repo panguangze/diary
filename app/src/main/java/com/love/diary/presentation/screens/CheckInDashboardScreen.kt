@@ -375,6 +375,8 @@ private fun checkInLabel(checkInType: CheckInType): String {
         CheckInType.SLEEP -> "睡眠打卡"
         CheckInType.MILESTONE -> "里程碑事件"
         CheckInType.CUSTOM -> "自定义打卡"
+        CheckInType.DAY_COUNTDOWN -> "天数倒计时"
+        CheckInType.CHECKIN_COUNTDOWN -> "打卡倒计时"
     }
 }
 
@@ -392,6 +394,8 @@ private fun checkInIcon(checkInType: CheckInType): String {
         CheckInType.SLEEP -> "🌙"
         CheckInType.MILESTONE -> "🎯"
         CheckInType.CUSTOM -> "✨"
+        CheckInType.DAY_COUNTDOWN -> "⏰"
+        CheckInType.CHECKIN_COUNTDOWN -> "📅"
     }
 }
 

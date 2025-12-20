@@ -245,4 +245,23 @@ object MigrationHelper {
             addColumnIfNotExists(database, "habits", "totalCheckIns", "INTEGER NOT NULL DEFAULT 0")
         }
     }
+
+    /**
+     * Migration from version 10 to 11 - Add countdown check-in fields
+     *
+     * This migration adds the required columns to unified_checkin_configs table to support:
+     * - tag: Tag for check-in countdown
+     * - countdownMode: Mode of countdown (DAY_COUNTDOWN or CHECKIN_COUNTDOWN)
+     * - countdownTarget: Target value for countdown (days or check-in count)
+     * - countdownProgress: Current progress for check-in countdown
+     */
+    val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Add countdown-related columns to unified_checkin_configs table
+            addColumnIfNotExists(database, "unified_checkin_configs", "tag", "TEXT DEFAULT NULL")
+            addColumnIfNotExists(database, "unified_checkin_configs", "countdownMode", "TEXT DEFAULT NULL")
+            addColumnIfNotExists(database, "unified_checkin_configs", "countdownTarget", "INTEGER DEFAULT NULL")
+            addColumnIfNotExists(database, "unified_checkin_configs", "countdownProgress", "INTEGER NOT NULL DEFAULT 0")
+        }
+    }
 }

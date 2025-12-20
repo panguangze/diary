@@ -82,6 +82,8 @@ class CheckInRepository @Inject constructor(
                     CheckInType.SLEEP -> "睡眠打卡"
                     CheckInType.MILESTONE -> "里程碑事件"
                     CheckInType.CUSTOM -> "自定义打卡"
+                    CheckInType.DAY_COUNTDOWN -> "天数倒计时"
+                    CheckInType.CHECKIN_COUNTDOWN -> "打卡倒计时"
                 },
                 buttonLabel = when(type) {
                     CheckInType.LOVE_DIARY -> "记录恋爱时光"
@@ -96,6 +98,8 @@ class CheckInRepository @Inject constructor(
                     CheckInType.SLEEP -> "睡眠"
                     CheckInType.MILESTONE -> "里程碑"
                     CheckInType.CUSTOM -> "打卡"
+                    CheckInType.DAY_COUNTDOWN -> "查看倒计时"
+                    CheckInType.CHECKIN_COUNTDOWN -> "打卡"
                 },
                 icon = when(type) {
                     CheckInType.LOVE_DIARY -> "❤️"
@@ -110,6 +114,8 @@ class CheckInRepository @Inject constructor(
                     CheckInType.SLEEP -> "😴"
                     CheckInType.MILESTONE -> "🏆"
                     CheckInType.CUSTOM -> "🎯"
+                    CheckInType.DAY_COUNTDOWN -> "⏰"
+                    CheckInType.CHECKIN_COUNTDOWN -> "📅"
                 }
             )
             saveCheckInConfig(newConfig)
@@ -404,5 +410,166 @@ class CheckInRepository @Inject constructor(
     // 更新打卡记录的名称（批量更新，用于同步名称变更）
     suspend fun updateCheckInRecordsName(oldName: String, newName: String): Int {
         return unifiedCheckInDao.updateCheckInRecordsName(oldName, newName)
+    }
+
+    // ========== 倒计时打卡相关方法 ==========
+
+    /**
+     * 创建天数倒计时打卡配置
+     * @param name 倒计时名称
+     * @param targetDate 目标日期
+     * @param description 描述
+     * @param icon 图标
+     * @param color 颜色
+     */
+    suspend fun createDayCountdown(
+        name: String,
+        targetDate: String,
+        description: String? = null,
+        icon: String = "⏰",
+        color: String = "#FF5722"
+    ): Long {
+        val config = UnifiedCheckInConfig(
+            name = name,
+            type = CheckInType.DAY_COUNTDOWN,
+            description = description ?: "天数倒计时",
+            buttonLabel = "查看倒计时",
+            icon = icon,
+            color = color,
+            startDate = LocalDate.now().toString(),
+            targetDate = targetDate,
+            countdownMode = com.love.diary.data.model.CountdownMode.DAY_COUNTDOWN,
+            countdownTarget = null, // 天数倒计时不需要设置目标值，自动计算
+            countdownProgress = 0
+        )
+        return saveCheckInConfig(config)
+    }
+
+    /**
+     * 创建打卡倒计时配置
+     * @param name 倒计时名称
+     * @param countdownTarget 倒计时目标次数
+     * @param tag 标签
+     * @param description 描述
+     * @param icon 图标
+     * @param color 颜色
+     */
+    suspend fun createCheckInCountdown(
+        name: String,
+        countdownTarget: Int,
+        tag: String? = null,
+        description: String? = null,
+        icon: String = "📅",
+        color: String = "#2196F3"
+    ): Long {
+        val config = UnifiedCheckInConfig(
+            name = name,
+            type = CheckInType.CHECKIN_COUNTDOWN,
+            description = description ?: "打卡倒计时",
+            buttonLabel = "打卡",
+            icon = icon,
+            color = color,
+            startDate = LocalDate.now().toString(),
+            tag = tag,
+            countdownMode = com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN,
+            countdownTarget = countdownTarget,
+            countdownProgress = 0
+        )
+        return saveCheckInConfig(config)
+    }
+
+    /**
+     * 打卡倒计时打卡
+     * 每打卡一次，进度+1
+     */
+    suspend fun checkInCountdown(configId: Long, tag: String? = null, note: String? = null): Long {
+        val config = getCheckInConfigById(configId) ?: return -1
+        
+        // 检查是否是打卡倒计时类型
+        if (config.countdownMode != com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN) {
+            return -1
+        }
+
+        // 检查是否已完成
+        if (config.countdownProgress >= (config.countdownTarget ?: 0)) {
+            return -1
+        }
+
+        // 执行打卡
+        val checkInId = checkIn(
+            name = config.name,
+            type = config.type,
+            tag = tag ?: config.tag,
+            note = note,
+            configId = configId
+        )
+
+        // 更新进度
+        val updatedConfig = config.copy(
+            countdownProgress = config.countdownProgress + 1,
+            updatedAt = System.currentTimeMillis()
+        )
+        updateCheckInConfig(updatedConfig)
+
+        return checkInId
+    }
+
+    /**
+     * 计算天数倒计时的剩余天数
+     * @param targetDate 目标日期字符串 (yyyy-MM-dd)
+     * @return 剩余天数，如果目标日期已过返回0
+     */
+    fun calculateDaysRemaining(targetDate: String): Int {
+        return try {
+            val target = LocalDate.parse(targetDate)
+            val today = LocalDate.now()
+            val daysRemaining = java.time.temporal.ChronoUnit.DAYS.between(today, target).toInt()
+            if (daysRemaining < 0) 0 else daysRemaining
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    /**
+     * 获取打卡倒计时的剩余次数
+     * @param config 打卡配置
+     * @return 剩余次数
+     */
+    fun getCheckInCountdownRemaining(config: UnifiedCheckInConfig): Int {
+        val target = config.countdownTarget ?: 0
+        val progress = config.countdownProgress
+        val remaining = target - progress
+        return if (remaining < 0) 0 else remaining
+    }
+
+    /**
+     * 获取倒计时进度百分比
+     * @param config 打卡配置
+     * @return 进度百分比 (0-100)
+     */
+    fun getCountdownProgress(config: UnifiedCheckInConfig): Float {
+        return when (config.countdownMode) {
+            com.love.diary.data.model.CountdownMode.DAY_COUNTDOWN -> {
+                // 天数倒计时：计算已经过的天数占总天数的百分比
+                if (config.targetDate == null) return 0f
+                val startDate = LocalDate.parse(config.startDate)
+                val targetDate = LocalDate.parse(config.targetDate)
+                val totalDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, targetDate).toFloat()
+                if (totalDays <= 0) return 100f
+                
+                val today = LocalDate.now()
+                val elapsedDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, today).toFloat()
+                val progress = (elapsedDays / totalDays * 100f).coerceIn(0f, 100f)
+                progress
+            }
+            com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN -> {
+                // 打卡倒计时：计算打卡次数占目标次数的百分比
+                val target = config.countdownTarget?.toFloat() ?: 0f
+                if (target <= 0) return 0f
+                val progress = (config.countdownProgress / target * 100f).coerceIn(0f, 100f)
+                progress
+            }
+            null -> 0f
+        }
     }
 }

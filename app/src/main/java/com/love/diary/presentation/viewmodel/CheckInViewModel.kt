@@ -353,4 +353,95 @@ class CheckInViewModel @Inject constructor(
         val latestRecord = checkInRepository.getLatestLoveDiaryRecord()
         // 可以更新UI状态或返回结果
     }
+
+    // ========== 倒计时打卡相关方法 ==========
+
+    /**
+     * 创建天数倒计时
+     * @param name 倒计时名称
+     * @param targetDate 目标日期
+     * @param description 描述
+     * @param icon 图标
+     * @param color 颜色
+     */
+    fun createDayCountdown(
+        name: String,
+        targetDate: String,
+        description: String? = null,
+        icon: String = "⏰",
+        color: String = "#FF5722"
+    ) {
+        viewModelScope.launch {
+            checkInRepository.createDayCountdown(
+                name = name,
+                targetDate = targetDate,
+                description = description,
+                icon = icon,
+                color = color
+            )
+        }
+    }
+
+    /**
+     * 创建打卡倒计时
+     * @param name 倒计时名称
+     * @param countdownTarget 倒计时目标次数
+     * @param tag 标签
+     * @param description 描述
+     * @param icon 图标
+     * @param color 颜色
+     */
+    fun createCheckInCountdown(
+        name: String,
+        countdownTarget: Int,
+        tag: String? = null,
+        description: String? = null,
+        icon: String = "📅",
+        color: String = "#2196F3"
+    ) {
+        viewModelScope.launch {
+            checkInRepository.createCheckInCountdown(
+                name = name,
+                countdownTarget = countdownTarget,
+                tag = tag,
+                description = description,
+                icon = icon,
+                color = color
+            )
+        }
+    }
+
+    /**
+     * 打卡倒计时打卡
+     */
+    fun checkInCountdown(configId: Long, tag: String? = null, note: String? = null) {
+        viewModelScope.launch {
+            checkInRepository.checkInCountdown(
+                configId = configId,
+                tag = tag,
+                note = note
+            )
+        }
+    }
+
+    /**
+     * 计算天数倒计时的剩余天数
+     */
+    fun calculateDaysRemaining(targetDate: String): Int {
+        return checkInRepository.calculateDaysRemaining(targetDate)
+    }
+
+    /**
+     * 获取打卡倒计时的剩余次数
+     */
+    fun getCheckInCountdownRemaining(config: UnifiedCheckInConfig): Int {
+        return checkInRepository.getCheckInCountdownRemaining(config)
+    }
+
+    /**
+     * 获取倒计时进度百分比
+     */
+    fun getCountdownProgress(config: UnifiedCheckInConfig): Float {
+        return checkInRepository.getCountdownProgress(config)
+    }
 }

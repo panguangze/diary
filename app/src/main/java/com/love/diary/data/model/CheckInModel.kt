@@ -20,7 +20,17 @@ enum class CheckInType {
     WATER,         // 喝水打卡
     SLEEP,         // 睡眠打卡
     MILESTONE,     // 里程碑事件
-    CUSTOM         // 自定义打卡
+    CUSTOM,        // 自定义打卡
+    DAY_COUNTDOWN, // 天数倒计时（自然天倒计时）
+    CHECKIN_COUNTDOWN // 打卡倒计时（随打卡进度变化）
+}
+
+/**
+ * 倒计时模式枚举
+ */
+enum class CountdownMode {
+    DAY_COUNTDOWN,     // 天数倒计时：按自然天数自动递减，不需要打卡
+    CHECKIN_COUNTDOWN  // 打卡倒计时：需要每天打卡，打卡一次进度才变化
 }
 
 /**
@@ -72,6 +82,7 @@ data class UnifiedCheckInConfig(
     val name: String,                    // 打卡名称
     val type: CheckInType,               // 打卡类型
     val description: String? = null,     // 描述
+    val tag: String? = null,             // 标签（用于打卡倒计时等）
     
     // UI相关
     val buttonLabel: String = "打卡",     // 按钮标签
@@ -85,6 +96,11 @@ data class UnifiedCheckInConfig(
     val reminderTime: String? = null,    // 提醒时间（HH:mm格式）
     val isRecurring: Boolean = false,    // 是否重复
     val recurrencePattern: String? = null, // 重复模式（daily, weekly, monthly等）
+    
+    // 倒计时相关
+    val countdownMode: CountdownMode? = null, // 倒计时模式（天数倒计时或打卡倒计时）
+    val countdownTarget: Int? = null,    // 倒计时目标值（天数或打卡次数）
+    val countdownProgress: Int = 0,      // 倒计时当前进度（用于打卡倒计时）
     
     // 状态
     val isActive: Boolean = true,        // 是否激活
