@@ -59,11 +59,13 @@ import com.love.diary.data.model.UnifiedCheckIn
 import com.love.diary.presentation.viewmodel.CheckInViewModel
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.AppScaffold
+import com.love.diary.presentation.components.CountdownCard
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader
 import com.love.diary.presentation.components.StatusBadge
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+
 
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -75,7 +77,15 @@ fun CheckInDashboardScreen(
     
     var selectedCheckIn by remember { mutableStateOf<UnifiedCheckIn?>(null) }
     var showCheckInCalendar by remember { mutableStateOf(false) }
+    var showAddCountdownDialog by remember { mutableStateOf(false) }
     val detailSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    
+    // Filter countdown configs
+    val countdownConfigs = remember(uiState.allCheckInConfigs) {
+        uiState.allCheckInConfigs.filter { 
+            it.countdownMode != null && it.isActive 
+        }
+    }
     
     AppScaffold(title = "打卡") { padding ->
         LazyColumn(
@@ -86,6 +96,57 @@ fun CheckInDashboardScreen(
             verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
             contentPadding = PaddingValues(bottom = Dimens.LargeSpacing)
         ) {
+            // Countdown check-ins section
+            if (countdownConfigs.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SectionHeader(
+                            title = "倒计时打卡",
+                            subtitle = "距离目标还有多远"
+                        )
+                        TextButton(onClick = { showAddCountdownDialog = true }) {
+                            Text("+ 添加")
+                        }
+                    }
+                }
+
+                items(countdownConfigs) { config ->
+                    CountdownCard(
+                        config = config,
+                        daysRemaining = config.targetDate?.let { 
+                            viewModel.calculateDaysRemaining(it) 
+                        },
+                        countdownRemaining = viewModel.getCheckInCountdownRemaining(config),
+                        progress = viewModel.getCountdownProgress(config),
+                        onCheckIn = if (config.countdownMode == com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN) {
+                            { viewModel.checkInCountdown(config.id, config.tag) }
+                        } else null,
+                        onClick = { }
+                    )
+                }
+            } else {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        SectionHeader(
+                            title = "倒计时打卡",
+                            subtitle = "添加你的第一个倒计时"
+                        )
+                        TextButton(onClick = { showAddCountdownDialog = true }) {
+                            Text("+ 添加")
+                        }
+                    }
+                }
+            }
+            
+
             item {
                 SectionHeader(
                     title = "今天的状态",
@@ -157,6 +218,40 @@ fun CheckInDashboardScreen(
                 }
             },
             checkInRecords = uiState.checkInRecords
+        )
+    }
+    
+    // Show add countdown dialog
+    if (showAddCountdownDialog) {
+        AddCountdownDialog(
+            onDismiss = { showAddCountdownDialog = false },
+            onConfirm = { name, countdownMode, targetDate, countdownTarget, tag, description, icon, color ->
+                when (countdownMode) {
+                    com.love.diary.data.model.CountdownMode.DAY_COUNTDOWN -> {
+                        targetDate?.let {
+                            viewModel.createDayCountdown(
+                                name = name,
+                                targetDate = it,
+                                description = description,
+                                icon = icon,
+                                color = color
+                            )
+                        }
+                    }
+                    com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN -> {
+                        countdownTarget?.let {
+                            viewModel.createCheckInCountdown(
+                                name = name,
+                                countdownTarget = it,
+                                tag = tag,
+                                description = description,
+                                icon = icon,
+                                color = color
+                            )
+                        }
+                    }
+                }
+            }
         )
     }
 }
@@ -375,6 +470,8 @@ private fun checkInLabel(checkInType: CheckInType): String {
         CheckInType.SLEEP -> "睡眠打卡"
         CheckInType.MILESTONE -> "里程碑事件"
         CheckInType.CUSTOM -> "自定义打卡"
+        CheckInType.DAY_COUNTDOWN -> "天数倒计时"
+        CheckInType.CHECKIN_COUNTDOWN -> "打卡倒计时"
     }
 }
 
@@ -392,6 +489,8 @@ private fun checkInIcon(checkInType: CheckInType): String {
         CheckInType.SLEEP -> "🌙"
         CheckInType.MILESTONE -> "🎯"
         CheckInType.CUSTOM -> "✨"
+        CheckInType.DAY_COUNTDOWN -> "⏰"
+        CheckInType.CHECKIN_COUNTDOWN -> "📅"
     }
 }
 

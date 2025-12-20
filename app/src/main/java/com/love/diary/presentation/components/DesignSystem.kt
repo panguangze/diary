@@ -38,6 +38,8 @@ object Dimens {
     val CardPadding = 16.dp
     val SectionSpacing = 12.dp
     val LargeSpacing = 24.dp
+    val MediumSpacing = 16.dp
+    val SmallSpacing = 8.dp
     val CardCorner = 16.dp
     val FieldCorner = 12.dp
     val TopBarHeight = 56.dp
