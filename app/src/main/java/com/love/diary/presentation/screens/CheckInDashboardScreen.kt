@@ -734,10 +734,20 @@ private fun CheckInDayCell(
     isToday: Boolean,
     onClick: () -> Unit
 ) {
+    // Get tag color from first check-in if available
+    val tagColor = com.love.diary.util.ColorUtil.parseColor(checkInsForDate?.firstOrNull()?.tagColor)
+    
     val backgroundColor = when {
         isToday -> MaterialTheme.colorScheme.primaryContainer
+        !checkInsForDate.isNullOrEmpty() && tagColor != null -> tagColor.copy(alpha = 0.8f)
         !checkInsForDate.isNullOrEmpty() -> MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
         else -> MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+    }
+    
+    val textColor = when {
+        !checkInsForDate.isNullOrEmpty() && tagColor != null -> 
+            com.love.diary.util.ColorUtil.getContrastingTextColor(tagColor)
+        else -> MaterialTheme.colorScheme.onSurface
     }
 
     androidx.compose.material3.Card(
@@ -768,7 +778,8 @@ private fun CheckInDayCell(
                     Text(
                         text = day.toString(),
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp
+                        fontSize = 10.sp,
+                        color = textColor
                     )
                 }
             } else {
@@ -836,6 +847,9 @@ private fun CheckInMiniMonthGrid(
                     val date = java.time.LocalDate.of(year, month, day)
                     val dateStr = date.toString()
                     val checkInsForDate = checkInMap[dateStr]
+                    
+                    // Get tag color from first check-in if available
+                    val tagColor = com.love.diary.util.ColorUtil.parseColor(checkInsForDate?.firstOrNull()?.tagColor)
 
                     Box(
                         modifier = Modifier.size(12.dp),
@@ -847,7 +861,7 @@ private fun CheckInMiniMonthGrid(
                                 modifier = Modifier
                                     .size(10.dp)
                                     .background(
-                                        MaterialTheme.colorScheme.primary,
+                                        tagColor ?: MaterialTheme.colorScheme.primary,
                                         shape = androidx.compose.foundation.shape.CircleShape
                                     )
                             )

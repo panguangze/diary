@@ -56,6 +56,7 @@ class CheckInRepository @Inject constructor(
         type: CheckInType,
         moodType: MoodType? = null,
         tag: String? = null,
+        tagColor: String? = null,
         note: String? = null,
         attachmentUri: String? = null,
         duration: Int? = null,
@@ -134,6 +135,7 @@ class CheckInRepository @Inject constructor(
             type = type,
             moodType = moodType,
             tag = tag,
+            tagColor = tagColor,
             date = today,
             count = count,
             note = note,
@@ -500,6 +502,7 @@ class CheckInRepository @Inject constructor(
             name = config.name,
             type = config.type,
             tag = tag ?: config.tag,
+            tagColor = config.color, // Use config color as tag color
             note = note,
             configId = configId
         )
