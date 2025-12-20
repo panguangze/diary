@@ -281,7 +281,8 @@ fun HomeScreen(
                 recentMoods = uiState.recentTenMoods,
                 todayMood = todayMoodRecord,
                 totalRecords = historyRecords.size,
-                streak = uiState.currentStreak,
+                currentStreak = uiState.currentStreak,
+                longestStreak = uiState.longestStreak,
                 favoriteMood = favoriteMood,
                 moodQuote = uiState.todayMood?.feedbackText
                     ?: "无论今天心情如何，我都在你身边，爱你每一天。",
@@ -679,7 +680,9 @@ private fun MoodRecordSection(
                     decorationBox = { innerTextField ->
                         Box(contentAlignment = Alignment.CenterStart) {
                             if (inputText.isBlank()) {
-                                Text("写点什么...", color = SubtitleGray, fontSize = 14.sp)
+                                // 如果选了心情，显示心情对应的寄语，否则显示默认提示
+                                val placeholderText = selectedMood?.feedbackText ?: "写点什么..."
+                                Text(placeholderText, color = SubtitleGray, fontSize = 14.sp)
                             }
                             innerTextField()
                         }
@@ -817,7 +820,8 @@ private fun RecentMoodStatsSection(
     recentMoods: List<DailyMoodEntity>,
     todayMood: DailyMoodEntity?, // 新增参数：今天的心情
     totalRecords: Int,
-    streak: Int,
+    currentStreak: Int,
+    longestStreak: Int,
     favoriteMood: MoodType?,
     moodQuote: String,
     onMoreClick: () -> Unit,
@@ -867,29 +871,12 @@ private fun RecentMoodStatsSection(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                StatItem(title = "已经记录", value = totalRecords.toString(), unit = "天")
-                StatItem(title = "连续记录", value = streak.toString(), unit = "天")
-            }
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "心情寄语",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 22.sp,
-                    color = HeaderTextColor
-                )
-                Text(
-                    text = moodQuote,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 20.sp,
-                    color = ControlTextColor
-                )
+                StatItem(title = "当前连续", value = currentStreak.toString(), unit = "天")
+                StatItem(title = "最长连续", value = longestStreak.toString(), unit = "天")
+                StatItem(title = "累计记录", value = totalRecords.toString(), unit = "天")
             }
         }
     }
@@ -997,6 +984,7 @@ private fun StatItem(
     highlight: Boolean = false
 ) {
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         val valueText = unit?.let { "$value$it" } ?: value
@@ -1009,14 +997,16 @@ private fun StatItem(
             fontSize = valueSize,
             fontWeight = valueWeight,
             lineHeight = if (highlight) 24.sp else 22.sp,
-            color = valueColor
+            color = valueColor,
+            textAlign = TextAlign.Center
         )
         Text(
             text = title,
             fontSize = 12.sp,
             fontWeight = FontWeight.Light,
             lineHeight = 16.sp,
-            color = SubTextColor
+            color = SubTextColor,
+            textAlign = TextAlign.Center
         )
     }
 }

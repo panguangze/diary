@@ -227,21 +227,18 @@ fun BottomNavigationBar(
                 icon = {
                     if (isSelected) {
                         Row(
-                            modifier = Modifier
-                                .background(selectedBrush, RoundedCornerShape(24.dp))
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Icon(
                                 screen.selectedIcon,
                                 contentDescription = "${screen.title}，已选中",
-                                tint = Color.White,
+                                tint = Color(0xFFFF6B81),
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
                                 text = screen.title,
-                                color = Color.White,
+                                color = Color(0xFFFF6B81),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 lineHeight = 16.sp
