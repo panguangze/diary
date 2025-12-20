@@ -260,9 +260,9 @@ fun HomeScreen(
                 inputText = uiState.otherMoodText,
                 selectedImageUri = uiState.selectedImageUri,
                 onMoodSelected = { mood ->
-                    // 只选择心情，不保存
+                    // 选择心情时，自动填充对应的feedbackText
                     if (mood != uiState.todayMood) {
-                        viewModel.updateOtherMoodText("")
+                        viewModel.updateOtherMoodText(mood.feedbackText)
                     }
                     viewModel.updateSelectedMood(mood)
                 },
@@ -1915,6 +1915,26 @@ private fun HistoryDetailSheet(
                     .heightIn(min = 120.dp),
                 label = { Text("一句话") }
             )
+        }
+
+        // Display image if available
+        if (!record.singleImageUri.isNullOrBlank()) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(record.singleImageUri)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "心情图片",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
 
         Row(

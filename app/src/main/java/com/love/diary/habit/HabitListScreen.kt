@@ -86,12 +86,6 @@ fun HabitListScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
         ) {
-            item {
-                SectionHeader(
-                    title = "打卡事项",
-                    subtitle = "管理你的习惯与今日完成度"
-                )
-            }
             items(habits) { habit ->
                 HabitItemCard(
                     habit = habit,

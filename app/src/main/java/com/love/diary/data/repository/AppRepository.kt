@@ -41,12 +41,14 @@ class AppRepository @Inject constructor(
      * @param startDate The relationship start date in yyyy-MM-dd format
      * @param coupleName Optional couple display name
      * @param partnerNickname Optional partner nickname
+     * @param avatarUri Optional user avatar URI
      * @throws IllegalArgumentException if startDate is invalid
      */
     suspend fun initializeFirstRun(
         startDate: String,
         coupleName: String? = null,
-        partnerNickname: String? = null
+        partnerNickname: String? = null,
+        avatarUri: String? = null
     ) {
         require(startDate.isNotBlank()) { "Start date cannot be blank" }
         
@@ -65,6 +67,7 @@ class AppRepository @Inject constructor(
             showMoodTip = true,
             showStreak = true,
             showAnniversary = true,
+            reservedText1 = avatarUri, // Save avatar URI
             createdAt = System.currentTimeMillis(),
             updatedAt = System.currentTimeMillis()
         )
