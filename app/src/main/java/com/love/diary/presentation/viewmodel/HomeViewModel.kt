@@ -225,6 +225,17 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun updateSelectedMood(moodType: MoodType) {
+        // 只更新选中的心情，不保存到数据库
+        _uiState.update {
+            it.copy(
+                todayMood = moodType,
+                isDescriptionEditing = true,
+                descriptionError = null
+            )
+        }
+    }
+
     fun saveOtherMood(text: String) {
         viewModelScope.launch {
             if (text.isNotBlank()) {
@@ -321,10 +332,15 @@ class HomeViewModel @Inject constructor(
                         todayMoodText = finalText,
                         otherMoodText = finalText ?: "",
                         selectedImageUri = imageUri,
+                        todayMoodDate = LocalDate.now().toString(),
                         isDescriptionEditing = false,
                         descriptionError = null
                     )
                 }
+                // 刷新最近的心情记录和连续记录天数
+                loadRecentTenMoods()
+                val currentStreak = calculateCurrentStreak()
+                _uiState.update { it.copy(currentStreak = currentStreak) }
             }.onFailure {
                 _uiState.update { state ->
                     state.copy(
