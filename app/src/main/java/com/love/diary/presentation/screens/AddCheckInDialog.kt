@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -20,7 +21,10 @@ import com.love.diary.data.model.CountdownMode
 import com.love.diary.data.model.RecurrenceType
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.TimePickerDialog
+import com.love.diary.presentation.components.UnifiedDatePickerDialog
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 /**
  * Dialog for adding a new check-in item
@@ -57,6 +61,19 @@ fun AddCheckInDialog(
     var reminderHour by remember { mutableStateOf(9) }
     var reminderMinute by remember { mutableStateOf(0) }
     var showTimePickerDialog by remember { mutableStateOf(false) }
+    var showDatePickerDialog by remember { mutableStateOf(false) }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+    val displayDateFormatter = remember { DateTimeFormatter.ofPattern("yyyy年M月d日") }
+    
+    // Helper function to format date for display
+    fun formatDateForDisplay(dateString: String): String {
+        return try {
+            val date = LocalDate.parse(dateString, dateFormatter)
+            date.format(displayDateFormatter)
+        } catch (e: DateTimeParseException) {
+            dateString
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -290,14 +307,27 @@ fun AddCheckInDialog(
                                 
                                 when (selectedCountdownMode) {
                                     CountdownMode.DAY_COUNTDOWN -> {
-                                        OutlinedTextField(
-                                            value = targetDate,
-                                            onValueChange = { targetDate = it },
-                                            label = { Text("目标日期") },
-                                            placeholder = { Text("yyyy-MM-dd") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            singleLine = true
-                                        )
+                                        // Use a button that opens date picker dialog
+                                        OutlinedButton(
+                                            onClick = { showDatePickerDialog = true },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.CalendarToday,
+                                                contentDescription = "选择日期"
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "目标日期",
+                                                    style = MaterialTheme.typography.labelSmall
+                                                )
+                                                Text(
+                                                    text = formatDateForDisplay(targetDate),
+                                                    style = MaterialTheme.typography.bodyLarge
+                                                )
+                                            }
+                                        }
                                     }
                                     CountdownMode.CHECKIN_COUNTDOWN -> {
                                         OutlinedTextField(
@@ -528,6 +558,18 @@ fun AddCheckInDialog(
             },
             initialHour = reminderHour,
             initialMinute = reminderMinute
+        )
+    }
+    
+    // Date picker dialog for countdown target date
+    if (showDatePickerDialog) {
+        UnifiedDatePickerDialog(
+            onDismiss = { showDatePickerDialog = false },
+            onDateSelected = { selectedDate ->
+                targetDate = selectedDate
+                showDatePickerDialog = false
+            },
+            initialDate = targetDate
         )
     }
 }
