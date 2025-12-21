@@ -52,6 +52,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -92,7 +94,12 @@ fun CheckInDashboardScreen(
         uiState.allCheckInConfigs.filter { it.isActive }
     }
     
-    AppScaffold(title = "打卡") { padding ->
+    AppScaffold(
+        title = "打卡",
+        backgroundBrush = Brush.verticalGradient(
+            colors = listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8))
+        )
+    ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()

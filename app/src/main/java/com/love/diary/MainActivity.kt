@@ -3,6 +3,7 @@ package com.love.diary
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
@@ -110,6 +111,27 @@ fun MainAppContent(
     onTabSelected: (Int) -> Unit,
     navController: androidx.navigation.NavHostController
 ) {
+    // Get current route for back button handling
+    val currentRoute by navController.currentBackStackEntryFlow.collectAsState(initial = navController.currentBackStackEntry)
+    val isOnHomeScreen = currentRoute?.destination?.route == Screen.Home.route
+    
+    // Handle back button press
+    BackHandler(enabled = true) {
+        if (isOnHomeScreen) {
+            // If on Home screen, finish activity (exit app)
+            (navController.context as? ComponentActivity)?.finish()
+        } else {
+            // If not on Home screen, navigate to Home
+            navController.navigate(Screen.Home.route) {
+                popUpTo(Screen.Home.route) {
+                    inclusive = false
+                }
+                launchSingleTop = true
+            }
+            onTabSelected(0) // Update selected tab to Home
+        }
+    }
+    
     if (isLoading) {
         // 加载中显示
         Box(
