@@ -206,7 +206,8 @@ class DataBackupManager(
                             
                             if (entryName == BACKUP_DATA_FILE) {
                                 // 读取JSON数据
-                                val jsonData = zipIn.bufferedReader().use { it.readText() }
+                                // Don't use .use() here as it will close the zipIn stream
+                                val jsonData = zipIn.bufferedReader().readText()
                                 
                                 if (jsonData.isBlank()) {
                                     throw IllegalArgumentException("备份文件为空")
@@ -231,7 +232,8 @@ class DataBackupManager(
                                 Log.d(TAG, "Extracted image: ${imageFile.name}")
                             }
                             
-                            zipIn.closeEntry()
+                            // closeEntry() is automatically called by nextEntry()
+                            // No need to manually call it
                         }
                     }
                 }
