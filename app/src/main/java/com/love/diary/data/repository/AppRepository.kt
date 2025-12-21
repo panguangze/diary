@@ -714,6 +714,12 @@ class AppRepository @Inject constructor(
      * - Check-in records and configs
      * - Habit records
      * - Event records and configs
+     * 
+     * Note: This method uses a "best effort" approach. If one operation fails,
+     * subsequent operations will still be attempted. This ensures maximum data
+     * cleanup even if individual operations fail. Each failure is wrapped with
+     * a specific error message for debugging.
+     * 
      * @throws IllegalStateException if any data clearing operation fails
      */
     suspend fun clearAllData() {

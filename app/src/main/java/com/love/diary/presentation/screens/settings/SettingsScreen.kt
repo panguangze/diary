@@ -447,6 +447,7 @@ fun SettingsScreen(
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
                     )
+                    // Note: Keep this list synchronized with AppRepository.clearAllData()
                     Text(
                         text = "• 恋爱开始日期和情侣信息\n• 所有心情记录\n• 所有打卡记录和配置\n• 所有习惯记录\n• 所有事件和里程碑",
                         style = MaterialTheme.typography.bodyMedium,
