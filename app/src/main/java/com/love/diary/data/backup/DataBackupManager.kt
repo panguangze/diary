@@ -36,6 +36,7 @@ class DataBackupManager(
         private const val BACKUP_DATA_FILE = "backup_data.json"
         private const val IMAGES_DIR = "images"
         private const val AVATARS_DIR = "avatars"
+        private const val DATABASE_FILE = "database/love_diary.db"
     }
 
     /**
@@ -120,6 +121,7 @@ class DataBackupManager(
      * - Events and event configurations
      * - All images (mood attachments, check-in attachments)
      * - Avatar images (user and partner)
+     * - Raw database file (as additional backup)
      * @param uri Target URI for export
      * @return Result indicating success or failure
      */
@@ -228,6 +230,25 @@ class DataBackupManager(
                             Log.w(TAG, "Failed to backup avatar: $avatarUriStr", e)
                             // Continue with other avatars
                         }
+                    }
+                    
+                    // 4. 写入数据库文件（作为额外备份）
+                    try {
+                        val dbFile = context.getDatabasePath("love_diary.db")
+                        if (dbFile.exists()) {
+                            FileInputStream(dbFile).use { inputStream ->
+                                val dbEntry = ZipEntry(DATABASE_FILE)
+                                zipOut.putNextEntry(dbEntry)
+                                inputStream.copyTo(zipOut)
+                                zipOut.closeEntry()
+                                Log.d(TAG, "Backed up database file")
+                            }
+                        } else {
+                            Log.w(TAG, "Database file not found at: ${dbFile.absolutePath}")
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to backup database file", e)
+                        // Continue - database backup is optional since we have JSON
                     }
                 }
             } ?: throw IOException("无法打开输出流")
