@@ -128,20 +128,20 @@ fun AppScaffold(
     )
     Scaffold(
         modifier = modifier.background(appliedBrush),
-        topBar = {
-            if (showTopBar) {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    },
-                    actions = actions,
-                )
-            } else null
-        },
+//        topBar = {
+//            if (showTopBar) {
+//                CenterAlignedTopAppBar(
+//                    title = {
+//                        Text(
+//                            text = title,
+//                            style = MaterialTheme.typography.titleLarge,
+//                            color = MaterialTheme.colorScheme.onSurface
+//                        )
+//                    },
+//                    actions = actions,
+//                )
+//            } else null
+//        },
         floatingActionButton = { floatingActionButton?.invoke() },
         content = content
     )

@@ -216,7 +216,7 @@ fun MainAppContent(
                 }
 
                 composable(Screen.Settings.route) {
-                    AppScaffold(title = "设置") { inner ->
+                    AppScaffold(title = "") { inner ->
                         SettingsScreen(
                             onNavigateToFirstRun = onNavigateToFirstRun,
                             modifier = Modifier
