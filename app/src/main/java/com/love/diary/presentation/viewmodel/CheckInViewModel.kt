@@ -380,13 +380,17 @@ class CheckInViewModel @Inject constructor(
      * @param description 描述
      * @param icon 图标
      * @param color 颜色
+     * @param reminderTime 提醒时间
+     * @param reminderEnabled 是否启用提醒
      */
     fun createDayCountdown(
         name: String,
         targetDate: String,
         description: String? = null,
         icon: String = "⏰",
-        color: String = "#FF5722"
+        color: String = "#FF5722",
+        reminderTime: String? = null,
+        reminderEnabled: Boolean = false
     ) {
         viewModelScope.launch {
             checkInRepository.createDayCountdown(
@@ -394,7 +398,9 @@ class CheckInViewModel @Inject constructor(
                 targetDate = targetDate,
                 description = description,
                 icon = icon,
-                color = color
+                color = color,
+                reminderTime = reminderTime,
+                reminderEnabled = reminderEnabled
             )
         }
     }
@@ -407,6 +413,8 @@ class CheckInViewModel @Inject constructor(
      * @param description 描述
      * @param icon 图标
      * @param color 颜色
+     * @param reminderTime 提醒时间
+     * @param reminderEnabled 是否启用提醒
      */
     fun createCheckInCountdown(
         name: String,
@@ -414,7 +422,9 @@ class CheckInViewModel @Inject constructor(
         tag: String? = null,
         description: String? = null,
         icon: String = "📅",
-        color: String = "#2196F3"
+        color: String = "#2196F3",
+        reminderTime: String? = null,
+        reminderEnabled: Boolean = false
     ) {
         viewModelScope.launch {
             checkInRepository.createCheckInCountdown(
@@ -423,7 +433,9 @@ class CheckInViewModel @Inject constructor(
                 tag = tag,
                 description = description,
                 icon = icon,
-                color = color
+                color = color,
+                reminderTime = reminderTime,
+                reminderEnabled = reminderEnabled
             )
         }
     }
@@ -464,13 +476,22 @@ class CheckInViewModel @Inject constructor(
     
     /**
      * 创建正向打卡配置
+     * @param name 打卡名称
+     * @param recurrenceType 重复类型
+     * @param description 描述
+     * @param icon 图标
+     * @param color 颜色
+     * @param reminderTime 提醒时间
+     * @param reminderEnabled 是否启用提醒
      */
     fun createPositiveCheckIn(
         name: String,
         recurrenceType: com.love.diary.data.model.RecurrenceType,
         description: String? = null,
         icon: String = "✅",
-        color: String = "#4CAF50"
+        color: String = "#4CAF50",
+        reminderTime: String? = null,
+        reminderEnabled: Boolean = false
     ) {
         viewModelScope.launch {
             checkInRepository.createPositiveCheckIn(
@@ -478,7 +499,9 @@ class CheckInViewModel @Inject constructor(
                 recurrenceType = recurrenceType,
                 description = description,
                 icon = icon,
-                color = color
+                color = color,
+                reminderTime = reminderTime,
+                reminderEnabled = reminderEnabled
             )
         }
     }

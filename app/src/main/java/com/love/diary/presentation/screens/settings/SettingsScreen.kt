@@ -241,6 +241,15 @@ fun SettingsScreen(
                         onClick = { showTimePickerDialog = true }
                     )
                 }
+                
+                Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                
+                SwitchSettingsItem(
+                    title = "打卡提醒",
+                    subtitle = if (uiState.checkInReminderEnabled) "已开启系统提醒" else "已关闭提醒",
+                    checked = uiState.checkInReminderEnabled,
+                    onCheckedChange = viewModel::toggleCheckInReminder
+                )
             }
         }
 

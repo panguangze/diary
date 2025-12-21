@@ -154,7 +154,7 @@ fun CheckInDashboardScreen(
     if (showAddCheckInDialog) {
         AddCheckInDialog(
             onDismiss = { showAddCheckInDialog = false },
-            onConfirm = { category, recurrenceType, countdownMode, name, targetDate, countdownTarget, description, icon, color ->
+            onConfirm = { category, recurrenceType, countdownMode, name, targetDate, countdownTarget, description, icon, color, reminderTime, reminderEnabled ->
                 when (category) {
                     com.love.diary.data.model.CheckInCategory.POSITIVE -> {
                         viewModel.createPositiveCheckIn(
@@ -162,7 +162,9 @@ fun CheckInDashboardScreen(
                             recurrenceType = recurrenceType!!,
                             description = description,
                             icon = icon,
-                            color = color
+                            color = color,
+                            reminderTime = reminderTime,
+                            reminderEnabled = reminderEnabled
                         )
                     }
                     com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
@@ -174,7 +176,9 @@ fun CheckInDashboardScreen(
                                         targetDate = it,
                                         description = description,
                                         icon = icon,
-                                        color = color
+                                        color = color,
+                                        reminderTime = reminderTime,
+                                        reminderEnabled = reminderEnabled
                                     )
                                 }
                             }
@@ -186,7 +190,9 @@ fun CheckInDashboardScreen(
                                         tag = null, // No tag support for countdown
                                         description = description,
                                         icon = icon,
-                                        color = color
+                                        color = color,
+                                        reminderTime = reminderTime,
+                                        reminderEnabled = reminderEnabled
                                     )
                                 }
                             }

@@ -28,6 +28,7 @@ data class SettingsUiState(
     val darkMode: Boolean? = null,
     val reminderEnabled: Boolean = false,
     val reminderTime: Int = 540, // Time in minutes from midnight (default 9:00 AM)
+    val checkInReminderEnabled: Boolean = true, // Master switch for all check-in reminders
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val successMessage: String? = null
@@ -61,6 +62,7 @@ class SettingsViewModel @Inject constructor(
                         darkMode = it.darkMode,
                         reminderEnabled = it.reminderEnabled,
                         reminderTime = it.reminderTime,
+                        checkInReminderEnabled = (it.reservedInt1 ?: 1) == 1, // Use reservedInt1 for check-in reminder master switch
                         isLoading = false
                     )
                 }
@@ -111,6 +113,21 @@ class SettingsViewModel @Inject constructor(
                 )
                 repository.updateAppConfig(updated)
                 _uiState.update { state -> state.copy(showAnniversary = show) }
+            }
+        }
+    }
+    
+    fun toggleCheckInReminder(enabled: Boolean) {
+        viewModelScope.launch {
+            val config = repository.getAppConfig()
+            config?.let {
+                val updated = it.copy(
+                    reservedInt1 = if (enabled) 1 else 0, // Use reservedInt1 for check-in reminder master switch
+                    startTimeMinutes = it.startTimeMinutes,
+                    updatedAt = System.currentTimeMillis()
+                )
+                repository.updateAppConfig(updated)
+                _uiState.update { state -> state.copy(checkInReminderEnabled = enabled) }
             }
         }
     }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import com.love.diary.data.model.CheckInCategory
 import com.love.diary.data.model.CountdownMode
 import com.love.diary.data.model.RecurrenceType
 import com.love.diary.presentation.components.Dimens
+import com.love.diary.presentation.components.TimePickerDialog
 import java.time.LocalDate
 
 /**
@@ -37,7 +39,9 @@ fun AddCheckInDialog(
         countdownTarget: Int?,
         description: String?,
         icon: String,
-        color: String
+        color: String,
+        reminderTime: String?,
+        reminderEnabled: Boolean
     ) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -49,6 +53,10 @@ fun AddCheckInDialog(
     var description by remember { mutableStateOf("") }
     var selectedIcon by remember { mutableStateOf("🎯") }
     var selectedColor by remember { mutableStateOf("#6200EE") }
+    var reminderEnabled by remember { mutableStateOf(false) }
+    var reminderHour by remember { mutableStateOf(9) }
+    var reminderMinute by remember { mutableStateOf(0) }
+    var showTimePickerDialog by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -323,33 +331,113 @@ fun AddCheckInDialog(
                         maxLines = 4
                     )
 
+                    // Reminder settings
+                    Text(
+                        text = "提醒设置",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "启用提醒",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = if (reminderEnabled) {
+                                    "每天 ${String.format("%02d:%02d", reminderHour, reminderMinute)} 提醒"
+                                } else {
+                                    "关闭提醒"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        androidx.compose.material3.Switch(
+                            checked = reminderEnabled,
+                            onCheckedChange = { reminderEnabled = it }
+                        )
+                    }
+                    
+                    if (reminderEnabled) {
+                        OutlinedButton(
+                            onClick = { showTimePickerDialog = true },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            androidx.compose.material3.Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Default.Schedule,
+                                contentDescription = "设置时间"
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("设置提醒时间：${String.format("%02d:%02d", reminderHour, reminderMinute)}")
+                        }
+                    }
+
                     // Icon selection
                     Text(
                         text = "图标",
                         style = MaterialTheme.typography.labelLarge
                     )
-                    Row(
+                    // Icon grid: 3 rows × 4 columns = 12 icons
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         val icons = when (selectedCategory) {
-                            CheckInCategory.POSITIVE -> listOf("✅", "📝", "💪", "🎯", "🏃")
+                            CheckInCategory.POSITIVE -> listOf(
+                                "✅", "📝", "💪", "🎯",
+                                "🏃", "📚", "🎨", "🎵",
+                                "🍎", "💧", "🧘", "😊"
+                            )
                             CheckInCategory.COUNTDOWN -> {
                                 when (selectedCountdownMode) {
-                                    CountdownMode.DAY_COUNTDOWN -> listOf("⏰", "⏳", "📅", "🎯", "🚀")
-                                    CountdownMode.CHECKIN_COUNTDOWN -> listOf("📅", "✅", "📝", "💪", "🎯")
-                                    null -> listOf("🎯", "✅", "📅", "⏰", "📝")
+                                    CountdownMode.DAY_COUNTDOWN -> listOf(
+                                        "⏰", "⏳", "📅", "🎯",
+                                        "🚀", "🎓", "💼", "🏆",
+                                        "🎊", "🎉", "⏱️", "📆"
+                                    )
+                                    CountdownMode.CHECKIN_COUNTDOWN -> listOf(
+                                        "📅", "✅", "📝", "💪",
+                                        "🎯", "🏃", "📚", "🎨",
+                                        "🍎", "💧", "🧘", "😊"
+                                    )
+                                    null -> listOf(
+                                        "🎯", "✅", "📅", "⏰",
+                                        "📝", "💪", "🏃", "📚",
+                                        "🎨", "🎵", "🍎", "💧"
+                                    )
                                 }
                             }
-                            null -> listOf("🎯", "✅", "📅", "⏰", "📝")
+                            null -> listOf(
+                                "🎯", "✅", "📅", "⏰",
+                                "📝", "💪", "🏃", "📚",
+                                "🎨", "🎵", "🍎", "💧"
+                            )
                         }
                         
-                        icons.forEach { icon ->
-                            FilterChip(
-                                selected = selectedIcon == icon,
-                                onClick = { selectedIcon = icon },
-                                label = { Text(icon, style = MaterialTheme.typography.headlineSmall) }
-                            )
+                        // Display icons in 3 rows with 4 icons each
+                        icons.chunked(4).forEach { rowIcons ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                rowIcons.forEach { icon ->
+                                    FilterChip(
+                                        selected = selectedIcon == icon,
+                                        onClick = { selectedIcon = icon },
+                                        label = { Text(icon, style = MaterialTheme.typography.headlineSmall) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                // Add empty spacers if the row has fewer than 4 icons
+                                repeat(4 - rowIcons.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
                         }
                     }
                 }
@@ -384,6 +472,12 @@ fun AddCheckInDialog(
                                 }
                                 
                                 if (isValid) {
+                                    val reminderTimeStr = if (reminderEnabled) {
+                                        String.format("%02d:%02d", reminderHour, reminderMinute)
+                                    } else {
+                                        null
+                                    }
+                                    
                                     onConfirm(
                                         selectedCategory!!,
                                         selectedRecurrenceType,
@@ -393,7 +487,9 @@ fun AddCheckInDialog(
                                         if (selectedCountdownMode == CountdownMode.CHECKIN_COUNTDOWN) countdownTarget.toIntOrNull() else null,
                                         description.ifBlank { null },
                                         selectedIcon,
-                                        selectedColor
+                                        selectedColor,
+                                        reminderTimeStr,
+                                        reminderEnabled
                                     )
                                     onDismiss()
                                 }
@@ -419,5 +515,19 @@ fun AddCheckInDialog(
                 }
             }
         }
+    }
+    
+    // Time picker dialog for reminder
+    if (showTimePickerDialog) {
+        TimePickerDialog(
+            onDismiss = { showTimePickerDialog = false },
+            onTimeSelected = { hour, minute ->
+                reminderHour = hour
+                reminderMinute = minute
+                showTimePickerDialog = false
+            },
+            initialHour = reminderHour,
+            initialMinute = reminderMinute
+        )
     }
 }
