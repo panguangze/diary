@@ -538,14 +538,11 @@ private fun TopInfoCardRedesigned(
     onAvatarClick: () -> Unit,
     onAiClick: () -> Unit
 ) {
-    Card(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp),
-        shape = RoundedCornerShape(CardCornerRadius),
-        border = BorderStroke(CardBorderWidth, BorderColor),
-        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        contentPadding = PaddingValues(0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -621,13 +618,9 @@ private fun MoodRecordSection(
     onPickImage: () -> Unit,       // 选图回调
     onSave: (String) -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(CardCornerRadius),
-        border = BorderStroke(CardBorderWidth, BorderColor),
-        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    AppCard(
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -911,14 +904,11 @@ private fun RecentMoodStatsSection(
     onMoreClick: () -> Unit,
     onMoodClick: (DailyMoodEntity) -> Unit
 ) {
-    Card(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 240.dp),
-        shape = RoundedCornerShape(CardCornerRadius),
-        border = BorderStroke(CardBorderWidth, BorderColor),
-        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        contentPadding = PaddingValues(0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -973,14 +963,11 @@ private fun MoodTrendPreviewCard(
     uiState: StatisticsViewModel.StatisticsUiState,
     onRangeChange: (Int) -> Unit
 ) {
-    Card(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 220.dp),
-        shape = RoundedCornerShape(CardCornerRadius),
-        border = BorderStroke(CardBorderWidth, BorderColor),
-        colors = CardDefaults.cardColors(containerColor = CardBackgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        contentPadding = PaddingValues(0.dp)
     ) {
         Column(
             modifier = Modifier
