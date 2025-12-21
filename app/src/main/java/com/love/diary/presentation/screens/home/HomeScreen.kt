@@ -557,9 +557,9 @@ private fun TopInfoCardRedesigned(
                 )
                 Text(
                     text = subtitle,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Light,
-                    lineHeight = 16.sp,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 18.sp,
                     color = SubTextColor
                 )
             }

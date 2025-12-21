@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.love.diary.data.backup.DataBackupManager
 import com.love.diary.data.repository.AppRepository
 import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.Dimens
@@ -66,9 +67,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun FirstRunScreen(
     repository: AppRepository,
+    backupManager: DataBackupManager,
     onSetupComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var setupMode by remember { mutableStateOf<String?>(null) } // "new" or "import"
     var startDate by remember { mutableStateOf("") }
     var coupleName by remember { mutableStateOf("") }
     var yourName by remember { mutableStateOf("") }
@@ -111,6 +114,27 @@ fun FirstRunScreen(
         }
     }
     
+    // Import backup file launcher
+    val importBackupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        uri?.let {
+            coroutineScope.launch {
+                try {
+                    val result = backupManager.importData(it)
+                    if (result.isSuccess) {
+                        onSetupComplete()
+                    } else {
+                        // Show error - for now just log
+                        android.util.Log.e("FirstRunScreen", "Import failed: ${result.exceptionOrNull()}")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("FirstRunScreen", "Import failed", e)
+                }
+            }
+        }
+    }
+    
     // Request notification permission on first launch (Android 13+)
     LaunchedEffect(Unit) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
@@ -131,6 +155,58 @@ fun FirstRunScreen(
         modifier = modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
+        // Show mode selection first, then show setup form
+        if (setupMode == null) {
+            // Initial mode selection screen
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = Dimens.ScreenPadding)
+                    .padding(top = Dimens.LargeSpacing, bottom = Dimens.ScreenPadding),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // 标题
+                Text(
+                    text = "欢迎使用恋爱日记",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(Dimens.SectionSpacing))
+
+                Text(
+                    text = "开始记录你们的美好时光",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(Dimens.LargeSpacing * 2))
+
+                // 新建按钮
+                Button(
+                    onClick = { setupMode = "new" },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "新建日记")
+                }
+
+                Spacer(modifier = Modifier.height(Dimens.SectionSpacing))
+
+                // 导入备份按钮
+                androidx.compose.material3.OutlinedButton(
+                    onClick = { importBackupLauncher.launch("application/zip") },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "导入备份")
+                }
+            }
+        } else {
+            // Setup form (existing UI)
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -371,6 +447,7 @@ fun FirstRunScreen(
             ) {
                 Text(text = "开始使用")
             }
+        }
         }
     }
     
