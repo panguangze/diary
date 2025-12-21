@@ -63,6 +63,17 @@ fun AddCheckInDialog(
     var showTimePickerDialog by remember { mutableStateOf(false) }
     var showDatePickerDialog by remember { mutableStateOf(false) }
     val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+    val displayDateFormatter = remember { DateTimeFormatter.ofPattern("yyyy年M月d日") }
+    
+    // Helper function to format date for display
+    fun formatDateForDisplay(dateString: String): String {
+        return try {
+            val date = LocalDate.parse(dateString, dateFormatter)
+            date.format(displayDateFormatter)
+        } catch (e: DateTimeParseException) {
+            dateString
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -312,12 +323,7 @@ fun AddCheckInDialog(
                                                     style = MaterialTheme.typography.labelSmall
                                                 )
                                                 Text(
-                                                    text = try {
-                                                        val date = LocalDate.parse(targetDate, dateFormatter)
-                                                        "${date.year}年${date.monthValue}月${date.dayOfMonth}日"
-                                                    } catch (e: DateTimeParseException) {
-                                                        targetDate
-                                                    },
+                                                    text = formatDateForDisplay(targetDate),
                                                     style = MaterialTheme.typography.bodyLarge
                                                 )
                                             }
