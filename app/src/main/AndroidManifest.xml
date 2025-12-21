@@ -59,6 +59,12 @@
             android:name=".util.ReminderReceiver"
             android:enabled="true"
             android:exported="false" />
+        
+        <!-- BroadcastReceiver for check-in reminders -->
+        <receiver
+            android:name=".util.CheckInReminderReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

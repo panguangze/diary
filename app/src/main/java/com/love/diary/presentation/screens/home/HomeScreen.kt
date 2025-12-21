@@ -254,12 +254,12 @@ fun HomeScreen(
 
     val moodOptions = remember {
         listOf(
-            MoodOption("甜蜜", MoodType.SATISFIED),
+            MoodOption("幸福", MoodType.SATISFIED),
             MoodOption("开心", MoodType.HAPPY),
             MoodOption("正常", MoodType.NORMAL),
             MoodOption("失落", MoodType.SAD),
             MoodOption("愤怒", MoodType.ANGRY),
-            MoodOption("哭哭", MoodType.OTHER)
+            MoodOption("哭泣", MoodType.OTHER)
         )
     }
 
@@ -291,7 +291,7 @@ fun HomeScreen(
 
             TopInfoCardRedesigned(
                 title = "${uiState.coupleName ?: "小明 & 小红"}的第${if (uiState.dayIndex > 0) uiState.dayIndex else 16}天",
-                subtitle = "From ${uiState.startDate.ifBlank { "2025 - 01 - 01" }} to ${uiState.todayDate.ifBlank { todayString }}",
+                subtitle = "开始于 ${uiState.startDate.ifBlank { "2025 - 01 - 01" }}",
                 avatarUri = uiState.avatarUri,
                 onAvatarClick = { avatarPicker.launch("image/*") },
                 onAiClick = { viewModel.showOtherMoodDialog() }
@@ -514,18 +514,11 @@ fun HomeScreen(
 private fun TodayHeader() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = "恋爱日记",
+            text = "我们的日记",
             fontSize = 24.sp,
             lineHeight = 32.sp,
             fontWeight = FontWeight.Bold,
             color = HeaderTextColor
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Box(
-            modifier = Modifier
-                .width(80.dp)
-                .height(1.dp)
-                .background(AccentPinkText, shape = RoundedCornerShape(50))
         )
     }
 }

@@ -63,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -81,6 +82,7 @@ import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader
 import com.love.diary.presentation.components.ShapeTokens
 import com.love.diary.presentation.components.StatusBadge
+import com.love.diary.util.CheckInReminderScheduler
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -96,6 +98,7 @@ fun CheckInDashboardScreen(
     viewModel: CheckInViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     
     var showAddCheckInDialog by remember { mutableStateOf(false) }
     
@@ -183,7 +186,14 @@ fun CheckInDashboardScreen(
                             icon = icon,
                             color = color,
                             reminderTime = reminderTime,
-                            reminderEnabled = reminderEnabled
+                            reminderEnabled = reminderEnabled,
+                            onSuccess = { configId ->
+                                // Schedule reminder if enabled
+                                if (reminderEnabled && !reminderTime.isNullOrBlank()) {
+                                    val scheduler = CheckInReminderScheduler(context)
+                                    scheduler.scheduleCheckInReminder(configId, name, reminderTime)
+                                }
+                            }
                         )
                     }
                     com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
@@ -197,7 +207,14 @@ fun CheckInDashboardScreen(
                                         icon = icon,
                                         color = color,
                                         reminderTime = reminderTime,
-                                        reminderEnabled = reminderEnabled
+                                        reminderEnabled = reminderEnabled,
+                                        onSuccess = { configId ->
+                                            // Schedule reminder if enabled
+                                            if (reminderEnabled && !reminderTime.isNullOrBlank()) {
+                                                val scheduler = CheckInReminderScheduler(context)
+                                                scheduler.scheduleCheckInReminder(configId, name, reminderTime)
+                                            }
+                                        }
                                     )
                                 }
                             }
@@ -211,7 +228,14 @@ fun CheckInDashboardScreen(
                                         icon = icon,
                                         color = color,
                                         reminderTime = reminderTime,
-                                        reminderEnabled = reminderEnabled
+                                        reminderEnabled = reminderEnabled,
+                                        onSuccess = { configId ->
+                                            // Schedule reminder if enabled
+                                            if (reminderEnabled && !reminderTime.isNullOrBlank()) {
+                                                val scheduler = CheckInReminderScheduler(context)
+                                                scheduler.scheduleCheckInReminder(configId, name, reminderTime)
+                                            }
+                                        }
                                     )
                                 }
                             }
