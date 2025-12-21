@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
@@ -23,6 +24,7 @@ import com.love.diary.presentation.components.TimePickerDialog
 import com.love.diary.presentation.components.UnifiedDatePickerDialog
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 /**
  * Dialog for adding a new check-in item
@@ -299,8 +301,8 @@ fun AddCheckInDialog(
                                             onClick = { showDatePickerDialog = true },
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            androidx.compose.material3.Icon(
-                                                imageVector = androidx.compose.material.icons.Icons.Default.Schedule,
+                                            Icon(
+                                                imageVector = Icons.Default.CalendarToday,
                                                 contentDescription = "选择日期"
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
@@ -313,7 +315,7 @@ fun AddCheckInDialog(
                                                     text = try {
                                                         val date = LocalDate.parse(targetDate, dateFormatter)
                                                         "${date.year}年${date.monthValue}月${date.dayOfMonth}日"
-                                                    } catch (e: Exception) {
+                                                    } catch (e: DateTimeParseException) {
                                                         targetDate
                                                     },
                                                     style = MaterialTheme.typography.bodyLarge
