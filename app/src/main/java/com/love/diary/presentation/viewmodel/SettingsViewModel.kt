@@ -202,6 +202,24 @@ class SettingsViewModel @Inject constructor(
     }
     
     /**
+     * Clear all application data and navigate to initialization screen
+     * @param onComplete Callback to navigate to FirstRunScreen after data is cleared
+     */
+    fun clearAllData(onComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                // Clear all data including love data and check-in data
+                repository.clearAllData()
+                _uiState.update { it.copy(successMessage = "所有数据已清除") }
+                // Navigate to first run screen
+                onComplete()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(errorMessage = "清除数据失败: ${e.message}") }
+            }
+        }
+    }
+    
+    /**
      * Clear error or success message
      */
     fun clearMessage() {

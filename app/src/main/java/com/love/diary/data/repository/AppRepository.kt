@@ -705,4 +705,37 @@ class AppRepository @Inject constructor(
     suspend fun batchInsertCheckInRecords(records: List<UnifiedCheckIn>) {
         checkInRepository.batchInsertCheckIns(records)
     }
+    
+    /**
+     * Clear all application data (for complete reset)
+     * This includes:
+     * - App configuration
+     * - Daily mood records
+     * - Check-in records and configs
+     * - Habit records
+     * - Event records and configs
+     */
+    suspend fun clearAllData() {
+        try {
+            // Clear app config
+            deleteAppConfig()
+            
+            // Clear daily mood records
+            clearAllMoodRecords()
+            
+            // Clear check-in data
+            checkInRepository.clearAllCheckIns()
+            checkInRepository.clearAllCheckInConfigs()
+            
+            // Clear habit data
+            habitDao.deleteAllHabitRecords()
+            habitDao.deleteAllHabits()
+            
+            // Clear event data
+            eventDao.deleteAllEvents()
+            eventDao.deleteAllEventConfigs()
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to clear all data", e)
+        }
+    }
 }

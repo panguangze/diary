@@ -103,4 +103,12 @@ interface UnifiedCheckInDao {
     // 获取所有打卡记录（用于备份）
     @Query("SELECT * FROM unified_checkins ORDER BY createdAt DESC")
     suspend fun getAllCheckIns(): List<UnifiedCheckIn>
+    
+    // 清除所有打卡记录（用于数据重置）
+    @Query("DELETE FROM unified_checkins")
+    suspend fun deleteAllCheckIns()
+    
+    // 清除所有打卡配置（用于数据重置）
+    @Query("DELETE FROM unified_checkin_configs")
+    suspend fun deleteAllCheckInConfigs()
 }

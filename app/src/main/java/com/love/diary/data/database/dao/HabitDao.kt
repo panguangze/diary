@@ -56,4 +56,12 @@ interface HabitDao {
     // 获取最近的打卡记录
     @Query("SELECT * FROM habit_records WHERE habitId = :habitId ORDER BY createdAt DESC LIMIT 1")
     suspend fun getLatestHabitRecord(habitId: Long): HabitRecord?
+    
+    // 清除所有习惯（用于数据重置）
+    @Query("DELETE FROM habits")
+    suspend fun deleteAllHabits()
+    
+    // 清除所有习惯记录（用于数据重置）
+    @Query("DELETE FROM habit_records")
+    suspend fun deleteAllHabitRecords()
 }
