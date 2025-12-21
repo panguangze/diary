@@ -25,7 +25,10 @@ class ReminderScheduler(private val context: Context) {
      */
     fun scheduleDailyReminder(hourOfDay: Int, minute: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, ReminderReceiver::class.java)
+        val intent = Intent(context, ReminderReceiver::class.java).apply {
+            putExtra(ReminderReceiver.EXTRA_HOUR, hourOfDay)
+            putExtra(ReminderReceiver.EXTRA_MINUTE, minute)
+        }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             REMINDER_REQUEST_CODE,
@@ -47,16 +50,36 @@ class ReminderScheduler(private val context: Context) {
         }
 
         try {
-            // Use setRepeating for daily alarms
-            // Note: On Android 6.0+ (API 23+), inexact alarms may be used to save battery
-            alarmManager.setRepeating(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                AlarmManager.INTERVAL_DAY,
-                pendingIntent
-            )
-            
-            Log.d(TAG, "Daily reminder scheduled for ${hourOfDay}:${minute.toString().padStart(2, '0')}")
+            // For Android 12+ (API 31+), use setExactAndAllowWhileIdle for precise timing
+            // For older versions, use setRepeating
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                // Check if we can schedule exact alarms
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                    Log.d(TAG, "Exact daily reminder scheduled for ${hourOfDay}:${minute.toString().padStart(2, '0')}")
+                } else {
+                    // Fall back to inexact alarm if exact alarms not allowed
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                    Log.d(TAG, "Inexact daily reminder scheduled for ${hourOfDay}:${minute.toString().padStart(2, '0')}")
+                }
+            } else {
+                // Use setRepeating for daily alarms on older Android versions
+                alarmManager.setRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    AlarmManager.INTERVAL_DAY,
+                    pendingIntent
+                )
+                Log.d(TAG, "Daily reminder scheduled for ${hourOfDay}:${minute.toString().padStart(2, '0')}")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to schedule reminder", e)
         }

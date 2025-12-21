@@ -86,6 +86,13 @@ fun FirstRunScreen(
     val coroutineScope = rememberCoroutineScope()
     val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
     
+    // Notification permission launcher
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        // Permission result is handled, proceed with setup
+    }
+    
     // Avatar picker launcher
     val avatarPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -101,6 +108,15 @@ fun FirstRunScreen(
                 // Permission not available, but continue anyway
             }
             avatarUri = it.toString()
+        }
+    }
+    
+    // Request notification permission on first launch (Android 13+)
+    LaunchedEffect(Unit) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (!com.love.diary.util.PermissionHelper.isNotificationPermissionGranted(context)) {
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
     }
     

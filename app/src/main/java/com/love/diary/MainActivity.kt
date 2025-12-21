@@ -5,17 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,15 +25,12 @@ import com.love.diary.presentation.screens.setup.FirstRunScreen
 import com.love.diary.presentation.viewmodel.HomeViewModel
 import com.love.diary.presentation.screens.CheckInDashboardScreen
 import com.love.diary.presentation.components.AppScaffold
-import com.love.diary.presentation.components.Dimens
 import com.love.diary.ui.theme.LoveDiaryTheme
 import dagger.hilt.android.AndroidEntryPoint
 import android.net.Uri
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.love.diary.data.repository.AppRepository
 
 @AndroidEntryPoint
@@ -189,7 +180,6 @@ fun BottomNavigationBar(
     onTabSelected: (Int) -> Unit
 ) {
     val unselectedColor = Color(0xFF999999)
-    val selectedBrush = Brush.horizontalGradient(listOf(Color(0xFFFF6B81), Color(0xFFFF476F)))
     val items = listOf(
         Screen.Home,
         Screen.Habits,
@@ -207,53 +197,20 @@ fun BottomNavigationBar(
                 selected = selectedTab == index,
                 onClick = { onTabSelected(index) },
                 icon = {
-                    if (isSelected) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                screen.selectedIcon,
-                                contentDescription = "${screen.title}，已选中",
-                                tint = Color(0xFFFF6B81),
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                text = screen.title,
-                                color = Color(0xFFFF6B81),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 16.sp
-                            )
-                        }
-                    } else {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(
-                                screen.unselectedIcon,
-                                contentDescription = "${screen.title}，未选中",
-                                tint = unselectedColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                text = screen.title,
-                                color = unselectedColor,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Normal,
-                                lineHeight = 16.sp
-                            )
-                        }
-                    }
+                    Icon(
+                        imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
+                        contentDescription = screen.title,
+                        tint = if (isSelected) Color(0xFFFF6B81) else unselectedColor,
+                        modifier = Modifier.size(24.dp)
+                    )
                 },
                 label = null,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.Transparent,  // Icon color handled in custom layout
-                    selectedTextColor = Color.Transparent,  // Text color handled in custom layout
-                    unselectedIconColor = Color.Transparent,  // Icon color handled in custom layout
-                    unselectedTextColor = Color.Transparent,  // Text color handled in custom layout
-                    indicatorColor = Color.Transparent  // Remove black background indicator
+                    selectedIconColor = Color.Transparent,
+                    selectedTextColor = Color.Transparent,
+                    unselectedIconColor = Color.Transparent,
+                    unselectedTextColor = Color.Transparent,
+                    indicatorColor = Color.Transparent
                 ),
                 alwaysShowLabel = false
             )
