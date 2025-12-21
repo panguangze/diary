@@ -2422,9 +2422,11 @@ private fun CalendarDayCell(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = MoodType.fromCode(moodRecord.moodTypeCode).emoji,
-                        fontSize = 16.sp
+                    val moodType = MoodType.fromCode(moodRecord.moodTypeCode)
+                    Image(
+                        painter = painterResource(id = moodType.getDrawableResourceId()),
+                        contentDescription = moodType.displayName,
+                        modifier = Modifier.size(20.dp)
                     )
                     Text(
                         text = day.toString(),

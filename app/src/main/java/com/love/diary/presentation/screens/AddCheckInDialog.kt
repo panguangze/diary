@@ -20,7 +20,9 @@ import com.love.diary.data.model.CountdownMode
 import com.love.diary.data.model.RecurrenceType
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.TimePickerDialog
+import com.love.diary.presentation.components.UnifiedDatePickerDialog
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * Dialog for adding a new check-in item
@@ -57,6 +59,8 @@ fun AddCheckInDialog(
     var reminderHour by remember { mutableStateOf(9) }
     var reminderMinute by remember { mutableStateOf(0) }
     var showTimePickerDialog by remember { mutableStateOf(false) }
+    var showDatePickerDialog by remember { mutableStateOf(false) }
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -290,14 +294,32 @@ fun AddCheckInDialog(
                                 
                                 when (selectedCountdownMode) {
                                     CountdownMode.DAY_COUNTDOWN -> {
-                                        OutlinedTextField(
-                                            value = targetDate,
-                                            onValueChange = { targetDate = it },
-                                            label = { Text("目标日期") },
-                                            placeholder = { Text("yyyy-MM-dd") },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            singleLine = true
-                                        )
+                                        // Use a button that opens date picker dialog
+                                        OutlinedButton(
+                                            onClick = { showDatePickerDialog = true },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            androidx.compose.material3.Icon(
+                                                imageVector = androidx.compose.material.icons.Icons.Default.Schedule,
+                                                contentDescription = "选择日期"
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "目标日期",
+                                                    style = MaterialTheme.typography.labelSmall
+                                                )
+                                                Text(
+                                                    text = try {
+                                                        val date = LocalDate.parse(targetDate, dateFormatter)
+                                                        "${date.year}年${date.monthValue}月${date.dayOfMonth}日"
+                                                    } catch (e: Exception) {
+                                                        targetDate
+                                                    },
+                                                    style = MaterialTheme.typography.bodyLarge
+                                                )
+                                            }
+                                        }
                                     }
                                     CountdownMode.CHECKIN_COUNTDOWN -> {
                                         OutlinedTextField(
@@ -528,6 +550,18 @@ fun AddCheckInDialog(
             },
             initialHour = reminderHour,
             initialMinute = reminderMinute
+        )
+    }
+    
+    // Date picker dialog for countdown target date
+    if (showDatePickerDialog) {
+        UnifiedDatePickerDialog(
+            onDismiss = { showDatePickerDialog = false },
+            onDateSelected = { selectedDate ->
+                targetDate = selectedDate
+                showDatePickerDialog = false
+            },
+            initialDate = targetDate
         )
     }
 }
