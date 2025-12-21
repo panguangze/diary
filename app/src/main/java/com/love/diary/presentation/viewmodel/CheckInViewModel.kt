@@ -416,10 +416,11 @@ class CheckInViewModel @Inject constructor(
         icon: String = "⏰",
         color: String = "#FF5722",
         reminderTime: String? = null,
-        reminderEnabled: Boolean = false
+        reminderEnabled: Boolean = false,
+        onSuccess: (Long) -> Unit = {}
     ) {
         viewModelScope.launch {
-            checkInRepository.createDayCountdown(
+            val configId = checkInRepository.createDayCountdown(
                 name = name,
                 targetDate = targetDate,
                 description = description,
@@ -428,6 +429,7 @@ class CheckInViewModel @Inject constructor(
                 reminderTime = reminderTime,
                 reminderEnabled = reminderEnabled
             )
+            onSuccess(configId)
         }
     }
 
@@ -450,10 +452,11 @@ class CheckInViewModel @Inject constructor(
         icon: String = "📅",
         color: String = "#2196F3",
         reminderTime: String? = null,
-        reminderEnabled: Boolean = false
+        reminderEnabled: Boolean = false,
+        onSuccess: (Long) -> Unit = {}
     ) {
         viewModelScope.launch {
-            checkInRepository.createCheckInCountdown(
+            val configId = checkInRepository.createCheckInCountdown(
                 name = name,
                 countdownTarget = countdownTarget,
                 tag = tag,
@@ -463,6 +466,7 @@ class CheckInViewModel @Inject constructor(
                 reminderTime = reminderTime,
                 reminderEnabled = reminderEnabled
             )
+            onSuccess(configId)
         }
     }
 
@@ -509,6 +513,7 @@ class CheckInViewModel @Inject constructor(
      * @param color 颜色
      * @param reminderTime 提醒时间
      * @param reminderEnabled 是否启用提醒
+     * @return 创建的配置ID
      */
     fun createPositiveCheckIn(
         name: String,
@@ -517,10 +522,11 @@ class CheckInViewModel @Inject constructor(
         icon: String = "✅",
         color: String = "#4CAF50",
         reminderTime: String? = null,
-        reminderEnabled: Boolean = false
+        reminderEnabled: Boolean = false,
+        onSuccess: (Long) -> Unit = {}
     ) {
         viewModelScope.launch {
-            checkInRepository.createPositiveCheckIn(
+            val configId = checkInRepository.createPositiveCheckIn(
                 name = name,
                 recurrenceType = recurrenceType,
                 description = description,
@@ -529,6 +535,7 @@ class CheckInViewModel @Inject constructor(
                 reminderTime = reminderTime,
                 reminderEnabled = reminderEnabled
             )
+            onSuccess(configId)
         }
     }
     

@@ -671,4 +671,22 @@ class CheckInRepository @Inject constructor(
         
         return checkInId
     }
+    
+    // === Batch operations for backup/restore ===
+    
+    /**
+     * Get all check-ins for backup
+     */
+    suspend fun getAllCheckIns(): List<UnifiedCheckIn> {
+        return unifiedCheckInDao.getAllCheckIns()
+    }
+    
+    /**
+     * Batch insert check-ins for restore
+     */
+    suspend fun batchInsertCheckIns(checkIns: List<UnifiedCheckIn>) {
+        checkIns.forEach { checkIn ->
+            unifiedCheckInDao.insertCheckIn(checkIn)
+        }
+    }
 }

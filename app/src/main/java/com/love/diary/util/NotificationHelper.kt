@@ -24,6 +24,7 @@ class NotificationHelper(private val context: Context) {
         private const val CHANNEL_NAME = "日记提醒"
         private const val CHANNEL_DESCRIPTION = "每日心情记录提醒"
         const val NOTIFICATION_ID_DAILY_REMINDER = 1001
+        private const val NOTIFICATION_ID_CHECK_IN_BASE = 3000
     }
 
     init {
@@ -135,6 +136,50 @@ class NotificationHelper(private val context: Context) {
                 notification
             )
         } catch (e: SecurityException) {
+            Log.w(TAG, "Notification permission not granted", e)
+        }
+    }
+
+    /**
+     * Show check-in reminder notification
+     * @param checkInConfigId The ID of the check-in config
+     * @param title Notification title
+     * @param message Notification message
+     */
+    fun showCheckInReminder(
+        checkInConfigId: Long,
+        title: String = "打卡提醒",
+        message: String = "该打卡了"
+    ) {
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        try {
+            // Use unique notification ID for each check-in item
+            val notificationId = NOTIFICATION_ID_CHECK_IN_BASE + checkInConfigId.toInt()
+            NotificationManagerCompat.from(context).notify(
+                notificationId,
+                notification
+            )
+        } catch (e: SecurityException) {
+            // Handle case where notification permission is not granted
             Log.w(TAG, "Notification permission not granted", e)
         }
     }
