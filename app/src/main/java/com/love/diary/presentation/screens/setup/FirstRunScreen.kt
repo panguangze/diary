@@ -175,16 +175,6 @@ fun FirstRunScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(Dimens.SectionSpacing))
-
-                Text(
-                    text = "开始记录你们的美好时光",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
                 Spacer(modifier = Modifier.height(Dimens.LargeSpacing * 2))
 
                 // 新建按钮

@@ -203,23 +203,27 @@ class DataBackupManager(
                         var entry: ZipEntry?
                         while (zipIn.nextEntry.also { entry = it } != null) {
                             val entryName = entry!!.name
-                            
+
                             if (entryName == BACKUP_DATA_FILE) {
-                                // 读取JSON数据
-                                val jsonData = zipIn.bufferedReader().use { it.readText() }
-                                
+                                // 修正：直接读取字节并转换为 String，不关闭流
+                                // ZipInputStream 的 readBytes() 会读取当前 Entry 直到结束，不会关闭流
+                                val jsonData = String(zipIn.readBytes(), Charsets.UTF_8)
+
+                                // 或者使用这种方式（不加 .use）:
+                                // val jsonData = zipIn.bufferedReader().readText()
+
                                 if (jsonData.isBlank()) {
                                     throw IllegalArgumentException("备份文件为空")
                                 }
-                                
+
                                 backupData = try {
                                     gson.fromJson(jsonData, BackupData::class.java)
                                 } catch (e: Exception) {
                                     throw IllegalArgumentException("备份文件格式无效", e)
                                 }
-                                
-                                Log.d(TAG, "Parsed backup data: ${backupData?.moodRecords?.size} mood records, ${backupData?.checkInRecords?.size} check-in records")
-                            } else if (entryName.startsWith(IMAGES_DIR)) {
+
+                                Log.d(TAG, "Parsed backup data: ...")
+                            }else if (entryName.startsWith(IMAGES_DIR)) {
                                 // 提取图片文件
                                 val imageFile = File(tempDir, entryName)
                                 imageFile.parentFile?.mkdirs()
