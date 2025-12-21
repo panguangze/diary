@@ -230,8 +230,6 @@ class DataBackupManager(
                                 
                                 Log.d(TAG, "Extracted image: ${imageFile.name}")
                             }
-                            
-                            zipIn.closeEntry()
                         }
                     }
                 }
