@@ -322,6 +322,32 @@ class CheckInViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Edit check-in config - only certain fields can be modified
+     */
+    fun editCheckInConfig(
+        id: Long,
+        name: String,
+        icon: String,
+        description: String?,
+        reminderTime: String?,
+        reminderEnabled: Boolean
+    ) {
+        viewModelScope.launch {
+            val existingConfig = checkInRepository.getCheckInConfigById(id)
+            existingConfig?.let {
+                val updatedConfig = it.copy(
+                    name = name,
+                    icon = icon,
+                    description = description,
+                    reminderTime = reminderTime,
+                    updatedAt = System.currentTimeMillis()
+                )
+                checkInRepository.updateCheckInConfig(updatedConfig)
+            }
+        }
+    }
+    
     // 获取指定日期范围内的打卡记录
     fun loadCheckInsBetweenDates(startDate: String, endDate: String) {
         viewModelScope.launch {
