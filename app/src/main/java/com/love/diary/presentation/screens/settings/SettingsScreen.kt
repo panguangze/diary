@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.AlertDialog
@@ -125,14 +129,37 @@ fun SettingsScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
+        
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8))
+                    )
+                )
+        ) {
+            // Title header matching HomeScreen style
+            Text(
+                text = "设置",
+                fontSize = 24.sp,
+                lineHeight = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2D2D33),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp),
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(20.dp))
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(innerPadding),
-        contentPadding = PaddingValues(Dimens.ScreenPadding),
-        verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
-    ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(Dimens.ScreenPadding),
+                verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing)
+            ) {
 
         // 关于我们的卡片
         item {
@@ -321,6 +348,8 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         }
+            }
+        }
     }
     
     // 添加日期选择对话框
@@ -484,7 +513,6 @@ fun SettingsScreen(
                 }
             }
         )
-    }
     }
 }
 

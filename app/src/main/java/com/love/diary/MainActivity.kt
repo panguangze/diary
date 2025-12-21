@@ -33,10 +33,15 @@ import android.net.Uri
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.love.diary.data.backup.DataBackupManager
 import com.love.diary.data.repository.AppRepository
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject
+    lateinit var backupManager: DataBackupManager
+    
     private lateinit var importLauncher: ActivityResultLauncher<String>
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,13 +53,13 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MainApp()
+            MainApp(backupManager = backupManager)
         }
     }
 }
 
 @Composable
-fun MainApp() {
+fun MainApp(backupManager: DataBackupManager) {
     val navController = rememberNavController()
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -78,6 +83,7 @@ fun MainApp() {
             isLoading = isLoading,
             isFirstRun = isFirstRun,
             repository = repository,
+            backupManager = backupManager,
             onSetupComplete = { isFirstRun = false },
             onNavigateToFirstRun = { isFirstRun = true },
             selectedTab = selectedTab,
@@ -108,6 +114,7 @@ fun MainAppContent(
     isLoading: Boolean,
     isFirstRun: Boolean,
     repository: AppRepository,
+    backupManager: DataBackupManager,
     onSetupComplete: () -> Unit,
     onNavigateToFirstRun: () -> Unit,
     selectedTab: Int,
@@ -169,6 +176,7 @@ fun MainAppContent(
         // 首次运行显示设置页
         FirstRunScreen(
             repository = repository,
+            backupManager = backupManager,
             onSetupComplete = onSetupComplete,
             modifier = Modifier.fillMaxSize()
         )

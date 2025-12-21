@@ -107,67 +107,87 @@ fun CheckInDashboardScreen(
         uiState.allCheckInConfigs.filter { it.isActive }
     }
     
-    AppScaffold(
-        title = "打卡",
-        backgroundBrush = Brush.verticalGradient(
-            colors = listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8))
-        )
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(Color(0xFFFAFAFC), Color(0xFFF5F5F8))
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
-            if (activeConfigs.isEmpty()) {
-                // Empty state - show centered message and add button
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(Dimens.ScreenPadding),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "还没有打卡事项",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(Dimens.SmallSpacing))
-                    Text(
-                        text = "点击下方按钮添加你的第一个打卡事项",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                // Show list of check-in items
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(Dimens.ScreenPadding),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
-                    contentPadding = PaddingValues(bottom = 80.dp) // Space for FAB
-                ) {
-                    items(activeConfigs) { config ->
-                        CheckInConfigCard(
-                            config = config,
-                            viewModel = viewModel
+            // Title header matching HomeScreen style
+            Text(
+                text = "打卡",
+                fontSize = 24.sp,
+                lineHeight = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF2D2D33),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp),
+                textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Box(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (activeConfigs.isEmpty()) {
+                    // Empty state - show centered message and add button
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(Dimens.ScreenPadding),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "还没有打卡事项",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.SmallSpacing))
+                        Text(
+                            text = "点击下方按钮添加你的第一个打卡事项",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                } else {
+                    // Show list of check-in items
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(Dimens.ScreenPadding),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.SectionSpacing),
+                        contentPadding = PaddingValues(bottom = 80.dp) // Space for FAB
+                    ) {
+                        items(activeConfigs) { config ->
+                            CheckInConfigCard(
+                                config = config,
+                                viewModel = viewModel
+                            )
+                        }
+                    }
                 }
-            }
-            
-            // Floating Action Button for adding new check-in items
-            androidx.compose.material3.FloatingActionButton(
-                onClick = { showAddCheckInDialog = true },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(Dimens.ScreenPadding)
-            ) {
-                Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Add,
-                    contentDescription = "添加打卡事项"
-                )
+                
+                // Floating Action Button for adding new check-in items
+                androidx.compose.material3.FloatingActionButton(
+                    onClick = { showAddCheckInDialog = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(Dimens.ScreenPadding)
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Add,
+                        contentDescription = "添加打卡事项"
+                    )
+                }
             }
         }
     }
