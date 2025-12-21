@@ -689,4 +689,18 @@ class CheckInRepository @Inject constructor(
             unifiedCheckInDao.insertCheckIn(checkIn)
         }
     }
+    
+    /**
+     * Clear all check-in records (for data reset)
+     */
+    suspend fun clearAllCheckIns() {
+        unifiedCheckInDao.deleteAllCheckIns()
+    }
+    
+    /**
+     * Clear all check-in configs (for data reset)
+     */
+    suspend fun clearAllCheckInConfigs() {
+        unifiedCheckInDao.deleteAllCheckInConfigs()
+    }
 }

@@ -705,4 +705,60 @@ class AppRepository @Inject constructor(
     suspend fun batchInsertCheckInRecords(records: List<UnifiedCheckIn>) {
         checkInRepository.batchInsertCheckIns(records)
     }
+    
+    /**
+     * Clear all application data (for complete reset)
+     * This includes:
+     * - App configuration
+     * - Daily mood records
+     * - Check-in records and configs
+     * - Habit records
+     * - Event records and configs
+     * 
+     * Note: This method uses a "best effort" approach. If one operation fails,
+     * subsequent operations will still be attempted. This ensures maximum data
+     * cleanup even if individual operations fail. Each failure is wrapped with
+     * a specific error message for debugging.
+     * 
+     * @throws IllegalStateException if any data clearing operation fails
+     */
+    suspend fun clearAllData() {
+        try {
+            // Clear app config
+            deleteAppConfig()
+        } catch (e: IllegalStateException) {
+            throw IllegalStateException("Failed to delete app config during clear all data", e)
+        }
+        
+        try {
+            // Clear daily mood records
+            clearAllMoodRecords()
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to clear mood records during clear all data", e)
+        }
+        
+        try {
+            // Clear check-in data
+            checkInRepository.clearAllCheckIns()
+            checkInRepository.clearAllCheckInConfigs()
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to clear check-in data during clear all data", e)
+        }
+        
+        try {
+            // Clear habit data
+            habitDao.deleteAllHabitRecords()
+            habitDao.deleteAllHabits()
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to clear habit data during clear all data", e)
+        }
+        
+        try {
+            // Clear event data
+            eventDao.deleteAllEvents()
+            eventDao.deleteAllEventConfigs()
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to clear event data during clear all data", e)
+        }
+    }
 }

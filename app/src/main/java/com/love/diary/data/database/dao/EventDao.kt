@@ -56,4 +56,12 @@ interface EventDao {
 
     @Delete
     suspend fun deleteConfig(config: EventConfig)
+    
+    // 清除所有事件（用于数据重置）
+    @Query("DELETE FROM events")
+    suspend fun deleteAllEvents()
+    
+    // 清除所有事件配置（用于数据重置）
+    @Query("DELETE FROM event_configs")
+    suspend fun deleteAllEventConfigs()
 }

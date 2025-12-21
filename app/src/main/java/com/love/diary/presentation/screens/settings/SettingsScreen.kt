@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -68,6 +69,7 @@ import com.love.diary.util.ReminderScheduler
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
+    onNavigateToFirstRun: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -96,6 +98,7 @@ fun SettingsScreen(
     var showNameEditDialog by remember { mutableStateOf(false) }
     var showNicknameEditDialog by remember { mutableStateOf(false) }
     var showTimePickerDialog by remember { mutableStateOf(false) }
+    var showClearDataConfirmDialog by remember { mutableStateOf(false) }
     var tempInput by remember { mutableStateOf("") }
     var currentEditType by remember { mutableStateOf("") } // "start_date", "couple_name", "partner_nickname"
     
@@ -282,7 +285,7 @@ fun SettingsScreen(
                     icon = Icons.Default.Delete,
                     title = "清除所有数据",
                     subtitle = "重置应用",
-                    onClick = viewModel::resetData
+                    onClick = { showClearDataConfirmDialog = true }
                 )
             }
         }
@@ -415,6 +418,71 @@ fun SettingsScreen(
             },
             initialHour = uiState.reminderTime / 60,
             initialMinute = uiState.reminderTime % 60
+        )
+    }
+    
+    // 清除数据确认对话框
+    if (showClearDataConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearDataConfirmDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error
+                )
+            },
+            title = { 
+                Text(
+                    text = "清除所有数据",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "此操作将清除应用的所有数据，包括：",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    // Note: Keep this list synchronized with AppRepository.clearAllData()
+                    Text(
+                        text = "• 恋爱开始日期和情侣信息\n• 所有心情记录\n• 所有打卡记录和配置\n• 所有习惯记录\n• 所有事件和里程碑",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "⚠️ 此操作不可恢复，应用将回到初始化状态！",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showClearDataConfirmDialog = false
+                        viewModel.clearAllData {
+                            // Navigate to FirstRunScreen after clearing data
+                            onNavigateToFirstRun?.invoke()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("确认清除")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearDataConfirmDialog = false }) {
+                    Text("取消")
+                }
+            }
         )
     }
     }

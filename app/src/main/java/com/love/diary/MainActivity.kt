@@ -79,6 +79,7 @@ fun MainApp() {
             isFirstRun = isFirstRun,
             repository = repository,
             onSetupComplete = { isFirstRun = false },
+            onNavigateToFirstRun = { isFirstRun = true },
             selectedTab = selectedTab,
             onTabSelected = { index ->
                 selectedTab = index
@@ -108,6 +109,7 @@ fun MainAppContent(
     isFirstRun: Boolean,
     repository: AppRepository,
     onSetupComplete: () -> Unit,
+    onNavigateToFirstRun: () -> Unit,
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     navController: androidx.navigation.NavHostController
@@ -208,6 +210,7 @@ fun MainAppContent(
                 composable(Screen.Settings.route) {
                     AppScaffold(title = "设置") { inner ->
                         SettingsScreen(
+                            onNavigateToFirstRun = onNavigateToFirstRun,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(inner)
