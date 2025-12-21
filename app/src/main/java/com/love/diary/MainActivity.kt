@@ -130,8 +130,8 @@ fun MainAppContent(
     val context = navController.context
     val coroutineScope = rememberCoroutineScope()
     
-    // Handle back button press
-    BackHandler(enabled = true) {
+    // Handle back button press - but not during first run
+    BackHandler(enabled = !isFirstRun) {
         if (isOnHomeScreen) {
             // If on Home screen, use double-press to exit
             if (backPressedOnce) {

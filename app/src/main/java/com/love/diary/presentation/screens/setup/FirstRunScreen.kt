@@ -1,6 +1,7 @@
 // presentation/screens/setup/FirstRunScreen.kt
 package com.love.diary.presentation.screens.setup
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -79,6 +80,10 @@ fun FirstRunScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var avatarUri by remember { mutableStateOf<String?>(null) }
     
+    // Import error state
+    var showImportErrorDialog by remember { mutableStateOf(false) }
+    var importErrorMessage by remember { mutableStateOf("") }
+    
     // Reminder settings
     var reminderEnabled by remember { mutableStateOf(false) }
     var reminderHour by remember { mutableStateOf(9) }
@@ -125,10 +130,15 @@ fun FirstRunScreen(
                     if (result.isSuccess) {
                         onSetupComplete()
                     } else {
-                        // Show error - for now just log
-                        android.util.Log.e("FirstRunScreen", "Import failed: ${result.exceptionOrNull()}")
+                        // Show error dialog
+                        val exception = result.exceptionOrNull()
+                        importErrorMessage = exception?.message ?: "导入备份失败，请检查文件格式"
+                        showImportErrorDialog = true
+                        android.util.Log.e("FirstRunScreen", "Import failed: $exception")
                     }
                 } catch (e: Exception) {
+                    importErrorMessage = "导入备份失败: ${e.message}"
+                    showImportErrorDialog = true
                     android.util.Log.e("FirstRunScreen", "Import failed", e)
                 }
             }
@@ -148,6 +158,17 @@ fun FirstRunScreen(
     LaunchedEffect(Unit) {
         if (startDate.isEmpty()) {
             startDate = LocalDate.now().format(dateFormatter)
+        }
+    }
+    
+    // Handle back button to prevent exiting during setup
+    BackHandler(enabled = true) {
+        if (setupMode == "new") {
+            // If in new diary mode, go back to mode selection
+            setupMode = null
+        } else {
+            // If in mode selection, do nothing (can't go back from first run)
+            // User must complete setup or import backup
         }
     }
 
@@ -472,6 +493,38 @@ fun FirstRunScreen(
             },
             initialHour = reminderHour,
             initialMinute = reminderMinute
+        )
+    }
+    
+    // 导入错误对话框
+    if (showImportErrorDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showImportErrorDialog = false },
+            title = { Text("导入失败") },
+            text = {
+                Column {
+                    Text(importErrorMessage)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "备份文件可能已损坏或格式不正确。您可以选择创建新的日记。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showImportErrorDialog = false
+                    setupMode = "new"
+                }) {
+                    Text("创建新日记")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportErrorDialog = false }) {
+                    Text("取消")
+                }
+            }
         )
     }
 }
