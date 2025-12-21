@@ -3,6 +3,7 @@ package com.love.diary.presentation.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +12,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +27,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissState
+import androidx.compose.material.DismissValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.SwipeToDismiss
+import androidx.compose.material.rememberDismissState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -70,6 +79,7 @@ import com.love.diary.presentation.components.AppCard
 import com.love.diary.presentation.components.AppScaffold
 import com.love.diary.presentation.components.Dimens
 import com.love.diary.presentation.components.SectionHeader
+import com.love.diary.presentation.components.ShapeTokens
 import com.love.diary.presentation.components.StatusBadge
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -214,6 +224,7 @@ fun CheckInDashboardScreen(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun CheckInConfigCard(
     config: UnifiedCheckInConfig,
@@ -229,62 +240,119 @@ private fun CheckInConfigCard(
         uiState.allCheckInRecords.filter { it.name == config.name }
     }
     
-    AppCard(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = null // Remove click from card itself
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Dimens.SmallSpacing)
-        ) {
-            // Collapsed state (always visible)
-            CollapsedCheckInContent(
-                config = config,
-                viewModel = viewModel,
-                isExpanded = isExpanded,
-                onExpandToggle = { 
-                    // Don't expand for day countdown
-                    if (config.countdownMode != CountdownMode.DAY_COUNTDOWN) {
-                        isExpanded = !isExpanded
-                    }
-                },
-                onCheckIn = {
-                    // Handle check-in action based on config type
-                    when (config.checkInCategory) {
-                        com.love.diary.data.model.CheckInCategory.POSITIVE -> {
-                            viewModel.checkInPositive(config.id)
-                        }
-                        com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
-                            when (config.countdownMode) {
-                                CountdownMode.CHECKIN_COUNTDOWN -> {
-                                    viewModel.checkInCountdown(config.id)
+    // Swipe state - swipe left for edit, swipe right for delete
+    val dismissState = rememberDismissState(
+        confirmStateChange = { value ->
+            when (value) {
+                DismissValue.DismissedToEnd -> {
+                    // Swiped right - show delete confirmation
+                    showDeleteConfirmDialog = true
+                    false // Don't actually dismiss, just show dialog
+                }
+                DismissValue.DismissedToStart -> {
+                    // Swiped left - show edit dialog
+                    showEditDialog = true
+                    false // Don't actually dismiss, just show dialog
+                }
+                else -> false
+            }
+        }
+    )
+    
+    SwipeToDismiss(
+        state = dismissState,
+        directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
+        background = {
+            // Background that shows during swipe
+            val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
+            val color = when (direction) {
+                DismissDirection.StartToEnd -> MaterialTheme.colorScheme.errorContainer // Right swipe - Delete (red)
+                DismissDirection.EndToStart -> MaterialTheme.colorScheme.primaryContainer // Left swipe - Edit (blue/primary)
+            }
+            val icon = when (direction) {
+                DismissDirection.StartToEnd -> Icons.Default.Delete
+                DismissDirection.EndToStart -> Icons.Default.Edit
+            }
+            val alignment = when (direction) {
+                DismissDirection.StartToEnd -> Alignment.CenterStart
+                DismissDirection.EndToStart -> Alignment.CenterEnd
+            }
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color, shape = ShapeTokens.Card)
+                    .padding(horizontal = 24.dp),
+                contentAlignment = alignment
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = when (direction) {
+                        DismissDirection.StartToEnd -> MaterialTheme.colorScheme.onErrorContainer
+                        DismissDirection.EndToStart -> MaterialTheme.colorScheme.onPrimaryContainer
+                    },
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        },
+        dismissContent = {
+            AppCard(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = null // Remove click from card itself
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.SmallSpacing)
+                ) {
+                    // Collapsed state (always visible) - without edit/delete buttons now
+                    CollapsedCheckInContent(
+                        config = config,
+                        viewModel = viewModel,
+                        isExpanded = isExpanded,
+                        onExpandToggle = { 
+                            // Don't expand for day countdown
+                            if (config.countdownMode != CountdownMode.DAY_COUNTDOWN) {
+                                isExpanded = !isExpanded
+                            }
+                        },
+                        onCheckIn = {
+                            // Handle check-in action based on config type
+                            when (config.checkInCategory) {
+                                com.love.diary.data.model.CheckInCategory.POSITIVE -> {
+                                    viewModel.checkInPositive(config.id)
+                                }
+                                com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+                                    when (config.countdownMode) {
+                                        CountdownMode.CHECKIN_COUNTDOWN -> {
+                                            viewModel.checkInCountdown(config.id)
+                                        }
+                                        else -> {}
+                                    }
                                 }
                                 else -> {}
                             }
-                        }
-                        else -> {}
+                        },
+                        checkInRecords = checkInRecords
+                    )
+                    
+                    // Expanded state (conditionally visible)
+                    if (isExpanded) {
+                        androidx.compose.material3.Divider(
+                            modifier = Modifier.padding(vertical = Dimens.SmallSpacing),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                        
+                        ExpandedCheckInContent(
+                            config = config,
+                            viewModel = viewModel,
+                            checkInRecords = checkInRecords
+                        )
                     }
-                },
-                checkInRecords = checkInRecords,
-                onEdit = { showEditDialog = true },
-                onDelete = { showDeleteConfirmDialog = true }
-            )
-            
-            // Expanded state (conditionally visible)
-            if (isExpanded) {
-                androidx.compose.material3.Divider(
-                    modifier = Modifier.padding(vertical = Dimens.SmallSpacing),
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
-                
-                ExpandedCheckInContent(
-                    config = config,
-                    viewModel = viewModel,
-                    checkInRecords = checkInRecords
-                )
+                }
             }
         }
-    }
+    )
     
     // Edit dialog
     if (showEditDialog) {
@@ -336,9 +404,7 @@ private fun CollapsedCheckInContent(
     isExpanded: Boolean,
     onExpandToggle: () -> Unit,
     onCheckIn: () -> Unit,
-    checkInRecords: List<UnifiedCheckIn>,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+    checkInRecords: List<UnifiedCheckIn>
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -420,76 +486,50 @@ private fun CollapsedCheckInContent(
             }
         }
         
-        // Right side - Action buttons (Edit, Delete, Check-in)
+        // Right side - Only Check-in button (Edit and Delete are now via swipe)
         // Check if today's check-in exists
         val today = LocalDate.now().toString()
         val hasCheckedInToday = checkInRecords.any { it.date == today }
         
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Edit button
-            IconButton(onClick = onEdit) {
-                Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Edit,
-                    contentDescription = "编辑",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            
-            // Delete button
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Delete,
-                    contentDescription = "删除",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            
-            // Check-in button (only for certain types)
-            when (config.checkInCategory) {
-                com.love.diary.data.model.CheckInCategory.POSITIVE -> {
-                    // Check-in button - icon only without outer circle
-                    IconButton(onClick = onCheckIn) {
-                        Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
-                            contentDescription = if (hasCheckedInToday) "已打卡" else "打卡",
-                            tint = if (hasCheckedInToday) 
-                                MaterialTheme.colorScheme.primary
-                            else 
-                                MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
+        // Only show check-in button (Edit and Delete are now via swipe)
+        when (config.checkInCategory) {
+            com.love.diary.data.model.CheckInCategory.POSITIVE -> {
+                // Check-in button - icon only without outer circle
+                IconButton(onClick = onCheckIn) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
+                        contentDescription = if (hasCheckedInToday) "已打卡" else "打卡",
+                        tint = if (hasCheckedInToday) 
+                            MaterialTheme.colorScheme.primary
+                        else 
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
-                com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
-                    when (config.countdownMode) {
-                        CountdownMode.CHECKIN_COUNTDOWN -> {
-                            // Check-in button for check-in countdown - icon only without outer circle
-                            IconButton(onClick = onCheckIn) {
-                                Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
-                                    contentDescription = if (hasCheckedInToday) "已打卡" else "打卡",
-                                    tint = if (hasCheckedInToday) 
-                                        MaterialTheme.colorScheme.primary
-                                    else 
-                                        MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(32.dp)
-                                )
-                            }
-                        }
-                        CountdownMode.DAY_COUNTDOWN -> {
-                            // Just show expand/collapse icon (no check-in needed)
-                            // But day countdown doesn't expand, so show nothing
-                        }
-                        null -> {}
-                    }
-                }
-                null -> {}
             }
+            com.love.diary.data.model.CheckInCategory.COUNTDOWN -> {
+                when (config.countdownMode) {
+                    CountdownMode.CHECKIN_COUNTDOWN -> {
+                        // Check-in button for check-in countdown - icon only without outer circle
+                        IconButton(onClick = onCheckIn) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Default.CheckCircle,
+                                contentDescription = if (hasCheckedInToday) "已打卡" else "打卡",
+                                tint = if (hasCheckedInToday) 
+                                    MaterialTheme.colorScheme.primary
+                                else 
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                    CountdownMode.DAY_COUNTDOWN -> {
+                        // No check-in button for day countdown
+                    }
+                    null -> {}
+                }
+            }
+            null -> {}
         }
     }
 }
