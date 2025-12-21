@@ -714,28 +714,45 @@ class AppRepository @Inject constructor(
      * - Check-in records and configs
      * - Habit records
      * - Event records and configs
+     * @throws IllegalStateException if any data clearing operation fails
      */
     suspend fun clearAllData() {
         try {
             // Clear app config
             deleteAppConfig()
-            
+        } catch (e: IllegalStateException) {
+            throw IllegalStateException("Failed to delete app config during clear all data", e)
+        }
+        
+        try {
             // Clear daily mood records
             clearAllMoodRecords()
-            
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to clear mood records during clear all data", e)
+        }
+        
+        try {
             // Clear check-in data
             checkInRepository.clearAllCheckIns()
             checkInRepository.clearAllCheckInConfigs()
-            
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to clear check-in data during clear all data", e)
+        }
+        
+        try {
             // Clear habit data
             habitDao.deleteAllHabitRecords()
             habitDao.deleteAllHabits()
-            
+        } catch (e: Exception) {
+            throw IllegalStateException("Failed to clear habit data during clear all data", e)
+        }
+        
+        try {
             // Clear event data
             eventDao.deleteAllEvents()
             eventDao.deleteAllEventConfigs()
         } catch (e: Exception) {
-            throw IllegalStateException("Failed to clear all data", e)
+            throw IllegalStateException("Failed to clear event data during clear all data", e)
         }
     }
 }

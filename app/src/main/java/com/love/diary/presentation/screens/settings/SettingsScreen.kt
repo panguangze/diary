@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -469,7 +470,7 @@ fun SettingsScreen(
                             onNavigateToFirstRun?.invoke()
                         }
                     },
-                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
                 ) {
