@@ -423,13 +423,17 @@ class CheckInRepository @Inject constructor(
      * @param description 描述
      * @param icon 图标
      * @param color 颜色
+     * @param reminderTime 提醒时间 (HH:mm格式)
+     * @param reminderEnabled 是否启用提醒
      */
     suspend fun createDayCountdown(
         name: String,
         targetDate: String,
         description: String? = null,
         icon: String = "⏰",
-        color: String = "#FF5722"
+        color: String = "#FF5722",
+        reminderTime: String? = null,
+        reminderEnabled: Boolean = false
     ): Long {
         val config = UnifiedCheckInConfig(
             name = name,
@@ -443,7 +447,9 @@ class CheckInRepository @Inject constructor(
             checkInCategory = com.love.diary.data.model.CheckInCategory.COUNTDOWN,
             countdownMode = com.love.diary.data.model.CountdownMode.DAY_COUNTDOWN,
             countdownTarget = null, // 天数倒计时不需要设置目标值，自动计算
-            countdownProgress = 0
+            countdownProgress = 0,
+            reminderTime = reminderTime,
+            isActive = true
         )
         return saveCheckInConfig(config)
     }
@@ -456,6 +462,8 @@ class CheckInRepository @Inject constructor(
      * @param description 描述
      * @param icon 图标
      * @param color 颜色
+     * @param reminderTime 提醒时间 (HH:mm格式)
+     * @param reminderEnabled 是否启用提醒
      */
     suspend fun createCheckInCountdown(
         name: String,
@@ -463,7 +471,9 @@ class CheckInRepository @Inject constructor(
         tag: String? = null,
         description: String? = null,
         icon: String = "📅",
-        color: String = "#2196F3"
+        color: String = "#2196F3",
+        reminderTime: String? = null,
+        reminderEnabled: Boolean = false
     ): Long {
         val config = UnifiedCheckInConfig(
             name = name,
@@ -477,7 +487,9 @@ class CheckInRepository @Inject constructor(
             checkInCategory = com.love.diary.data.model.CheckInCategory.COUNTDOWN,
             countdownMode = com.love.diary.data.model.CountdownMode.CHECKIN_COUNTDOWN,
             countdownTarget = countdownTarget,
-            countdownProgress = 0
+            countdownProgress = 0,
+            reminderTime = reminderTime,
+            isActive = true
         )
         return saveCheckInConfig(config)
     }
@@ -595,13 +607,17 @@ class CheckInRepository @Inject constructor(
      * @param description 描述
      * @param icon 图标
      * @param color 颜色
+     * @param reminderTime 提醒时间 (HH:mm格式)
+     * @param reminderEnabled 是否启用提醒
      */
     suspend fun createPositiveCheckIn(
         name: String,
         recurrenceType: com.love.diary.data.model.RecurrenceType,
         description: String? = null,
         icon: String = "✅",
-        color: String = "#4CAF50"
+        color: String = "#4CAF50",
+        reminderTime: String? = null,
+        reminderEnabled: Boolean = false
     ): Long {
         val config = UnifiedCheckInConfig(
             name = name,
@@ -615,7 +631,9 @@ class CheckInRepository @Inject constructor(
             color = color,
             startDate = LocalDate.now().toString(),
             checkInCategory = com.love.diary.data.model.CheckInCategory.POSITIVE,
-            recurrenceType = recurrenceType
+            recurrenceType = recurrenceType,
+            reminderTime = reminderTime,
+            isActive = true
         )
         return saveCheckInConfig(config)
     }
