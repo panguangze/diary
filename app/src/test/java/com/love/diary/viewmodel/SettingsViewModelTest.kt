@@ -196,4 +196,33 @@ class SettingsViewModelTest {
         assertNull(state.coupleName)
         assertNull(state.partnerNickname)
     }
+    
+    @Test
+    fun `clearAllData should call repository clearAllData and invoke callback`() = runTest {
+        // Given
+        val config = AppConfigEntity(
+            id = 1,
+            startDate = "2024-01-01",
+            startTimeMinutes = 0,
+            showMoodTip = true,
+            showStreak = true,
+            showAnniversary = true,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+        whenever(repository.getAppConfig()).thenReturn(config)
+        
+        viewModel = SettingsViewModel(repository, backupManager)
+        advanceUntilIdle()
+        
+        var callbackInvoked = false
+        
+        // When
+        viewModel.clearAllData { callbackInvoked = true }
+        advanceUntilIdle()
+        
+        // Then
+        verify(repository).clearAllData()
+        assertTrue(callbackInvoked)
+    }
 }
