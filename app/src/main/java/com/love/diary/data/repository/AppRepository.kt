@@ -8,6 +8,7 @@ import com.love.diary.data.database.entities.AppConfigEntity
 import com.love.diary.data.database.entities.DailyMoodEntity
 import com.love.diary.data.model.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -704,6 +705,94 @@ class AppRepository @Inject constructor(
      */
     suspend fun batchInsertCheckInRecords(records: List<UnifiedCheckIn>) {
         checkInRepository.batchInsertCheckIns(records)
+    }
+    
+    /**
+     * Get all habits (including inactive ones) for backup
+     */
+    suspend fun getAllHabitsForBackup(): List<Habit> {
+        return habitDao.getAllHabits().first()
+    }
+    
+    /**
+     * Get all habit records for backup
+     */
+    suspend fun getAllHabitRecords(): List<HabitRecord> {
+        // Get all habits first, then get all records for each
+        val habits = habitDao.getAllHabits().first()
+        val allRecords = mutableListOf<HabitRecord>()
+        for (habit in habits) {
+            val records = habitDao.getHabitRecordsFlow(habit.id).first()
+            allRecords.addAll(records)
+        }
+        return allRecords
+    }
+    
+    /**
+     * Get all events for backup
+     */
+    suspend fun getAllEvents(): List<Event> {
+        // Get events from a large date range
+        val startDate = "1900-01-01"
+        val endDate = "2100-12-31"
+        return eventDao.getEventsBetweenDates(startDate, endDate)
+    }
+    
+    /**
+     * Get all event configs for backup
+     */
+    suspend fun getAllEventConfigs(): List<EventConfig> {
+        return eventDao.getAllActiveConfigs().first()
+    }
+    
+    /**
+     * Get all check-in configs for backup
+     */
+    suspend fun getAllCheckInConfigsForBackup(): List<UnifiedCheckInConfig> {
+        return checkInRepository.getAllCheckInConfigs().first()
+    }
+    
+    /**
+     * Batch insert habits for restore
+     */
+    suspend fun batchInsertHabits(habits: List<Habit>) {
+        habits.forEach { habit ->
+            habitDao.insertHabit(habit)
+        }
+    }
+    
+    /**
+     * Batch insert habit records for restore
+     */
+    suspend fun batchInsertHabitRecords(records: List<HabitRecord>) {
+        records.forEach { record ->
+            habitDao.insertHabitRecord(record)
+        }
+    }
+    
+    /**
+     * Batch insert events for restore
+     */
+    suspend fun batchInsertEvents(events: List<Event>) {
+        eventDao.insertEvents(events)
+    }
+    
+    /**
+     * Batch insert event configs for restore
+     */
+    suspend fun batchInsertEventConfigs(configs: List<EventConfig>) {
+        configs.forEach { config ->
+            eventDao.insertConfig(config)
+        }
+    }
+    
+    /**
+     * Batch insert check-in configs for restore
+     */
+    suspend fun batchInsertCheckInConfigs(configs: List<UnifiedCheckInConfig>) {
+        configs.forEach { config ->
+            checkInRepository.saveCheckInConfig(config)
+        }
     }
     
     /**

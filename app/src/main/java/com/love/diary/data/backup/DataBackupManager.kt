@@ -6,7 +6,7 @@ import android.net.Uri
 import android.util.Log
 import com.google.gson.Gson
 import com.love.diary.data.database.entities.DailyMoodEntity
-import com.love.diary.data.model.UnifiedCheckIn
+import com.love.diary.data.model.*
 import com.love.diary.data.repository.AppRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,22 +35,35 @@ class DataBackupManager(
         private const val TAG = "DataBackupManager"
         private const val BACKUP_DATA_FILE = "backup_data.json"
         private const val IMAGES_DIR = "images"
+        private const val AVATARS_DIR = "avatars"
     }
 
     /**
      * Data structure for backup files
      * @property backupDate Timestamp when backup was created
-     * @property appConfig Application configuration
+     * @property appConfig Application configuration (includes avatar URIs in reservedText1/reservedText2)
      * @property moodRecords List of all mood entries
      * @property checkInRecords List of all check-in records
+     * @property checkInConfigs List of all check-in configurations (includes reminder settings)
+     * @property habits List of all habits (legacy system)
+     * @property habitRecords List of all habit records (legacy system)
+     * @property events List of all events
+     * @property eventConfigs List of all event configurations
      * @property imageFiles List of image file paths (relative to backup)
+     * @property avatarFiles List of avatar file paths (user and partner avatars)
      */
     data class BackupData(
         val backupDate: String,
         val appConfig: com.love.diary.data.database.entities.AppConfigEntity?,
         val moodRecords: List<DailyMoodEntity>,
         val checkInRecords: List<UnifiedCheckIn> = emptyList(),
-        val imageFiles: List<String> = emptyList()
+        val checkInConfigs: List<UnifiedCheckInConfig> = emptyList(),
+        val habits: List<Habit> = emptyList(),
+        val habitRecords: List<HabitRecord> = emptyList(),
+        val events: List<Event> = emptyList(),
+        val eventConfigs: List<EventConfig> = emptyList(),
+        val imageFiles: List<String> = emptyList(),
+        val avatarFiles: List<String> = emptyList()
     )
 
     /**
@@ -99,23 +112,36 @@ class DataBackupManager(
 
     /**
      * Export data with images to user-selected URI as ZIP file
+     * Exports all data including:
+     * - App configuration (with reminder settings)
+     * - Mood records
+     * - Check-in records and configurations
+     * - Habits and habit records (legacy system)
+     * - Events and event configurations
+     * - All images (mood attachments, check-in attachments)
+     * - Avatar images (user and partner)
      * @param uri Target URI for export
      * @return Result indicating success or failure
      */
     suspend fun exportDataToUri(uri: Uri): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Starting export with images to URI: $uri")
+            Log.d(TAG, "Starting comprehensive export to URI: $uri")
             
-            // 获取数据
+            // 获取所有数据
             val config = repository.getAppConfig()
             val moodRecords = repository.getAllMoodRecords()
             val checkInRecords = repository.getAllCheckInRecords()
+            val checkInConfigs = repository.getAllCheckInConfigsForBackup()
+            val habits = repository.getAllHabitsForBackup()
+            val habitRecords = repository.getAllHabitRecords()
+            val events = repository.getAllEvents()
+            val eventConfigs = repository.getAllEventConfigs()
             
             if (config == null) {
                 Log.w(TAG, "No config found, exporting records only")
             }
 
-            // 收集所有图片URI
+            // 收集所有内容图片URI
             val imageUris = mutableListOf<String>()
             moodRecords.forEach { mood ->
                 mood.singleImageUri?.let { imageUris.add(it) }
@@ -124,14 +150,28 @@ class DataBackupManager(
                 checkIn.attachmentUri?.let { imageUris.add(it) }
             }
             
-            Log.d(TAG, "Found ${imageUris.size} images to backup")
+            // 收集头像URI
+            val avatarUris = mutableListOf<String>()
+            config?.reservedText1?.let { avatarUris.add(it) } // User avatar
+            config?.reservedText2?.let { avatarUris.add(it) } // Partner avatar
+            
+            Log.d(TAG, "Found ${imageUris.size} content images and ${avatarUris.size} avatars to backup")
+            Log.d(TAG, "Data counts - Moods: ${moodRecords.size}, CheckIns: ${checkInRecords.size}, " +
+                    "CheckInConfigs: ${checkInConfigs.size}, Habits: ${habits.size}, " +
+                    "HabitRecords: ${habitRecords.size}, Events: ${events.size}, EventConfigs: ${eventConfigs.size}")
 
             val backupData = BackupData(
                 backupDate = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()),
                 appConfig = config,
                 moodRecords = moodRecords,
                 checkInRecords = checkInRecords,
-                imageFiles = imageUris.distinct()
+                checkInConfigs = checkInConfigs,
+                habits = habits,
+                habitRecords = habitRecords,
+                events = events,
+                eventConfigs = eventConfigs,
+                imageFiles = imageUris.distinct(),
+                avatarFiles = avatarUris.distinct()
             )
 
             // 创建ZIP文件
@@ -144,7 +184,7 @@ class DataBackupManager(
                     zipOut.write(jsonData.toByteArray())
                     zipOut.closeEntry()
                     
-                    // 2. 写入图片文件
+                    // 2. 写入内容图片文件
                     imageUris.distinct().forEachIndexed { index, imageUriStr ->
                         try {
                             val imageUri = Uri.parse(imageUriStr)
@@ -159,17 +199,40 @@ class DataBackupManager(
                                 inputStream.copyTo(zipOut)
                                 zipOut.closeEntry()
                                 
-                                Log.d(TAG, "Backed up image: $imageFileName")
+                                Log.d(TAG, "Backed up content image: $imageFileName")
                             }
                         } catch (e: Exception) {
-                            Log.w(TAG, "Failed to backup image: $imageUriStr", e)
+                            Log.w(TAG, "Failed to backup content image: $imageUriStr", e)
                             // Continue with other images
+                        }
+                    }
+                    
+                    // 3. 写入头像文件
+                    avatarUris.distinct().forEachIndexed { index, avatarUriStr ->
+                        try {
+                            val avatarUri = Uri.parse(avatarUriStr)
+                            context.contentResolver.openInputStream(avatarUri)?.use { inputStream ->
+                                // 使用索引作为文件名，保持原扩展名
+                                val extension = getFileExtension(avatarUriStr)
+                                val avatarFileName = "$AVATARS_DIR/avatar_$index$extension"
+                                
+                                val avatarEntry = ZipEntry(avatarFileName)
+                                zipOut.putNextEntry(avatarEntry)
+                                
+                                inputStream.copyTo(zipOut)
+                                zipOut.closeEntry()
+                                
+                                Log.d(TAG, "Backed up avatar: $avatarFileName")
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to backup avatar: $avatarUriStr", e)
+                            // Continue with other avatars
                         }
                     }
                 }
             } ?: throw IOException("无法打开输出流")
 
-            Log.d(TAG, "Export with images to URI successful")
+            Log.d(TAG, "Comprehensive export successful - All data and media backed up")
             Result.success(true)
         } catch (e: IOException) {
             Log.e(TAG, "IO error during export to URI", e)
@@ -182,19 +245,28 @@ class DataBackupManager(
 
     /**
      * Import data with images from user-selected URI (ZIP file)
+     * Restores all data including:
+     * - App configuration (with reminder settings)
+     * - Mood records
+     * - Check-in records and configurations
+     * - Habits and habit records (legacy system)
+     * - Events and event configurations
+     * - All images (mood attachments, check-in attachments)
+     * - Avatar images (user and partner)
      * @param uri Source URI for import
      * @return Result indicating success or failure
      */
     suspend fun importData(uri: Uri): Result<Boolean> = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Starting import with images from URI: $uri")
+            Log.d(TAG, "Starting comprehensive import from URI: $uri")
             
-            // 创建临时目录存储解压的图片
+            // 创建临时目录存储解压的文件
             val tempDir = File(context.cacheDir, "import_temp_${System.currentTimeMillis()}")
             tempDir.mkdirs()
             
             var backupData: BackupData? = null
             val imageMapping = mutableMapOf<String, String>() // old path -> new path
+            val avatarMapping = mutableMapOf<String, String>() // old path -> new path
             
             try {
                 // 解压ZIP文件
@@ -205,12 +277,8 @@ class DataBackupManager(
                             val entryName = entry!!.name
 
                             if (entryName == BACKUP_DATA_FILE) {
-                                // 修正：直接读取字节并转换为 String，不关闭流
-                                // ZipInputStream 的 readBytes() 会读取当前 Entry 直到结束，不会关闭流
+                                // 读取JSON数据
                                 val jsonData = String(zipIn.readBytes(), Charsets.UTF_8)
-
-                                // 或者使用这种方式（不加 .use）:
-                                // val jsonData = zipIn.bufferedReader().readText()
 
                                 if (jsonData.isBlank()) {
                                     throw IllegalArgumentException("备份文件为空")
@@ -222,9 +290,9 @@ class DataBackupManager(
                                     throw IllegalArgumentException("备份文件格式无效", e)
                                 }
 
-                                Log.d(TAG, "Parsed backup data: ...")
-                            }else if (entryName.startsWith(IMAGES_DIR)) {
-                                // 提取图片文件
+                                Log.d(TAG, "Parsed backup data from ${backupData.backupDate}")
+                            } else if (entryName.startsWith(IMAGES_DIR)) {
+                                // 提取内容图片文件
                                 val imageFile = File(tempDir, entryName)
                                 imageFile.parentFile?.mkdirs()
                                 
@@ -232,7 +300,17 @@ class DataBackupManager(
                                     zipIn.copyTo(output)
                                 }
                                 
-                                Log.d(TAG, "Extracted image: ${imageFile.name}")
+                                Log.d(TAG, "Extracted content image: ${imageFile.name}")
+                            } else if (entryName.startsWith(AVATARS_DIR)) {
+                                // 提取头像文件
+                                val avatarFile = File(tempDir, entryName)
+                                avatarFile.parentFile?.mkdirs()
+                                
+                                FileOutputStream(avatarFile).use { output ->
+                                    zipIn.copyTo(output)
+                                }
+                                
+                                Log.d(TAG, "Extracted avatar: ${avatarFile.name}")
                             }
                         }
                     }
@@ -242,7 +320,7 @@ class DataBackupManager(
                     throw IllegalArgumentException("备份文件中没有找到数据")
                 }
                 
-                // 将临时图片文件复制到应用的图片目录
+                // 将临时内容图片文件复制到应用的图片目录
                 val appImagesDir = File(context.filesDir, "images")
                 appImagesDir.mkdirs()
                 
@@ -258,15 +336,38 @@ class DataBackupManager(
                             val oldPath = backupData!!.imageFiles[oldIndex]
                             val newUri = Uri.fromFile(newImageFile).toString()
                             imageMapping[oldPath] = newUri
-                            Log.d(TAG, "Mapped image: $oldPath -> $newUri")
+                            Log.d(TAG, "Mapped content image: $oldPath -> $newUri")
                         }
                     }
                 }
                 
-                // 恢复数据
+                // 将临时头像文件复制到应用的图片目录
+                val extractedAvatarsDir = File(tempDir, AVATARS_DIR)
+                if (extractedAvatarsDir.exists()) {
+                    extractedAvatarsDir.listFiles()?.forEach { avatarFile ->
+                        val newAvatarFile = File(appImagesDir, "${System.currentTimeMillis()}_${avatarFile.name}")
+                        avatarFile.copyTo(newAvatarFile, overwrite = true)
+                        
+                        // 记录旧路径到新路径的映射
+                        val oldIndex = avatarFile.nameWithoutExtension.substringAfter("avatar_").toIntOrNull()
+                        if (oldIndex != null && oldIndex < backupData!!.avatarFiles.size) {
+                            val oldPath = backupData!!.avatarFiles[oldIndex]
+                            val newUri = Uri.fromFile(newAvatarFile).toString()
+                            avatarMapping[oldPath] = newUri
+                            Log.d(TAG, "Mapped avatar: $oldPath -> $newUri")
+                        }
+                    }
+                }
+                
+                // 恢复应用配置（包含头像路径）
                 backupData!!.appConfig?.let { config ->
-                    repository.saveAppConfig(config)
-                    Log.d(TAG, "Config restored")
+                    // 更新头像URI
+                    val updatedConfig = config.copy(
+                        reservedText1 = config.reservedText1?.let { avatarMapping[it] } ?: config.reservedText1,
+                        reservedText2 = config.reservedText2?.let { avatarMapping[it] } ?: config.reservedText2
+                    )
+                    repository.saveAppConfig(updatedConfig)
+                    Log.d(TAG, "Config restored with updated avatar paths")
                 }
 
                 // 清空现有记录并导入新记录（更新图片路径）
@@ -301,7 +402,38 @@ class DataBackupManager(
                     repository.batchInsertCheckInRecords(updatedCheckInRecords)
                     Log.d(TAG, "Restored ${updatedCheckInRecords.size} check-in records")
                 }
+                
+                // 恢复check-in配置
+                if (backupData!!.checkInConfigs.isNotEmpty()) {
+                    repository.batchInsertCheckInConfigs(backupData!!.checkInConfigs)
+                    Log.d(TAG, "Restored ${backupData!!.checkInConfigs.size} check-in configs")
+                }
+                
+                // 恢复习惯（legacy系统）
+                if (backupData!!.habits.isNotEmpty()) {
+                    repository.batchInsertHabits(backupData!!.habits)
+                    Log.d(TAG, "Restored ${backupData!!.habits.size} habits")
+                }
+                
+                // 恢复习惯记录
+                if (backupData!!.habitRecords.isNotEmpty()) {
+                    repository.batchInsertHabitRecords(backupData!!.habitRecords)
+                    Log.d(TAG, "Restored ${backupData!!.habitRecords.size} habit records")
+                }
+                
+                // 恢复事件
+                if (backupData!!.events.isNotEmpty()) {
+                    repository.batchInsertEvents(backupData!!.events)
+                    Log.d(TAG, "Restored ${backupData!!.events.size} events")
+                }
+                
+                // 恢复事件配置
+                if (backupData!!.eventConfigs.isNotEmpty()) {
+                    repository.batchInsertEventConfigs(backupData!!.eventConfigs)
+                    Log.d(TAG, "Restored ${backupData!!.eventConfigs.size} event configs")
+                }
 
+                Log.d(TAG, "Comprehensive import successful - All data and media restored")
                 Result.success(true)
             } finally {
                 // 清理临时文件
