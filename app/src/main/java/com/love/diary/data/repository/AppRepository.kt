@@ -689,4 +689,20 @@ class AppRepository @Inject constructor(
         )
         updateAppConfig(updated)
     }
+    
+    // === Check-in batch operations for backup/restore ===
+    
+    /**
+     * Get all check-in records for backup
+     */
+    suspend fun getAllCheckInRecords(): List<UnifiedCheckIn> {
+        return checkInRepository.getAllCheckIns()
+    }
+    
+    /**
+     * Batch insert check-in records for restore
+     */
+    suspend fun batchInsertCheckInRecords(records: List<UnifiedCheckIn>) {
+        checkInRepository.batchInsertCheckIns(records)
+    }
 }

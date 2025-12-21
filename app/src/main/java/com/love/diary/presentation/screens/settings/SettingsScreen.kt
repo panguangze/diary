@@ -110,9 +110,9 @@ fun SettingsScreen(
         }
     }
     
-    // 添加导出文件选择器
+    // 添加导出文件选择器（ZIP格式）
     val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json")
+        contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
         uri?.let {
             viewModel.exportDataToUri(it)
@@ -259,10 +259,10 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Download,
                     title = "导出记录",
-                    subtitle = "导出所有配置和记录",
+                    subtitle = "导出所有配置、记录和图片（ZIP格式）",
                     onClick = { 
                         val timestamp = System.currentTimeMillis()
-                        val fileName = "love_diary_backup_${timestamp}.json"
+                        val fileName = "love_diary_backup_${timestamp}.zip"
                         exportLauncher.launch(fileName) 
                     }
                 )
@@ -272,8 +272,8 @@ fun SettingsScreen(
                 SettingsItem(
                     icon = Icons.Default.Upload,
                     title = "导入记录",
-                    subtitle = "从备份文件恢复",
-                    onClick = { importLauncher.launch("*/*") }
+                    subtitle = "从备份ZIP文件恢复",
+                    onClick = { importLauncher.launch("application/zip") }
                 )
 
                 Divider(modifier = Modifier.padding(horizontal = 16.dp))
