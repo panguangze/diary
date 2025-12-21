@@ -263,7 +263,7 @@ private fun CheckInConfigCard(
         state = dismissState,
         directions = setOf(DismissDirection.StartToEnd, DismissDirection.EndToStart),
         background = {
-            // Background that shows during swipe
+            // Background shown during swipe: StartToEnd (right swipe) for delete (red), EndToStart (left swipe) for edit (primary)
             val direction = dismissState.dismissDirection ?: return@SwipeToDismiss
             val color = when (direction) {
                 DismissDirection.StartToEnd -> MaterialTheme.colorScheme.errorContainer // Right swipe - Delete (red)
@@ -305,7 +305,7 @@ private fun CheckInConfigCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(Dimens.SmallSpacing)
                 ) {
-                    // Collapsed state (always visible) - without edit/delete buttons now
+                    // Collapsed state content (edit/delete available via swipe gestures)
                     CollapsedCheckInContent(
                         config = config,
                         viewModel = viewModel,
@@ -486,7 +486,7 @@ private fun CollapsedCheckInContent(
             }
         }
         
-        // Right side - Only Check-in button (Edit and Delete are now via swipe)
+        // Right side - Check-in button only (edit/delete available via swipe gestures)
         // Check if today's check-in exists
         val today = LocalDate.now().toString()
         val hasCheckedInToday = checkInRecords.any { it.date == today }
