@@ -134,7 +134,7 @@ fun MainAppContent(
         } else {
             // If not on Home screen, navigate back to Home and clear intermediate stack
             navController.navigate(Screen.Home.route) {
-                popUpTo(navController.graph.startDestinationId) {
+                popUpTo(Screen.Home.route) {
                     inclusive = false
                     saveState = false
                 }

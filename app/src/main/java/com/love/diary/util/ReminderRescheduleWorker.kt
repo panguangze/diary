@@ -10,6 +10,9 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.love.diary.data.database.LoveDatabase
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.Dispatchers
 import java.util.concurrent.TimeUnit
 
 /**
@@ -19,6 +22,8 @@ class ReminderRescheduleWorker(
     appContext: Context,
     params: WorkerParameters
 ) : CoroutineWorker(appContext, params) {
+
+    private val database: LoveDatabase by lazy { LoveDatabase.getInstance(applicationContext) }
 
     companion object {
         private const val PERIODIC_WORK_NAME = "reminder_reschedule_periodic"
@@ -51,9 +56,8 @@ class ReminderRescheduleWorker(
         }
     }
 
-    override suspend fun doWork(): Result {
+    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val context = applicationContext
-        val database = LoveDatabase.getInstance(context)
         val reminderScheduler = ReminderScheduler(context)
 
         // 重新安排每日心情提醒
@@ -62,8 +66,11 @@ class ReminderRescheduleWorker(
             reminderScheduler.scheduleDailyReminder(appConfig.reminderTime)
         }
 
-        // 重新安排打卡提醒
-        val checkInConfigs = database.unifiedCheckInDao().getAllCheckInConfigs().first()
+        // 重新安排打卡提醒（设置超时避免阻塞）
+        val checkInConfigs = withTimeoutOrNull(3_000) {
+            database.unifiedCheckInDao().getAllCheckInConfigs().first()
+        }.orEmpty()
+
         val checkInScheduler = CheckInReminderScheduler(context)
         checkInConfigs.forEach { config ->
             val reminderTime = config.reminderTime
@@ -76,6 +83,6 @@ class ReminderRescheduleWorker(
             }
         }
 
-        return Result.success()
+        Result.success()
     }
 }
