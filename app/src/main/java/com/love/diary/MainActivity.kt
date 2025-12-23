@@ -19,7 +19,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.launch
 import com.love.diary.navigation.Screen
 import com.love.diary.presentation.screens.home.HomeScreen
 import com.love.diary.presentation.screens.settings.SettingsScreen
@@ -125,40 +124,22 @@ fun MainAppContent(
     val currentRoute by navController.currentBackStackEntryFlow.collectAsState(initial = navController.currentBackStackEntry)
     val isOnHomeScreen = currentRoute?.destination?.route == Screen.Home.route
     
-    // State for double-back-to-exit
-    var backPressedOnce by remember { mutableStateOf(false) }
     val context = navController.context
-    val coroutineScope = rememberCoroutineScope()
     
     // Handle back button press
     BackHandler(enabled = true) {
         if (isOnHomeScreen) {
-            // If on Home screen, use double-press to exit
-            if (backPressedOnce) {
-                // Second press - exit app
-                (context as? ComponentActivity)?.finish()
-            } else {
-                // First press - show message and set flag
-                backPressedOnce = true
-                android.widget.Toast.makeText(
-                    context,
-                    "再按一次退出应用",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-                
-                // Reset flag after 2 seconds
-                coroutineScope.launch {
-                    kotlinx.coroutines.delay(2000)
-                    backPressedOnce = false
-                }
-            }
+            // If on Home screen, exit app directly
+            (context as? ComponentActivity)?.finish()
         } else {
-            // If not on Home screen, navigate to Home
+            // If not on Home screen, navigate back to Home and clear intermediate stack
             navController.navigate(Screen.Home.route) {
-                popUpTo(Screen.Home.route) {
+                popUpTo(navController.graph.startDestinationId) {
                     inclusive = false
+                    saveState = false
                 }
                 launchSingleTop = true
+                restoreState = false
             }
             onTabSelected(0) // Update selected tab to Home
         }

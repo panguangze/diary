@@ -1,6 +1,7 @@
 package com.love.diary
 
 import android.app.Application
+import com.love.diary.util.ReminderRescheduleWorker
 import dagger.hilt.android.HiltAndroidApp
 
 /**
@@ -13,5 +14,6 @@ class LoveDiaryApp : Application() {
     override fun onCreate() {
         super.onCreate()
         // 可以在这里进行应用初始化
+        ReminderRescheduleWorker.enqueue(this)
     }
 }
