@@ -23,11 +23,15 @@ class ReminderRescheduleWorker(
     params: WorkerParameters
 ) : CoroutineWorker(appContext, params) {
 
-    private val database: LoveDatabase by lazy { LoveDatabase.getInstance(applicationContext) }
+    private val database: LoveDatabase by lazy {
+        // WorkManager 尚未接入 Hilt-Work，使用单例数据库确保后台任务可用
+        LoveDatabase.getInstance(applicationContext)
+    }
 
     companion object {
         private const val PERIODIC_WORK_NAME = "reminder_reschedule_periodic"
         private const val ONE_TIME_WORK_NAME = "reminder_reschedule_once"
+        private const val FLOW_TIMEOUT_MS = 3_000L
 
         /**
          * 启动一次后台任务，用于立即和周期性地同步提醒
@@ -60,29 +64,32 @@ class ReminderRescheduleWorker(
         val context = applicationContext
         val reminderScheduler = ReminderScheduler(context)
 
-        // 重新安排每日心情提醒
-        val appConfig = database.appConfigDao().getConfig()
-        if (appConfig?.reminderEnabled == true) {
-            reminderScheduler.scheduleDailyReminder(appConfig.reminderTime)
-        }
-
-        // 重新安排打卡提醒（设置超时避免阻塞）
-        val checkInConfigs = withTimeoutOrNull(3_000) {
-            database.unifiedCheckInDao().getAllCheckInConfigs().first()
-        }.orEmpty()
-
-        val checkInScheduler = CheckInReminderScheduler(context)
-        checkInConfigs.forEach { config ->
-            val reminderTime = config.reminderTime
-            if (config.isActive && !reminderTime.isNullOrBlank()) {
-                checkInScheduler.scheduleCheckInReminder(
-                    config.id,
-                    config.name,
-                    reminderTime
-                )
+        runCatching {
+            // 重新安排每日心情提醒
+            val appConfig = database.appConfigDao().getConfig()
+            if (appConfig?.reminderEnabled == true) {
+                reminderScheduler.scheduleDailyReminder(appConfig.reminderTime)
             }
-        }
 
-        Result.success()
+            // 重新安排打卡提醒（设置超时避免阻塞）
+            val checkInConfigs = withTimeoutOrNull(FLOW_TIMEOUT_MS) {
+                database.unifiedCheckInDao().getAllCheckInConfigs().first()
+            }.orEmpty()
+
+            val checkInScheduler = CheckInReminderScheduler(context)
+            checkInConfigs.forEach { config ->
+                val reminderTime = config.reminderTime
+                if (config.isActive && !reminderTime.isNullOrBlank()) {
+                    checkInScheduler.scheduleCheckInReminder(
+                        config.id,
+                        config.name,
+                        reminderTime
+                    )
+                }
+            }
+            Result.success()
+        }.getOrElse {
+            Result.retry()
+        }
     }
 }
