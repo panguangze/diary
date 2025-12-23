@@ -9,6 +9,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.love.diary.data.database.LoveDatabase
+import android.util.Log
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -32,6 +33,7 @@ class ReminderRescheduleWorker(
         private const val PERIODIC_WORK_NAME = "reminder_reschedule_periodic"
         private const val ONE_TIME_WORK_NAME = "reminder_reschedule_once"
         private const val FLOW_TIMEOUT_MS = 3_000L
+        private const val TAG = "ReminderRescheduleWorker"
 
         /**
          * 启动一次后台任务，用于立即和周期性地同步提醒
@@ -66,7 +68,9 @@ class ReminderRescheduleWorker(
 
         runCatching {
             // 重新安排每日心情提醒
-            val appConfig = database.appConfigDao().getConfig()
+            val appConfig = withTimeoutOrNull(FLOW_TIMEOUT_MS) {
+                database.appConfigDao().getConfig()
+            }
             if (appConfig?.reminderEnabled == true) {
                 reminderScheduler.scheduleDailyReminder(appConfig.reminderTime)
             }
@@ -89,7 +93,8 @@ class ReminderRescheduleWorker(
             }
             Result.success()
         }.getOrElse {
-            Result.retry()
+            Log.e(TAG, "Failed to reschedule reminders", it)
+            Result.failure()
         }
     }
 }
